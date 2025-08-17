@@ -1,6 +1,28 @@
-# Getting Started with Create React App
+# Thai QR Code Tools
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React TypeScript application for extracting and parsing Thai QR code payment data. The app allows users to scan QR codes via camera, upload image files, or manually input QR data to decode Thai payment QR codes (PromptPay format).
+
+🌐 **Live Demo**: [https://ohmrefresh.github.io/thai-qr-extractor](https://ohmrefresh.github.io/thai-qr-extractor)
+
+## Features
+
+- 📱 **Camera QR Scanning** - Real-time QR code scanning using device camera
+- 🖼️ **Image Upload** - Upload and scan QR codes from image files
+- ⌨️ **Text Input** - Manually paste or type QR code data
+- 🔍 **Thai QR Parser** - Parse PromptPay and EMV QR code formats
+- 🏗️ **QR Generator** - Generate Thai payment QR codes
+- 📊 **Data Display** - Formatted display of parsed QR data with expandable sections
+- 📝 **History** - Track previous scans and generations
+- 📱 **Responsive Design** - Works on desktop and mobile devices
+
+## Tech Stack
+
+- **React 19** with TypeScript
+- **html5-qrcode** for camera scanning
+- **jsQR** for image-based QR decoding
+- **qrcode** for QR generation
+- **React Testing Library** for testing
+- **GitHub Actions** for CI/CD
 
 ## Available Scripts
 
@@ -29,18 +51,58 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
+### `npm run deploy`
+
+Builds and deploys the app to GitHub Pages.
+
 ### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🚀 Deployment
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+This project is configured for automatic deployment to GitHub Pages:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Automatic Deployment
+- Pushes to `main` branch trigger automatic deployment via GitHub Actions
+- Tests must pass before deployment
+- Built app is deployed to `gh-pages` branch
 
-## Learn More
+### Manual Deployment
+```bash
+# Run the deployment script
+./deploy-manual.sh
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# Or run commands individually  
+npm run build
+npm run deploy
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+## 📖 Development
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm start`
+4. Run tests: `npm test`
+5. Build for production: `npm run build`
+
+## 🧪 Testing
+
+The project includes comprehensive tests:
+- Unit tests for utilities and components
+- Integration tests for QR parsing and generation
+- Test coverage reporting
+
+Run tests with: `npm test`
+
+## 📝 Architecture
+
+See [CLAUDE.md](./CLAUDE.md) for detailed project architecture and development guidelines.
+
+## 🔗 Links
+
+- **Live Demo**: [https://ohmrefresh.github.io/thai-qr-extractor](https://ohmrefresh.github.io/thai-qr-extractor)
+- **Repository**: [https://github.com/ohmrefresh/thai-qr-extractor](https://github.com/ohmrefresh/thai-qr-extractor)
+- **Deployment Guide**: [DEPLOYMENT.md](./DEPLOYMENT.md)

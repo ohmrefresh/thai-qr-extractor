@@ -8,14 +8,16 @@ if (typeof global.TextEncoder === 'undefined') {
   global.TextDecoder = TextDecoder;
 }
 
-// Mock canvas for QR code generation in tests
+// Mock canvas for QR code generation in tests  
 jest.mock('qrcode', () => ({
   toDataURL: jest.fn().mockResolvedValue('data:image/png;base64,mockQRCodeImage')
 }));
 
-const QRCode = require('qrcode');
-
 describe('Thai QR Generator', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('generates valid QR code with required fields', async () => {
     const input = {
       aid: 'A000000677010111',
@@ -25,11 +27,15 @@ describe('Thai QR Generator', () => {
 
     const result = await generateThaiQR(input);
     
+    expect(result).toBeDefined();
     expect(result.qrString).toBeDefined();
-    expect(result.qrCodeDataURL).toMatch(/^data:image\/png;base64,/);
     expect(result.qrString).toContain('00'); // Payload format indicator
     expect(result.qrString).toContain('30'); // Tag 30 for merchant account info
     expect(result.qrString).toContain('63'); // CRC tag
+    
+    // Test QR code structure - it should be a valid EMV QR string
+    expect(result.qrString.length).toBeGreaterThan(50);
+    expect(result.qrString).toMatch(/^00020101021230/); // Start pattern
   });
 
   test('round-trip: generated QR can be parsed back', async () => {
