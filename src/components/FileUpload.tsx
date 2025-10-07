@@ -67,25 +67,30 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
         type="file"
         accept="image/*"
         onChange={handleFileUpload}
-        style={{ display: 'none' }}
+        className="hidden-input"
       />
-      <div className="upload-area" onClick={triggerFileInput}>
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', opacity: 0.6 }}>
+      <div className="card-header">
+        <div className="card-icon accent-upload">
+          <svg className="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17,8 12,3 7,8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 className="card-title">Upload image</h3>
+          <p className="card-subtitle">Select a QR code image from your device for automatic parsing.</p>
+        </div>
+      </div>
+      <button type="button" className="upload-dropzone" onClick={triggerFileInput}>
+        <svg className="icon icon-lg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17,8 12,3 7,8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        <h3 style={{ color: '#6b7280', margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: '600' }}>Upload Image</h3>
-        <p style={{ margin: '0 0 16px 0', color: '#9ca3af' }}>Click to select a QR code image from your device</p>
-        <button className="upload-button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7,10 12,15 17,10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Choose File
-        </button>
-      </div>
+        <span className="dropzone-title">Browse image</span>
+        <span className="dropzone-subtitle">PNG or JPG up to 5 MB</span>
+      </button>
     </div>
   );
 };

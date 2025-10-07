@@ -155,6 +155,13 @@ function App() {
           <>
             {!qrData && (
               <div className="scanner-section">
+                <div className="section-heading">
+                  <div>
+                    <h2>Scan or import Thai QR codes</h2>
+                    <p>Choose the method that fits best for capturing or pasting QR payloads.</p>
+                  </div>
+                  <span className="section-tag">Live tools</span>
+                </div>
                 <div className="input-methods">
                   <QRScanner 
                     onScanSuccess={(data) => {
@@ -163,7 +170,6 @@ function App() {
                     }}
                     onScanError={handleScanError}
                   />
-                  <div className="divider">OR</div>
                   <FileUpload 
                     onScanSuccess={(data) => {
                       setLastScanSource('file');
@@ -171,7 +177,6 @@ function App() {
                     }}
                     onScanError={handleScanError}
                   />
-                  <div className="divider">OR</div>
                   <TextInput 
                     onScanSuccess={(data) => {
                       setLastScanSource('text');
@@ -180,15 +185,28 @@ function App() {
                     onScanError={handleScanError}
                   />
                 </div>
-                
+
                 {error && (
-                  <div className="error-message">
-                    <p>Error: {error}</p>
+                  <div className="error-message" role="alert">
+                    <svg
+                      className="error-icon"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="13"></line>
+                      <line x1="12" y1="16" x2="12" y2="16"></line>
+                    </svg>
+                    <span>Error: {error}</span>
                   </div>
                 )}
               </div>
             )}
-            
+
             {qrData && (
               <QRDataDisplay 
                 data={qrData}
