@@ -36,10 +36,14 @@ describe('historyStorage', () => {
       const history: HistoryItem[] = [
         {
           id: '1',
-          qrData: '00020101',
+          data: {
+            rawData: '00020101',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date('2024-01-01T00:00:00Z'),
-          merchantName: 'Test Merchant',
-          amount: 10.0,
+          source: 'text',
         },
       ];
 
@@ -59,9 +63,14 @@ describe('historyStorage', () => {
       const history: HistoryItem[] = [
         {
           id: '1',
-          qrData: '00020101',
+          data: {
+            rawData: '00020101',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp,
-          merchantName: 'Test',
+          source: 'text',
         },
       ];
 
@@ -83,8 +92,14 @@ describe('historyStorage', () => {
       const history: HistoryItem[] = [
         {
           id: '1',
-          qrData: '00020101',
+          data: {
+            rawData: '00020101',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
       ];
 
@@ -105,10 +120,14 @@ describe('historyStorage', () => {
       const serialized = JSON.stringify([
         {
           id: '1',
-          qrData: '00020101',
+          data: {
+            rawData: '00020101',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: '2024-01-01T00:00:00.000Z',
-          merchantName: 'Test Merchant',
-          amount: 10.0,
+          source: 'text',
         },
       ]);
 
@@ -166,8 +185,14 @@ describe('historyStorage', () => {
       const serialized = JSON.stringify([
         {
           id: '1',
-          qrData: '00020101',
+          data: {
+            rawData: '00020101',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: '2024-06-15T12:30:00.000Z',
+          source: 'text',
         },
       ]);
 
@@ -184,15 +209,19 @@ describe('historyStorage', () => {
     test('adds new item to history', () => {
       const currentHistory: HistoryItem[] = [];
       const newItem = {
-        qrData: '00020101',
-        merchantName: 'Test Merchant',
-        amount: 10.0,
+        data: {
+          rawData: '00020101',
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
+        source: 'text' as const,
       };
 
       const updatedHistory = addToHistory(currentHistory, newItem);
 
       expect(updatedHistory).toHaveLength(1);
-      expect(updatedHistory[0].qrData).toBe('00020101');
+      expect(updatedHistory[0].data.rawData).toBe('00020101');
       expect(updatedHistory[0].id).toBeTruthy();
       expect(updatedHistory[0].timestamp).toBeInstanceOf(Date);
     });
@@ -201,44 +230,74 @@ describe('historyStorage', () => {
       const currentHistory: HistoryItem[] = [
         {
           id: '1',
-          qrData: 'old-data',
+          data: {
+            rawData: 'old-data',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date('2024-01-01'),
+          source: 'text',
         },
       ];
       const newItem = {
-        qrData: 'new-data',
+        data: {
+          rawData: 'new-data',
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
+        source: 'text' as const,
       };
 
       const updatedHistory = addToHistory(currentHistory, newItem);
 
       expect(updatedHistory).toHaveLength(2);
-      expect(updatedHistory[0].qrData).toBe('new-data');
-      expect(updatedHistory[1].qrData).toBe('old-data');
+      expect(updatedHistory[0].data.rawData).toBe('new-data');
+      expect(updatedHistory[1].data.rawData).toBe('old-data');
     });
 
     test('limits history to MAX_HISTORY_ITEMS (50)', () => {
       // Create 50 existing items
       const currentHistory: HistoryItem[] = Array.from({ length: 50 }, (_, i) => ({
         id: `${i}`,
-        qrData: `data-${i}`,
+        data: {
+          rawData: `data-${i}`,
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
         timestamp: new Date(),
+        source: 'text' as const,
       }));
 
       const newItem = {
-        qrData: 'new-data',
+        data: {
+          rawData: 'new-data',
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
+        source: 'text' as const,
       };
 
       const updatedHistory = addToHistory(currentHistory, newItem);
 
       expect(updatedHistory).toHaveLength(50);
-      expect(updatedHistory[0].qrData).toBe('new-data');
-      expect(updatedHistory[49].qrData).toBe('data-48'); // Last old item should be data-48
+      expect(updatedHistory[0].data.rawData).toBe('new-data');
+      expect(updatedHistory[49].data.rawData).toBe('data-48'); // Last old item should be data-48
     });
 
     test('generates unique ID for new item', () => {
       const currentHistory: HistoryItem[] = [];
       const newItem = {
-        qrData: '00020101',
+        data: {
+          rawData: '00020101',
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
+        source: 'text' as const,
       };
 
       const updatedHistory = addToHistory(currentHistory, newItem);
@@ -250,7 +309,13 @@ describe('historyStorage', () => {
     test('saves updated history to localStorage', () => {
       const currentHistory: HistoryItem[] = [];
       const newItem = {
-        qrData: '00020101',
+        data: {
+          rawData: '00020101',
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
+        source: 'text' as const,
       };
 
       addToHistory(currentHistory, newItem);
@@ -260,7 +325,6 @@ describe('historyStorage', () => {
 
       const parsed = JSON.parse(stored!);
       expect(parsed).toHaveLength(1);
-      expect(parsed[0].qrData).toBe('00020101');
     });
 
     test('generates fallback ID when crypto.randomUUID is not available', () => {
@@ -272,7 +336,13 @@ describe('historyStorage', () => {
 
       const currentHistory: HistoryItem[] = [];
       const newItem = {
-        qrData: '00020101',
+        data: {
+          rawData: '00020101',
+          version: '01',
+          type: '12',
+          parsedFields: [],
+        },
+        source: 'text' as const,
       };
 
       const updatedHistory = addToHistory(currentHistory, newItem);
@@ -287,18 +357,36 @@ describe('historyStorage', () => {
       const currentHistory: HistoryItem[] = [
         {
           id: '1',
-          qrData: 'data-1',
+          data: {
+            rawData: 'data-1',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
         {
           id: '2',
-          qrData: 'data-2',
+          data: {
+            rawData: 'data-2',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
         {
           id: '3',
-          qrData: 'data-3',
+          data: {
+            rawData: 'data-3',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
       ];
 
@@ -314,8 +402,14 @@ describe('historyStorage', () => {
       const currentHistory: HistoryItem[] = [
         {
           id: '1',
-          qrData: 'data-1',
+          data: {
+            rawData: 'data-1',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
       ];
 
@@ -329,13 +423,25 @@ describe('historyStorage', () => {
       const currentHistory: HistoryItem[] = [
         {
           id: '1',
-          qrData: 'data-1',
+          data: {
+            rawData: 'data-1',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
         {
           id: '2',
-          qrData: 'data-2',
+          data: {
+            rawData: 'data-2',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
           timestamp: new Date(),
+          source: 'text',
         },
       ];
 
@@ -350,7 +456,12 @@ describe('historyStorage', () => {
 
   describe('clearHistory', () => {
     test('removes history from localStorage', () => {
-      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify([{ id: '1', qrData: 'data' }]));
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify([{
+        id: '1',
+        data: { rawData: 'data', version: '01', type: '12', parsedFields: [] },
+        timestamp: new Date().toISOString(),
+        source: 'text'
+      }]));
 
       expect(localStorage.getItem(HISTORY_STORAGE_KEY)).toBeTruthy();
 

@@ -17,31 +17,31 @@ describe('QRDataDisplay Component', () => {
     parsedFields: [
       {
         tag: '00',
-        length: '02',
+        length: 2,
         value: '01',
         description: 'Payload Format Indicator',
       },
       {
         tag: '01',
-        length: '02',
+        length: 2,
         value: '11',
         description: 'Point of Initiation Method',
       },
       {
         tag: '29',
-        length: '37',
+        length: 37,
         value: '0016A000000677010111011300668123456785',
         description: 'Merchant Account Information',
         subTags: [
           {
             tag: '00',
-            length: '16',
+            length: 16,
             value: 'A00000067701011101',
             description: 'Global Unique Identifier',
           },
           {
             tag: '13',
-            length: '00',
+            length: 13,
             value: '0066812345678',
             description: 'PromptPay ID',
           },
@@ -49,7 +49,7 @@ describe('QRDataDisplay Component', () => {
       },
       {
         tag: '58',
-        length: '02',
+        length: 2,
         value: 'TH',
         description: 'Country Code',
       },
@@ -179,6 +179,8 @@ describe('QRDataDisplay Component', () => {
   test('displays N/A for missing summary fields', () => {
     const minimalData: ThaiQRData = {
       rawData: '00020101',
+      version: '01',
+      type: '01',
       parsedFields: [],
     };
 
@@ -228,6 +230,8 @@ describe('QRDataDisplay Component', () => {
   test('handles data with no parsed fields', () => {
     const emptyData: ThaiQRData = {
       rawData: '00020101',
+      version: '01',
+      type: '01',
       parsedFields: [],
     };
 

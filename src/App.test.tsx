@@ -12,8 +12,8 @@ describe('App Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (historyStorage.loadHistoryFromStorage as jest.Mock).mockReturnValue([]);
-    (historyStorage.addToHistory as jest.Mock).mockImplementation((history, item) => [...history, { ...item, id: '1', timestamp: new Date() }]);
-    (historyStorage.removeFromHistory as jest.Mock).mockImplementation((history, id) => history.filter(h => h.id !== id));
+    (historyStorage.addToHistory as jest.Mock).mockImplementation((history: any[], item: any) => [...history, { ...item, id: '1', timestamp: new Date() }]);
+    (historyStorage.removeFromHistory as jest.Mock).mockImplementation((history: any[], id: string) => history.filter((h: any) => h.id !== id));
     (historyStorage.clearHistory as jest.Mock).mockReturnValue([]);
   });
 
