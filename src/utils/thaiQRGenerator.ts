@@ -1,4 +1,11 @@
 import QRCode from 'qrcode';
+import {
+  CURRENCY_CODE_THB,
+  COUNTRY_CODE_THAILAND,
+  PAYLOAD_FORMAT_VERSION,
+  POINT_OF_INITIATION_STATIC,
+  DEFAULT_MERCHANT_CATEGORY
+} from '../constants/qrFields';
 
 export interface ThaiQRGeneratorInput {
   aid: string;              // Application Identifier (AID)
@@ -15,8 +22,82 @@ export interface QRGenerationResult {
   qrCodeDataURL: string;
 }
 
-// CRC16-CCITT calculation for QR code checksum
-function calculateCRC16(data: string): string {
+interface ValidationRule {
+  field: keyof ThaiQRGeneratorInput;
+  required?: boolean;
+  maxLength?: number;
+  minValue?: number;
+  maxValue?: number;
+  errorMessages: {
+    required?: string;
+    maxLength?: string;
+    range?: string;
+  };
+}
+
+const VALIDATION_RULES: ValidationRule[] = [
+  {
+    field: 'aid',
+    required: true,
+    maxLength: 32,
+    errorMessages: {
+      required: 'AID (Application Identifier) is required',
+      maxLength: 'AID must be 32 characters or less'
+    }
+  },
+  {
+    field: 'billerId',
+    required: true,
+    maxLength: 32,
+    errorMessages: {
+      required: 'Biller ID is required',
+      maxLength: 'Biller ID must be 32 characters or less'
+    }
+  },
+  {
+    field: 'reference1',
+    required: true,
+    maxLength: 25,
+    errorMessages: {
+      required: 'Reference 1 is required',
+      maxLength: 'Reference 1 must be 25 characters or less'
+    }
+  },
+  {
+    field: 'reference2',
+    maxLength: 25,
+    errorMessages: {
+      maxLength: 'Reference 2 must be 25 characters or less'
+    }
+  },
+  {
+    field: 'amount',
+    minValue: 0,
+    maxValue: 999999.99,
+    errorMessages: {
+      range: 'Amount must be between 0 and 999,999.99'
+    }
+  },
+  {
+    field: 'merchantName',
+    maxLength: 25,
+    errorMessages: {
+      maxLength: 'Merchant name must be 25 characters or less'
+    }
+  },
+  {
+    field: 'merchantCity',
+    maxLength: 15,
+    errorMessages: {
+      maxLength: 'Merchant city must be 15 characters or less'
+    }
+  }
+];
+
+/**
+ * CRC16-CCITT calculation for QR code checksum
+ */
+const calculateCRC16 = (data: string): string => {
   let crc = 0xFFFF;
   
   for (let i = 0; i < data.length; i++) {
@@ -33,100 +114,94 @@ function calculateCRC16(data: string): string {
   }
   
   return crc.toString(16).toUpperCase().padStart(4, '0');
-}
+};
 
-// Format TLV (Tag-Length-Value) structure
-function formatTLV(tag: string, value: string): string {
+/**
+ * Format TLV (Tag-Length-Value) structure
+ */
+const formatTLV = (tag: string, value: string): string => {
   const length = value.length.toString().padStart(2, '0');
   return `${tag}${length}${value}`;
-}
+};
 
-// Generate sub-tags for Tag 30 (Merchant Account Information)
-function generateTag30SubTags(input: ThaiQRGeneratorInput): string {
+/**
+ * Generate sub-tags for Tag 30 (Merchant Account Information)
+ */
+const generateTag30SubTags = (input: ThaiQRGeneratorInput): string => {
   let subTags = '';
   
-  // Sub-tag 00: Globally Unique Identifier (AID)
   if (input.aid) {
     subTags += formatTLV('00', input.aid);
   }
   
-  // Sub-tag 02: Merchant Identifier (Biller ID)
   if (input.billerId) {
     subTags += formatTLV('02', input.billerId);
   }
   
   return subTags;
-}
+};
 
-// Generate sub-tags for Tag 62 (Additional Data Field Template)
-function generateTag62SubTags(input: ThaiQRGeneratorInput): string {
+/**
+ * Generate sub-tags for Tag 62 (Additional Data Field Template)
+ */
+const generateTag62SubTags = (input: ThaiQRGeneratorInput): string => {
   let subTags = '';
   
-  // Sub-tag 01: Bill Number (Reference 1)
   if (input.reference1) {
     subTags += formatTLV('01', input.reference1);
   }
   
-  // Sub-tag 02: Mobile Number or Reference 2
   if (input.reference2) {
     subTags += formatTLV('02', input.reference2);
   }
   
   return subTags;
-}
+};
 
-export async function generateThaiQR(input: ThaiQRGeneratorInput): Promise<QRGenerationResult> {
+/**
+ * Generate Thai QR code
+ */
+export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGenerationResult> => {
   try {
-    // Validate required fields
-    if (!input.aid || !input.billerId || !input.reference1) {
-      throw new Error('AID, Biller ID, and Reference 1 are required fields');
+    const errors = validateQRInput(input);
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
     }
     
     let qrString = '';
     
-    // Tag 00: Payload Format Indicator
-    qrString += formatTLV('00', '01');
+    // Build QR string with required and optional fields
+    qrString += formatTLV('00', PAYLOAD_FORMAT_VERSION);
+    qrString += formatTLV('01', POINT_OF_INITIATION_STATIC);
     
-    // Tag 01: Point of Initiation Method
-    qrString += formatTLV('01', '12'); // Static QR
-    
-    // Tag 30: Merchant Account Information
     const tag30SubTags = generateTag30SubTags(input);
     if (tag30SubTags) {
       qrString += formatTLV('30', tag30SubTags);
     }
     
-    // Tag 52: Merchant Category Code (default: 0000 for general)
-    qrString += formatTLV('52', '0000');
+    qrString += formatTLV('52', DEFAULT_MERCHANT_CATEGORY);
+    qrString += formatTLV('53', CURRENCY_CODE_THB);
     
-    // Tag 53: Transaction Currency (764 = Thai Baht)
-    qrString += formatTLV('53', '764');
-    
-    // Tag 54: Transaction Amount (if provided)
     if (input.amount && input.amount > 0) {
       qrString += formatTLV('54', input.amount.toFixed(2));
     }
     
-    // Tag 58: Country Code (TH for Thailand)
-    qrString += formatTLV('58', 'TH');
+    qrString += formatTLV('58', COUNTRY_CODE_THAILAND);
     
-    // Tag 59: Merchant Name (if provided)
     if (input.merchantName) {
       qrString += formatTLV('59', input.merchantName);
     }
     
-    // Tag 60: Merchant City (if provided)
     if (input.merchantCity) {
       qrString += formatTLV('60', input.merchantCity);
     }
     
-    // Tag 62: Additional Data Field Template (References)
     const tag62SubTags = generateTag62SubTags(input);
     if (tag62SubTags) {
       qrString += formatTLV('62', tag62SubTags);
     }
     
-    // Tag 63: CRC (will be calculated and appended)
+    // Calculate and append CRC
     const qrWithoutCRC = qrString + '6304';
     const crc = calculateCRC16(qrWithoutCRC);
     qrString += formatTLV('63', crc);
@@ -150,55 +225,54 @@ export async function generateThaiQR(input: ThaiQRGeneratorInput): Promise<QRGen
   } catch (error) {
     throw new Error(`Failed to generate Thai QR code: ${error}`);
   }
-}
+};
 
-// Validate Thai QR input fields
-export function validateQRInput(input: Partial<ThaiQRGeneratorInput>): string[] {
+/**
+ * Validate Thai QR input fields
+ */
+export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] => {
   const errors: string[] = [];
   
-  if (!input.aid?.trim()) {
-    errors.push('AID (Application Identifier) is required');
-  } else if (input.aid.length > 32) {
-    errors.push('AID must be 32 characters or less');
-  }
-  
-  if (!input.billerId?.trim()) {
-    errors.push('Biller ID is required');
-  } else if (input.billerId.length > 32) {
-    errors.push('Biller ID must be 32 characters or less');
-  }
-  
-  if (!input.reference1?.trim()) {
-    errors.push('Reference 1 is required');
-  } else if (input.reference1.length > 25) {
-    errors.push('Reference 1 must be 25 characters or less');
-  }
-  
-  if (input.reference2 && input.reference2.length > 25) {
-    errors.push('Reference 2 must be 25 characters or less');
-  }
-  
-  if (input.amount !== undefined) {
-    if (input.amount < 0) {
-      errors.push('Amount must be positive');
-    } else if (input.amount > 999999.99) {
-      errors.push('Amount must be less than 1,000,000');
+  VALIDATION_RULES.forEach(rule => {
+    const value = input[rule.field];
+    
+    // Check required fields
+    if (rule.required && (!value || (typeof value === 'string' && !value.trim()))) {
+      if (rule.errorMessages.required) {
+        errors.push(rule.errorMessages.required);
+      }
+      return;
     }
-  }
-  
-  if (input.merchantName && input.merchantName.length > 25) {
-    errors.push('Merchant name must be 25 characters or less');
-  }
-  
-  if (input.merchantCity && input.merchantCity.length > 15) {
-    errors.push('Merchant city must be 15 characters or less');
-  }
+    
+    // Check max length for string fields
+    if (rule.maxLength && typeof value === 'string' && value.length > rule.maxLength) {
+      if (rule.errorMessages.maxLength) {
+        errors.push(rule.errorMessages.maxLength);
+      }
+    }
+    
+    // Check numeric ranges
+    if (typeof value === 'number') {
+      if (rule.minValue !== undefined && value < rule.minValue) {
+        if (rule.errorMessages.range) {
+          errors.push(rule.errorMessages.range);
+        }
+      }
+      if (rule.maxValue !== undefined && value > rule.maxValue) {
+        if (rule.errorMessages.range) {
+          errors.push(rule.errorMessages.range);
+        }
+      }
+    }
+  });
   
   return errors;
-}
+};
 
-// Generate sample QR code for testing
-export function generateSampleQR(): ThaiQRGeneratorInput {
+/**
+ * Generate sample QR code for testing
+ */
+export const generateSampleQR = (): ThaiQRGeneratorInput => {
   return {
     aid: 'A000000677010112',
     billerId: '010566300012345',
@@ -208,4 +282,4 @@ export function generateSampleQR(): ThaiQRGeneratorInput {
     merchantName: 'Sample Merchant',
     merchantCity: 'Bangkok'
   };
-}
+};

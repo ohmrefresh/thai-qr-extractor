@@ -1,100 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import QRScanner from './components/QRScanner';
 import FileUpload from './components/FileUpload';
 import TextInput from './components/TextInput';
 import QRDataDisplay from './components/QRDataDisplay';
 import QRGenerator from './components/QRGenerator';
-import History, { HistoryItem } from './components/History';
-import { ThaiQRData, parseThaiQR } from './utils/thaiQRParser';
-import { 
-  loadHistoryFromStorage, 
-  addToHistory, 
-  removeFromHistory, 
-  clearHistory 
-} from './utils/historyStorage';
+import History from './components/History';
+import { useHistory, useQRData } from './hooks';
+
+type View = 'scan' | 'generate';
 
 function App() {
-  const [qrData, setQrData] = useState<ThaiQRData | null>(null);
-  const [error, setError] = useState<string>('');
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'scan' | 'generate'>('scan');
-  const [lastScanSource, setLastScanSource] = useState<'camera' | 'file' | 'text'>('camera');
+  const [currentView, setCurrentView] = useState<View>('scan');
+  
+  const {
+    qrData,
+    error,
+    lastScanSource,
+    handleScanSuccess,
+    handleScanError,
+    clearData,
+    parseAndSetQRData
+  } = useQRData();
+  
+  const {
+    history,
+    isHistoryOpen,
+    addToHistory,
+    removeFromHistory,
+    clearHistory,
+    toggleHistory,
+    closeHistory
+  } = useHistory();
 
-  useEffect(() => {
-    const savedHistory = loadHistoryFromStorage();
-    setHistory(savedHistory);
-  }, []);
-
-  const handleScanSuccess = (data: ThaiQRData, source?: 'camera' | 'file' | 'text') => {
-    setQrData(data);
-    setError('');
-    
-    const scanSource = source || lastScanSource;
-    const updatedHistory = addToHistory(history, {
-      data,
-      source: scanSource
-    });
-    setHistory(updatedHistory);
+  const handleScan = (data: any, source: 'camera' | 'file' | 'text') => {
+    handleScanSuccess(data, source);
+    addToHistory(data, source);
   };
 
-  const handleScanError = (error: string) => {
-    setError(error);
-    setQrData(null);
-  };
-
-  const clearData = () => {
-    setQrData(null);
-    setError('');
-  };
-
-  const handleHistorySelect = (data: ThaiQRData) => {
-    setQrData(data);
-    setError('');
-    setIsHistoryOpen(false);
-  };
-
-  const handleClearHistory = () => {
-    const emptyHistory = clearHistory();
-    setHistory(emptyHistory);
-  };
-
-  const handleDeleteHistoryItem = (id: string) => {
-    const updatedHistory = removeFromHistory(history, id);
-    setHistory(updatedHistory);
-  };
-
-  const toggleHistory = () => {
-    setIsHistoryOpen(!isHistoryOpen);
+  const handleHistorySelect = (data: any) => {
+    handleScanSuccess(data, lastScanSource);
+    closeHistory();
   };
 
   const handleQRGenerated = (qrString: string) => {
     try {
-      const parsedData = parseThaiQR(qrString);
-      setQrData(parsedData);
-      setError('');
-      
-      // Add to history with 'generate' source
-      const updatedHistory = addToHistory(history, {
-        data: parsedData,
-        source: 'text' // Use text as the closest source type for generated QR
-      });
-      setHistory(updatedHistory);
-      
-      // Switch to scan view to show the result
+      const parsedData = parseAndSetQRData(qrString);
+      addToHistory(parsedData, 'text');
       setCurrentView('scan');
-    } catch (error) {
-      setError(`Failed to parse generated QR: ${error}`);
+    } catch (err) {
+      // Error is already handled in parseAndSetQRData
     }
-  };
-
-  const switchToScanView = () => {
-    setCurrentView('scan');
-  };
-
-  const switchToGenerateView = () => {
-    setCurrentView('generate');
   };
 
   return (
@@ -114,7 +70,7 @@ function App() {
             <div className="view-toggle">
               <button 
                 className={`view-button ${currentView === 'scan' ? 'active' : ''}`}
-                onClick={switchToScanView}
+                onClick={() => setCurrentView('scan')}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 9h6v6h-6z"></path>
@@ -124,7 +80,7 @@ function App() {
               </button>
               <button 
                 className={`view-button ${currentView === 'generate' ? 'active' : ''}`}
-                onClick={switchToGenerateView}
+                onClick={() => setCurrentView('generate')}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="7" height="7"></rect>
@@ -164,24 +120,15 @@ function App() {
                 </div>
                 <div className="input-methods">
                   <QRScanner 
-                    onScanSuccess={(data) => {
-                      setLastScanSource('camera');
-                      handleScanSuccess(data, 'camera');
-                    }}
+                    onScanSuccess={(data) => handleScan(data, 'camera')}
                     onScanError={handleScanError}
                   />
                   <FileUpload 
-                    onScanSuccess={(data) => {
-                      setLastScanSource('file');
-                      handleScanSuccess(data, 'file');
-                    }}
+                    onScanSuccess={(data) => handleScan(data, 'file')}
                     onScanError={handleScanError}
                   />
                   <TextInput 
-                    onScanSuccess={(data) => {
-                      setLastScanSource('text');
-                      handleScanSuccess(data, 'text');
-                    }}
+                    onScanSuccess={(data) => handleScan(data, 'text')}
                     onScanError={handleScanError}
                   />
                 </div>
@@ -226,10 +173,10 @@ function App() {
       <History
         historyItems={history}
         onSelectItem={handleHistorySelect}
-        onClearHistory={handleClearHistory}
-        onDeleteItem={handleDeleteHistoryItem}
+        onClearHistory={clearHistory}
+        onDeleteItem={removeFromHistory}
         isOpen={isHistoryOpen}
-        onClose={() => setIsHistoryOpen(false)}
+        onClose={closeHistory}
       />
     </div>
   );

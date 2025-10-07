@@ -212,7 +212,7 @@ describe('Thai QR Generator', () => {
     };
 
     const errors = validateQRInput(input);
-    expect(errors).toContain('Amount must be positive');
+    expect(errors).toContain('Amount must be between 0 and 999,999.99');
   });
 
   test('returns empty array for valid input', () => {
