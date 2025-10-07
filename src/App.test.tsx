@@ -16,6 +16,6 @@ test('renders QR scanner component', () => {
 
 test('renders file upload component', () => {
   render(<App />);
-  const uploadButton = screen.getByText(/Choose File/i);
+  const uploadButton = screen.getByText(/Browse image/i);
   expect(uploadButton).toBeInTheDocument();
 });
