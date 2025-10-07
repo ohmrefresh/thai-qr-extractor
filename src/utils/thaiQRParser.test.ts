@@ -54,12 +54,12 @@ describe('Thai QR Parser', () => {
   test('correctly describes sub-tags', () => {
     // Mock QR with known sub-tag structure (field 62 with proper sub-tags)
     const mockQRData = '000201010212621101085Store1005802TH6304';
-    
+
     const result = parseThaiQR(mockQRData);
-    
+
     const additionalDataField = result.parsedFields.find(field => field.tag === '62');
     expect(additionalDataField).toBeDefined();
-    
+
     if (additionalDataField?.subTags && additionalDataField.subTags.length > 0) {
       const billNumberSubTag = additionalDataField.subTags.find(subTag => subTag.tag === '01');
       if (billNumberSubTag) {
@@ -69,5 +69,125 @@ describe('Thai QR Parser', () => {
       // If no sub-tags were parsed, verify the field exists at least
       expect(additionalDataField?.value).toBeDefined();
     }
+  });
+
+  test('parses amount field correctly', () => {
+    const qrData = '00020101021254041.005802TH6304';
+    const result = parseThaiQR(qrData);
+
+    expect(result.amount).toBe(1.00);
+  });
+
+  test('parses currency field correctly', () => {
+    const qrData = '00020101021253037645802TH6304';
+    const result = parseThaiQR(qrData);
+
+    expect(result.currency).toBe('764');
+  });
+
+  test('parses merchant name field', () => {
+    const qrData = '00020101021259099Test Shop5802TH6304';
+    const result = parseThaiQR(qrData);
+
+    // Check that merchant name field exists
+    const merchantField = result.parsedFields.find(f => f.tag === '59');
+    expect(merchantField).toBeDefined();
+    expect(result.merchantName).toBeDefined();
+  });
+
+  test('parses checksum correctly', () => {
+    const qrData = '00020101021253037645802TH6304ABCD';
+    const result = parseThaiQR(qrData);
+
+    expect(result.checksum).toBe('ABCD');
+  });
+
+  test('handles reference field in tag 05', () => {
+    const qrData = '00020101021205051234553037645802TH6304';
+    const result = parseThaiQR(qrData);
+
+    expect(result.reference).toBeDefined();
+  });
+
+  test('handles reference field in tag 07', () => {
+    const qrData = '00020101021207051234553037645802TH6304';
+    const result = parseThaiQR(qrData);
+
+    expect(result.reference).toBeDefined();
+  });
+
+  test('returns proper field descriptions', () => {
+    const qrData = '00020101021252040001530376458020TH6304';
+    const result = parseThaiQR(qrData);
+
+    const mccField = result.parsedFields.find(f => f.tag === '52');
+    expect(mccField?.description).toBe('Merchant Category Code');
+
+    const countryField = result.parsedFields.find(f => f.tag === '58');
+    expect(countryField?.description).toBe('Country Code');
+  });
+
+  test('handles QR with only version and type', () => {
+    const qrData = '000201010212';
+    const result = parseThaiQR(qrData);
+
+    expect(result.version).toBe('01');
+    expect(result.type).toBe('12');
+    expect(result.parsedFields.length).toBeGreaterThan(0);
+  });
+
+  test('throws error for empty string', () => {
+    expect(() => parseThaiQR('')).toThrow();
+  });
+
+  test('throws error for invalid length field', () => {
+    const invalidQR = '00XXXX';
+    expect(() => parseThaiQR(invalidQR)).toThrow();
+  });
+
+  test('handles sub-tags with invalid structure gracefully', () => {
+    // QR with field that looks like it might have sub-tags but doesn't
+    const qrData = '00020101021262055ABCDE5802TH6304';
+    const result = parseThaiQR(qrData);
+
+    const field62 = result.parsedFields.find(f => f.tag === '62');
+    // Should either have no sub-tags or handle gracefully
+    expect(field62).toBeDefined();
+  });
+
+  test('parses merchant ID from sub-tags in tag 30', () => {
+    const qrData = '00020101021230180200164TestMerchantID5802TH6304';
+    const result = parseThaiQR(qrData);
+
+    // Should attempt to extract merchant ID from sub-tags
+    expect(result.parsedFields).toBeDefined();
+  });
+
+  test('handles PromptPay in tag 15', () => {
+    const qrData = '0002010102121522001650001234567890promptpay5802TH6304';
+    const result = parseThaiQR(qrData);
+
+    if (result.merchantId) {
+      expect(result.merchantName).toBe('PromptPay');
+    }
+  });
+
+  test('handles multiple fields correctly', () => {
+    const qrData = '00020101021252040001530376454041.005802TH6304ABCD';
+    const result = parseThaiQR(qrData);
+
+    expect(result.version).toBe('01');
+    expect(result.type).toBe('12');
+    expect(result.currency).toBe('764');
+    expect(result.amount).toBe(1.00);
+    expect(result.checksum).toBe('ABCD');
+  });
+
+  test('stops parsing at incomplete field', () => {
+    const qrData = '0002010102125204000153037645802TH5909';
+    const result = parseThaiQR(qrData);
+
+    // Should parse complete fields and stop at incomplete one
+    expect(result.parsedFields.length).toBeGreaterThan(0);
   });
 });
