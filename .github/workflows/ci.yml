@@ -1,0 +1,170 @@
+name: CI - Test & Coverage
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linter
+      run: npm run lint --if-present || echo "No linter configured"
+      continue-on-error: true
+
+    - name: Run tests with coverage
+      run: npm test -- --coverage --watchAll=false --coverageReporters=text --coverageReporters=lcov --coverageReporters=json-summary --coverageReporters=cobertura
+
+    - name: Generate Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: coverage/cobertura-coverage.xml
+        badge: true
+        fail_below_min: false
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: '60 80'
+
+    - name: Create Coverage Summary
+      if: always()
+      run: |
+        echo "## 📊 Test Coverage Report" > coverage-summary.md
+        echo "" >> coverage-summary.md
+        echo "### Overall Coverage" >> coverage-summary.md
+        echo "" >> coverage-summary.md
+        
+        if [ -f coverage/coverage-summary.json ]; then
+          node -e "
+          const coverage = require('./coverage/coverage-summary.json');
+          const total = coverage.total;
+          
+          const getEmoji = (pct) => {
+            if (pct >= 90) return '🟢';
+            if (pct >= 80) return '🟡';
+            if (pct >= 60) return '🟠';
+            return '🔴';
+          };
+          
+          const getStatus = (pct) => {
+            if (pct >= 80) return '✅ Excellent';
+            if (pct >= 60) return '⚠️ Good';
+            return '❌ Needs Improvement';
+          };
+          
+          console.log('| Metric | Coverage | Status |');
+          console.log('|--------|----------|--------|');
+          console.log('| Statements | ' + getEmoji(total.statements.pct) + ' **' + total.statements.pct + '%** | ' + getStatus(total.statements.pct) + ' |');
+          console.log('| Branches | ' + getEmoji(total.branches.pct) + ' **' + total.branches.pct + '%** | ' + getStatus(total.branches.pct) + ' |');
+          console.log('| Functions | ' + getEmoji(total.functions.pct) + ' **' + total.functions.pct + '%** | ' + getStatus(total.functions.pct) + ' |');
+          console.log('| Lines | ' + getEmoji(total.lines.pct) + ' **' + total.lines.pct + '%** | ' + getStatus(total.lines.pct) + ' |');
+          console.log('');
+          console.log('### 📈 Coverage Trend');
+          console.log('');
+          console.log('Current overall coverage: **' + total.lines.pct + '%**');
+          " >> coverage-summary.md
+          
+          echo "" >> coverage-summary.md
+          echo "### 📁 Files with Low Coverage" >> coverage-summary.md
+          echo "" >> coverage-summary.md
+          
+          node -e "
+          const coverage = require('./coverage/coverage-summary.json');
+          const files = Object.entries(coverage)
+            .filter(([key]) => key !== 'total')
+            .map(([path, data]) => ({
+              path: path.replace(/^.*\/src\//, 'src/'),
+              lines: data.lines.pct,
+              statements: data.statements.pct,
+              branches: data.branches.pct,
+              functions: data.functions.pct
+            }))
+            .filter(file => file.lines < 80)
+            .sort((a, b) => a.lines - b.lines)
+            .slice(0, 10);
+          
+          if (files.length > 0) {
+            console.log('| File | Lines | Branches | Functions |');
+            console.log('|------|-------|----------|-----------|');
+            files.forEach(file => {
+              console.log('| \`' + file.path + '\` | ' + file.lines + '% | ' + file.branches + '% | ' + file.functions + '% |');
+            });
+          } else {
+            console.log('🎉 All files have coverage above 80%!');
+          }
+          " >> coverage-summary.md
+          
+          echo "" >> coverage-summary.md
+          echo "### 🎯 Coverage Thresholds" >> coverage-summary.md
+          echo "" >> coverage-summary.md
+          echo "- 🟢 Excellent: ≥ 90%" >> coverage-summary.md
+          echo "- 🟡 Good: 80-89%" >> coverage-summary.md
+          echo "- 🟠 Acceptable: 60-79%" >> coverage-summary.md
+          echo "- 🔴 Needs Improvement: < 60%" >> coverage-summary.md
+        fi
+
+    - name: Add Coverage PR Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: github.event_name == 'pull_request'
+      with:
+        recreate: true
+        path: coverage-summary.md
+
+    - name: Write to Job Summary
+      if: always()
+      run: cat coverage-summary.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        verbose: true
+      continue-on-error: true
+
+    - name: Archive coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ github.sha }}
+        path: |
+          coverage/
+          coverage-summary.md
+        retention-days: 30
+
+    - name: Check coverage threshold
+      run: |
+        COVERAGE=$(node -e "const c = require('./coverage/coverage-summary.json'); console.log(c.total.lines.pct)")
+        echo "Current coverage: $COVERAGE%"
+        if (( $(echo "$COVERAGE < 60" | bc -l) )); then
+          echo "❌ Coverage is below 60% threshold"
+          exit 1
+        else
+          echo "✅ Coverage meets minimum threshold"
+        fi
+      continue-on-error: true

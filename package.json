@@ -51,6 +51,32 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
+      }
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/index.tsx",
+      "!src/reportWebVitals.ts",
+      "!src/**/*.test.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/setupTests.ts"
+    ],
+    "coverageReporters": [
+      "text",
+      "text-summary",
+      "lcov",
+      "json-summary",
+      "html",
+      "cobertura"
+    ]
+  },
   "devDependencies": {
     "gh-pages": "^6.3.0",
     "postcss": "^8.4.31",

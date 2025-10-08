@@ -1,5 +1,10 @@
 # Thai QR Code Tools
 
+[![CI - Test & Coverage](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/ci.yml/badge.svg)](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/ci.yml)
+[![Deploy to GitHub Pages](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/deploy.yml/badge.svg)](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/deploy.yml)
+[![codecov](https://codecov.io/gh/ohmrefresh/thai-qr-extractor/branch/main/graph/badge.svg)](https://codecov.io/gh/ohmrefresh/thai-qr-extractor)
+[![Coverage](https://img.shields.io/badge/coverage-84.77%25-brightgreen)](https://github.com/ohmrefresh/thai-qr-extractor)
+
 A React TypeScript application for extracting and parsing Thai QR code payment data. The app allows users to scan QR codes via camera, upload image files, or manually input QR data to decode Thai payment QR codes (PromptPay format).
 
 🌐 **Live Demo**: [https://ohmrefresh.github.io/thai-qr-extractor](https://ohmrefresh.github.io/thai-qr-extractor)
@@ -23,6 +28,14 @@ A React TypeScript application for extracting and parsing Thai QR code payment d
 - **qrcode** for QR generation
 - **React Testing Library** for testing
 - **GitHub Actions** for CI/CD
+
+## Code Quality
+
+- ✅ **Test Coverage**: 84.77%
+- ✅ **187 Unit Tests** passing
+- ✅ **TypeScript** for type safety
+- ✅ **Custom Hooks** for clean architecture
+- ✅ **Comprehensive Testing** with React Testing Library
 
 ## Available Scripts
 
