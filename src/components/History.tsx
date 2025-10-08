@@ -74,9 +74,20 @@ const History: React.FC<HistoryProps> = ({
     <div className="history-overlay">
       <div className="history-menu">
         <div className="history-header">
-          <h2>Scan History</h2>
-          <button className="close-button" onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="history-heading">
+            <div className="card-icon accent-history">
+              <svg className="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12,6 12,12 16,14"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h2>Scan history</h2>
+              <p>Recent QR payloads captured across all methods.</p>
+            </div>
+          </div>
+          <button className="close-button" onClick={onClose} aria-label="Close history">
+            <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -86,7 +97,7 @@ const History: React.FC<HistoryProps> = ({
         <div className="history-content">
           {historyItems.length === 0 ? (
             <div className="empty-history">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
+              <svg className="icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
                 <line x1="9" y1="9" x2="9.01" y2="9"></line>
@@ -103,7 +114,7 @@ const History: React.FC<HistoryProps> = ({
                   onClick={onClearHistory}
                   disabled={historyItems.length === 0}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="3,6 5,6 21,6"></polyline>
                     <path d="M19,6V20a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
                   </svg>
@@ -130,7 +141,7 @@ const History: React.FC<HistoryProps> = ({
                             onDeleteItem(item.id);
                           }}
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                           </svg>

@@ -1,6 +1,6 @@
 {
   "name": "thai-qr-extractor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "homepage": "https://ohmrefresh.github.io/thai-qr-extractor",
   "dependencies": {
@@ -15,13 +15,15 @@
     "@types/react-dom": "^19.1.7",
     "html5-qrcode": "^2.3.8",
     "jsqr": "^1.4.0",
+    "nth-check": "^2.0.1",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-scripts": "^5.0.1",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "yaml": "^2.8.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -49,9 +51,36 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
+      }
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/index.tsx",
+      "!src/reportWebVitals.ts",
+      "!src/**/*.test.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/setupTests.ts"
+    ],
+    "coverageReporters": [
+      "text",
+      "text-summary",
+      "lcov",
+      "json-summary",
+      "html",
+      "cobertura"
+    ]
+  },
   "devDependencies": {
     "gh-pages": "^6.3.0",
-    "webpack-dev-server": "^5.2.2",
-    "postcss": ">=8.4.31"
+    "postcss": "^8.4.31",
+    "webpack-dev-server": "^5.2.2"
+
   }
 }
