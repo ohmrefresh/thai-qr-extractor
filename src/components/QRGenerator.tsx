@@ -116,10 +116,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
             <rect x="3" y="14" width="7" height="7"></rect>
           </svg>
         </div>
-        <div>
-          <h2>Generate Thai QR code</h2>
-          <p>Create QR codes with Tag 30 merchant account information.</p>
-        </div>
+       
         {onClose && (
           <button className="close-button" onClick={onClose} aria-label="Close generator">
             <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
