@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import './App.css';
-import QRScanner from './components/QRScanner';
-import FileUpload from './components/FileUpload';
-import TextInput from './components/TextInput';
-import QRDataDisplay from './components/QRDataDisplay';
-import QRGenerator from './components/QRGenerator';
-import History from './components/History';
 import { useHistory, useQRData } from './hooks';
+
+// Lazy load components to reduce initial bundle size
+const QRScanner = lazy(() => import('./components/QRScanner'));
+const FileUpload = lazy(() => import('./components/FileUpload'));
+const TextInput = lazy(() => import('./components/TextInput'));
+const QRDataDisplay = lazy(() => import('./components/QRDataDisplay'));
+const QRGenerator = lazy(() => import('./components/QRGenerator'));
+const History = lazy(() => import('./components/History'));
 
 type View = 'scan' | 'generate';
 
@@ -107,77 +109,81 @@ function App() {
       </header>
       
       <main className="App-main">
-        {currentView === 'scan' ? (
-          <>
-            {!qrData && (
-              <div className="scanner-section">
-                <div className="section-heading">
-                  <div>
-                    <h2>Scan or import Thai QR codes</h2>
-                    <p>Choose the method that fits best for capturing or pasting QR payloads.</p>
+        <Suspense fallback={<div className="loading-spinner"><div className="spinner"></div></div>}>
+          {currentView === 'scan' ? (
+            <>
+              {!qrData && (
+                <div className="scanner-section">
+                  <div className="section-heading">
+                    <div>
+                      <h2>Scan or import Thai QR codes</h2>
+                      <p>Choose the method that fits best for capturing or pasting QR payloads.</p>
+                    </div>
+                    <span className="section-tag">Live tools</span>
                   </div>
-                  <span className="section-tag">Live tools</span>
-                </div>
-                <div className="input-methods">
-                  <QRScanner 
-                    onScanSuccess={(data) => handleScan(data, 'camera')}
-                    onScanError={handleScanError}
-                  />
-                  <FileUpload 
-                    onScanSuccess={(data) => handleScan(data, 'file')}
-                    onScanError={handleScanError}
-                  />
-                  <TextInput 
-                    onScanSuccess={(data) => handleScan(data, 'text')}
-                    onScanError={handleScanError}
-                  />
-                </div>
-
-                {error && (
-                  <div className="error-message" role="alert">
-                    <svg
-                      className="error-icon"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="8" x2="12" y2="13"></line>
-                      <line x1="12" y1="16" x2="12" y2="16"></line>
-                    </svg>
-                    <span>Error: {error}</span>
+                  <div className="input-methods">
+                    <QRScanner
+                      onScanSuccess={(data) => handleScan(data, 'camera')}
+                      onScanError={handleScanError}
+                    />
+                    <FileUpload
+                      onScanSuccess={(data) => handleScan(data, 'file')}
+                      onScanError={handleScanError}
+                    />
+                    <TextInput
+                      onScanSuccess={(data) => handleScan(data, 'text')}
+                      onScanError={handleScanError}
+                    />
                   </div>
-                )}
-              </div>
-            )}
 
-            {qrData && (
-              <QRDataDisplay 
-                data={qrData}
-                onClear={clearData}
+                  {error && (
+                    <div className="error-message" role="alert">
+                      <svg
+                        className="error-icon"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="13"></line>
+                        <line x1="12" y1="16" x2="12" y2="16"></line>
+                      </svg>
+                      <span>Error: {error}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {qrData && (
+                <QRDataDisplay
+                  data={qrData}
+                  onClear={clearData}
+                />
+              )}
+            </>
+          ) : (
+            <div className="generator-section">
+              <QRGenerator
+                onQRGenerated={handleQRGenerated}
               />
-            )}
-          </>
-        ) : (
-          <div className="generator-section">
-            <QRGenerator 
-              onQRGenerated={handleQRGenerated}
-            />
-          </div>
-        )}
+            </div>
+          )}
+        </Suspense>
       </main>
 
-      <History
-        historyItems={history}
-        onSelectItem={handleHistorySelect}
-        onClearHistory={clearHistory}
-        onDeleteItem={removeFromHistory}
-        isOpen={isHistoryOpen}
-        onClose={closeHistory}
-      />
+      <Suspense fallback={null}>
+        <History
+          historyItems={history}
+          onSelectItem={handleHistorySelect}
+          onClearHistory={clearHistory}
+          onDeleteItem={removeFromHistory}
+          isOpen={isHistoryOpen}
+          onClose={closeHistory}
+        />
+      </Suspense>
     </div>
   );
 }

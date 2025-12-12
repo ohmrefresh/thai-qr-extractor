@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -7,6 +7,18 @@ export default defineConfig({
   build: {
     outDir: 'build',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate React and React DOM into their own chunk
+          'react-vendor': ['react', 'react-dom'],
+          // Group QR scanning libraries (loaded with QRScanner and FileUpload)
+          'qr-scanner-libs': ['html5-qrcode', 'jsqr'],
+          // QR generation library (loaded with QRGenerator)
+          'qr-generator-lib': ['qrcode'],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
