@@ -4,8 +4,8 @@ import {
   addToHistory,
   removeFromHistory,
   clearHistory,
-} from './historyStorage';
-import { HistoryItem } from '../components/History';
+} from '../historyStorage';
+import { HistoryItem } from '../../components/History';
 
 const HISTORY_STORAGE_KEY = 'thai-qr-history';
 
@@ -82,7 +82,7 @@ describe('historyStorage', () => {
     });
 
     test('handles save errors gracefully', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Mock localStorage.setItem to throw error
       const setItemSpy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
@@ -147,7 +147,7 @@ describe('historyStorage', () => {
     });
 
     test('handles invalid JSON gracefully', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       localStorage.setItem(HISTORY_STORAGE_KEY, 'invalid json{');
 
@@ -163,7 +163,7 @@ describe('historyStorage', () => {
     });
 
     test('handles storage errors gracefully', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
         throw new Error('Storage error');
@@ -476,7 +476,7 @@ describe('historyStorage', () => {
     });
 
     test('handles clear errors gracefully', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const removeItemSpy = jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
         throw new Error('Storage error');

@@ -1,5 +1,6 @@
-import { generateThaiQR, validateQRInput, generateSampleQR } from './thaiQRGenerator';
-import { parseThaiQR } from './thaiQRParser';
+import { vi } from 'vitest';
+import { generateThaiQR, validateQRInput, generateSampleQR } from '../thaiQRGenerator';
+import { parseThaiQR } from '../thaiQRParser';
 
 // Mock TextEncoder/TextDecoder for Node.js test environment
 if (typeof global.TextEncoder === 'undefined') {
@@ -8,14 +9,16 @@ if (typeof global.TextEncoder === 'undefined') {
   global.TextDecoder = TextDecoder;
 }
 
-// Mock canvas for QR code generation in tests  
-jest.mock('qrcode', () => ({
-  toDataURL: jest.fn().mockResolvedValue('data:image/png;base64,mockQRCodeImage')
+// Mock canvas for QR code generation in tests
+vi.mock('qrcode', () => ({
+  default: {
+    toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mockQRCodeImage')
+  }
 }));
 
 describe('Thai QR Generator', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('generates valid QR code with required fields', async () => {

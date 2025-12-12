@@ -1,4 +1,4 @@
-import { parseThaiQR } from './thaiQRParser';
+import { parseThaiQR } from '../thaiQRParser';
 
 describe('Thai QR Parser', () => {
   test('parses basic QR code structure', () => {

@@ -1,23 +1,24 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import QRGenerator from './QRGenerator';
-import * as thaiQRGenerator from '../utils/thaiQRGenerator';
+import { vi } from 'vitest';
+import QRGenerator from '../QRGenerator';
+import * as thaiQRGenerator from '../../utils/thaiQRGenerator';
 
 // Mock the thaiQRGenerator module
-jest.mock('../utils/thaiQRGenerator', () => ({
-  generateThaiQR: jest.fn(),
-  validateQRInput: jest.fn(),
-  generateSampleQR: jest.fn()
+vi.mock('../../utils/thaiQRGenerator', () => ({
+  generateThaiQR: vi.fn(),
+  validateQRInput: vi.fn(),
+  generateSampleQR: vi.fn()
 }));
 
 describe('QRGenerator Component', () => {
-  const mockOnQRGenerated = jest.fn();
-  const mockOnClose = jest.fn();
+  const mockOnQRGenerated = vi.fn();
+  const mockOnClose = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (thaiQRGenerator.validateQRInput as jest.Mock).mockReturnValue([]);
-    (thaiQRGenerator.generateSampleQR as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    vi.mocked(thaiQRGenerator.validateQRInput).mockReturnValue([]);
+    vi.mocked(thaiQRGenerator.generateSampleQR).mockReturnValue({
       aid: 'A000000677010111',
       billerId: '0123456789012',
       reference1: 'REF001',
@@ -56,7 +57,7 @@ describe('QRGenerator Component', () => {
   });
 
   test('shows validation errors when generate is clicked with invalid data', async () => {
-    (thaiQRGenerator.validateQRInput as jest.Mock).mockReturnValue([
+    vi.mocked(thaiQRGenerator.validateQRInput).mockReturnValue([
       'AID is required',
       'Biller ID is required'
     ]);
@@ -73,7 +74,7 @@ describe('QRGenerator Component', () => {
   });
 
   test('clears validation errors when user types', async () => {
-    (thaiQRGenerator.validateQRInput as jest.Mock).mockReturnValue(['AID is required']);
+    vi.mocked(thaiQRGenerator.validateQRInput).mockReturnValue(['AID is required']);
 
     render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
 
@@ -98,7 +99,7 @@ describe('QRGenerator Component', () => {
       qrCodeDataURL: 'data:image/png;base64,mockdata'
     };
 
-    (thaiQRGenerator.generateThaiQR as jest.Mock).mockResolvedValue(mockResult);
+    vi.mocked(thaiQRGenerator.generateThaiQR).mockResolvedValue(mockResult);
 
     render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
 
@@ -118,7 +119,7 @@ describe('QRGenerator Component', () => {
   });
 
   test('handles generation error', async () => {
-    (thaiQRGenerator.generateThaiQR as jest.Mock).mockRejectedValue(
+    vi.mocked(thaiQRGenerator.generateThaiQR).mockRejectedValue(
       new Error('Generation failed')
     );
 
@@ -170,7 +171,7 @@ describe('QRGenerator Component', () => {
       qrCodeDataURL: 'data:image/png;base64,mockdata'
     };
 
-    (thaiQRGenerator.generateThaiQR as jest.Mock).mockResolvedValue(mockResult);
+    vi.mocked(thaiQRGenerator.generateThaiQR).mockResolvedValue(mockResult);
 
     render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
 
@@ -196,7 +197,7 @@ describe('QRGenerator Component', () => {
       qrCodeDataURL: 'data:image/png;base64,mockdata'
     };
 
-    (thaiQRGenerator.generateThaiQR as jest.Mock).mockResolvedValue(mockResult);
+    vi.mocked(thaiQRGenerator.generateThaiQR).mockResolvedValue(mockResult);
 
     render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
 
@@ -215,7 +216,7 @@ describe('QRGenerator Component', () => {
   });
 
   test('disables generate button during generation', async () => {
-    (thaiQRGenerator.generateThaiQR as jest.Mock).mockImplementation(
+    vi.mocked(thaiQRGenerator.generateThaiQR).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
@@ -265,7 +266,7 @@ describe('QRGenerator Component', () => {
   });
 
   test('does not call onQRGenerated when generation fails', async () => {
-    (thaiQRGenerator.generateThaiQR as jest.Mock).mockRejectedValue(
+    vi.mocked(thaiQRGenerator.generateThaiQR).mockRejectedValue(
       new Error('Generation failed')
     );
 

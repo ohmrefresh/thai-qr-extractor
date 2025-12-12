@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import QRDataDisplay from './QRDataDisplay';
-import { ThaiQRData } from '../utils/thaiQRParser';
+import { vi } from 'vitest';
+import QRDataDisplay from '../QRDataDisplay';
+import { ThaiQRData } from '../../utils/thaiQRParser';
 
 describe('QRDataDisplay Component', () => {
   const mockData: ThaiQRData = {
@@ -56,10 +57,10 @@ describe('QRDataDisplay Component', () => {
     ],
   };
 
-  let onClear: jest.Mock;
+  let onClear: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    onClear = jest.fn();
+    onClear = vi.fn();
   });
 
   test('renders QR data display with title', () => {

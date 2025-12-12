@@ -1,20 +1,21 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import App from './App';
-import * as historyStorage from './utils/historyStorage';
-import { parseThaiQR } from './utils/thaiQRParser';
+import { vi } from 'vitest';
+import App from '../App';
+import * as historyStorage from '../utils/historyStorage';
+import { parseThaiQR } from '../utils/thaiQRParser';
 
 // Mock the storage module
-jest.mock('./utils/historyStorage');
-jest.mock('./utils/thaiQRParser');
+vi.mock('../utils/historyStorage');
+vi.mock('../utils/thaiQRParser');
 
 describe('App Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (historyStorage.loadHistoryFromStorage as jest.Mock).mockReturnValue([]);
-    (historyStorage.addToHistory as jest.Mock).mockImplementation((history: any[], item: any) => [...history, { ...item, id: '1', timestamp: new Date() }]);
-    (historyStorage.removeFromHistory as jest.Mock).mockImplementation((history: any[], id: string) => history.filter((h: any) => h.id !== id));
-    (historyStorage.clearHistory as jest.Mock).mockReturnValue([]);
+    vi.clearAllMocks();
+    vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue([]);
+    vi.mocked(historyStorage.addToHistory).mockImplementation((history: any[], item: any) => [...history, { ...item, id: '1', timestamp: new Date() }]);
+    vi.mocked(historyStorage.removeFromHistory).mockImplementation((history: any[], id: string) => history.filter((h: any) => h.id !== id));
+    vi.mocked(historyStorage.clearHistory).mockReturnValue([]);
   });
 
   test('renders Thai QR Code Tools', () => {
@@ -50,7 +51,7 @@ describe('App Component', () => {
         merchantName: 'Test',
       },
     ];
-    (historyStorage.loadHistoryFromStorage as jest.Mock).mockReturnValue(mockHistory);
+    vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
 
     render(<App />);
 
@@ -111,7 +112,7 @@ describe('App Component', () => {
       parsedFields: [],
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -145,7 +146,7 @@ describe('App Component', () => {
       version: '01',
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -190,7 +191,7 @@ describe('App Component', () => {
       amount: 50.00
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -207,7 +208,7 @@ describe('App Component', () => {
       version: '01'
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -221,7 +222,7 @@ describe('App Component', () => {
       version: '01'
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -244,7 +245,7 @@ describe('App Component', () => {
       merchantName: 'Test'
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -276,8 +277,8 @@ describe('App Component', () => {
       }
     ];
 
-    (historyStorage.loadHistoryFromStorage as jest.Mock).mockReturnValue(mockHistory);
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -304,7 +305,7 @@ describe('App Component', () => {
       }
     ];
 
-    (historyStorage.loadHistoryFromStorage as jest.Mock).mockReturnValue(mockHistory);
+    vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
 
     render(<App />);
 
@@ -324,7 +325,7 @@ describe('App Component', () => {
       version: '01'
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -349,7 +350,7 @@ describe('App Component', () => {
       merchantName: 'Generated Store'
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
@@ -421,7 +422,7 @@ describe('App Component', () => {
       version: '01'
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockQRData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
