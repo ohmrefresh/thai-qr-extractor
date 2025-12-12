@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { 
-  generateThaiQR, 
-  validateQRInput, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  generateThaiQR,
+  validateQRInput,
   generateSampleQR,
-  ThaiQRGeneratorInput, 
-  QRGenerationResult 
+  ThaiQRGeneratorInput,
+  QRGenerationResult
 } from '../utils/thaiQRGenerator';
 
 interface QRGeneratorProps {
@@ -22,22 +22,63 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     merchantName: '',
     merchantCity: ''
   });
-  
+
   const [result, setResult] = useState<QRGenerationResult | null>(null);
+  const [previewResult, setPreviewResult] = useState<QRGenerationResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (field: keyof ThaiQRGeneratorInput, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
+
     // Clear errors when user starts typing
     if (errors.length > 0) {
       setErrors([]);
     }
   };
+
+  // Live preview generation with debouncing
+  useEffect(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Check if we have the minimum required fields for preview
+    const hasRequiredFields = formData.aid && formData.billerId && formData.reference1;
+
+    if (!hasRequiredFields) {
+      setPreviewResult(null);
+      return;
+    }
+
+    // Debounce the preview generation
+    debounceTimerRef.current = setTimeout(async () => {
+      setIsGeneratingPreview(true);
+
+      try {
+        const qrResult = await generateThaiQR(formData);
+        setPreviewResult(qrResult);
+      } catch (error) {
+        // Silently fail for preview - user can still click Generate for full validation
+        setPreviewResult(null);
+      } finally {
+        setIsGeneratingPreview(false);
+      }
+    }, 500); // 500ms debounce delay
+
+    // Cleanup function
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [formData]);
 
   const handleGenerate = async () => {
     const validationErrors = validateQRInput(formData);
@@ -287,18 +328,24 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
 
         <div className="qr-result">
           <h3>QR Code Preview</h3>
-          
-          {result ? (
+
+          {(result || previewResult) ? (
             <>
               <div className="qr-display">
-                <img 
-                  src={result.qrCodeDataURL} 
+                <img
+                  src={(result || previewResult)!.qrCodeDataURL}
                   alt="Generated Thai QR Code"
                   className="qr-image"
                 />
-                
+
+                {!result && previewResult && (
+                  <div className="preview-badge">
+                    <span>Live Preview</span>
+                  </div>
+                )}
+
                 <div className="qr-actions">
-                  <button onClick={handleDownload} className="download-button">
+                  <button onClick={handleDownload} className="download-button" disabled={!result}>
                     <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7,10 12,15 17,10"></polyline>
@@ -306,8 +353,8 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     </svg>
                     Download PNG
                   </button>
-                  
-                  <button onClick={handleCopyQRString} className="copy-button">
+
+                  <button onClick={handleCopyQRString} className="copy-button" disabled={!result}>
                     <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -320,9 +367,20 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
               <div className="qr-string">
                 <h4>QR Code String:</h4>
                 <div className="qr-string-display">
-                  <code>{result.qrString}</code>
+                  <code>{(result || previewResult)!.qrString}</code>
                 </div>
               </div>
+
+              {!result && previewResult && (
+                <p className="preview-hint">
+                  <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9,9h0a3,3,0,0,1,6,0c0,2-3,3-3,3"></path>
+                    <path d="M12,17h.01"></path>
+                  </svg>
+                  Click "Generate QR Code" to finalize and enable download/copy
+                </p>
+              )}
             </>
           ) : (
             <div className="qr-placeholder">
@@ -332,11 +390,11 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 <rect x="14" y="14" width="7" height="7"></rect>
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
-              <p>Fill in the form and click "Generate QR Code" to see your QR code here</p>
-              {isGenerating && (
+              <p>Fill in the required fields to see a live preview</p>
+              {isGeneratingPreview && (
                 <div className="generating-spinner">
                   <div className="spinner"></div>
-                  <span>Generating QR code...</span>
+                  <span>Generating preview...</span>
                 </div>
               )}
             </div>
