@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ThaiQRData, QRSubTag } from '../utils/thaiQRParser';
+import { ThaiQRData, QRSubTag, QRField } from '../utils/thaiQRParser';
+import { formatCurrencyDisplay } from '../utils/currencyMapping';
 
 interface QRDataDisplayProps {
   data: ThaiQRData;
@@ -38,6 +39,24 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
     setExpandedFields(newExpanded);
   };
 
+  const formatFieldValue = (field: QRField): string => {
+    // Format Transaction Currency (tag 53) with flag and country
+    if (field.tag === '53') {
+      return formatCurrencyDisplay(field.value);
+    }
+
+    return field.value;
+  };
+
+  const formatSubTagValue = (subTag: QRSubTag): string => {
+    // Format Transaction Currency sub-tag (tag 04 with "Currency" in description)
+    if (subTag.tag === '04' && subTag.description.toLowerCase().includes('currency')) {
+      return formatCurrencyDisplay(subTag.value);
+    }
+
+    return subTag.value;
+  };
+
   const renderSubTags = (subTags: QRSubTag[]) => (
     <div className="subtag-table">
       <div className="subtag-header">
@@ -50,7 +69,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
         <div key={subIndex} className="subtag-row">
           <span className="subtag-cell subtag-cell--tag">{subTag.tag}</span>
           <span className="subtag-cell subtag-cell--length">{subTag.length}</span>
-          <span className="subtag-cell subtag-cell--value">{subTag.value}</span>
+          <span className="subtag-cell subtag-cell--value">{formatSubTagValue(subTag)}</span>
           <span className="subtag-cell subtag-cell--description">{subTag.description}</span>
         </div>
       ))}
@@ -132,7 +151,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
                   <span className="tag-value">{field.tag}</span>
                 </span>
                 <span className="length">{field.length}</span>
-                <span className="value">{field.value}</span>
+                <span className="value">{formatFieldValue(field)}</span>
                 <span className="description">
                   {field.description}
                   {field.subTags && field.subTags.length > 0 && (

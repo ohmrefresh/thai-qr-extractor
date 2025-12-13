@@ -31,8 +31,9 @@ describe('QRGenerator Component', () => {
 
   test('renders QRGenerator component', () => {
     render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
-    
-    expect(screen.getByText(/Generate Thai QR/i)).toBeInTheDocument();
+
+    expect(screen.getByText(/Required Information/i)).toBeInTheDocument();
+    expect(screen.getByText(/QR Code Preview/i)).toBeInTheDocument();
   });
 
   test('renders all input fields', () => {

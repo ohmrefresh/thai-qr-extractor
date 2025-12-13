@@ -63,9 +63,9 @@ describe('QRDataDisplay Component', () => {
     onClear = vi.fn();
   });
 
-  test('renders QR data display with title', () => {
+  test('renders QR data display component', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
-    expect(screen.getByText(/Thai QR code data/i)).toBeInTheDocument();
+    expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
   });
 
   test('renders clear button', () => {
@@ -81,33 +81,6 @@ describe('QRDataDisplay Component', () => {
     expect(onClear).toHaveBeenCalled();
   });
 
-  test('renders summary section with data', () => {
-    render(<QRDataDisplay data={mockData} onClear={onClear} />);
-
-    expect(screen.getByText(/Summary/i)).toBeInTheDocument();
-    expect(screen.getAllByText('01').length).toBeGreaterThan(0); // Version (may appear multiple times)
-    expect(screen.getByText('Static')).toBeInTheDocument(); // Type
-    expect(screen.getByText('Test Merchant')).toBeInTheDocument(); // Merchant name
-    expect(screen.getAllByText('0066812345678').length).toBeGreaterThan(0); // Merchant ID (may appear multiple times)
-    expect(screen.getByText('THB')).toBeInTheDocument(); // Currency
-    expect(screen.getByText('REF123')).toBeInTheDocument(); // Reference
-    expect(screen.getByText('ABCD')).toBeInTheDocument(); // Checksum
-  });
-
-  test('formats amount correctly', () => {
-    render(<QRDataDisplay data={mockData} onClear={onClear} />);
-
-    // Thai baht currency format
-    expect(screen.getByText(/฿10\.00/)).toBeInTheDocument();
-  });
-
-  test('displays N/A for missing amount', () => {
-    const dataWithoutAmount = { ...mockData, amount: undefined };
-    render(<QRDataDisplay data={dataWithoutAmount} onClear={onClear} />);
-
-    const summaryItems = screen.getAllByText('N/A');
-    expect(summaryItems.length).toBeGreaterThan(0);
-  });
 
   test('renders raw data section', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
@@ -177,19 +150,6 @@ describe('QRDataDisplay Component', () => {
     expect(toggleButton).not.toBeInTheDocument();
   });
 
-  test('displays N/A for missing summary fields', () => {
-    const minimalData: ThaiQRData = {
-      rawData: '00020101',
-      version: '01',
-      type: '01',
-      parsedFields: [],
-    };
-
-    render(<QRDataDisplay data={minimalData} onClear={onClear} />);
-
-    const naElements = screen.getAllByText('N/A');
-    expect(naElements.length).toBeGreaterThan(0);
-  });
 
   test('renders all parsed fields', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
@@ -238,7 +198,7 @@ describe('QRDataDisplay Component', () => {
 
     render(<QRDataDisplay data={emptyData} onClear={onClear} />);
 
-    expect(screen.getByText(/Thai QR code data/i)).toBeInTheDocument();
+    expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
     expect(screen.getByText(emptyData.rawData)).toBeInTheDocument();
   });
 

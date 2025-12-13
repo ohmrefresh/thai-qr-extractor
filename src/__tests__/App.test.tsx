@@ -4,10 +4,12 @@ import { vi } from 'vitest';
 import App from '../App';
 import * as historyStorage from '../utils/historyStorage';
 import { parseThaiQR } from '../utils/thaiQRParser';
+import { Html5Qrcode } from 'html5-qrcode';
 
 // Mock the storage module
 vi.mock('../utils/historyStorage');
 vi.mock('../utils/thaiQRParser');
+vi.mock('html5-qrcode');
 
 describe('App Component', () => {
   beforeEach(() => {
@@ -16,6 +18,32 @@ describe('App Component', () => {
     vi.mocked(historyStorage.addToHistory).mockImplementation((history: any[], item: any) => [...history, { ...item, id: '1', timestamp: new Date() }]);
     vi.mocked(historyStorage.removeFromHistory).mockImplementation((history: any[], id: string) => history.filter((h: any) => h.id !== id));
     vi.mocked(historyStorage.clearHistory).mockReturnValue([]);
+
+    // Mock Html5Qrcode for QRScanner component
+    const mockHtml5QrcodeInstance = {
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.mocked(Html5Qrcode).mockImplementation(function(this: any) {
+      return mockHtml5QrcodeInstance;
+    } as any);
+
+    // @ts-ignore - Mock static method
+    Html5Qrcode.getCameras = vi.fn().mockResolvedValue([
+      { id: 'camera1', label: 'Front Camera' },
+      { id: 'camera2', label: 'Back Camera' }
+    ]);
+
+    // Mock navigator.mediaDevices
+    Object.defineProperty(global.navigator, 'mediaDevices', {
+      value: {
+        enumerateDevices: vi.fn()
+      },
+      writable: true,
+      configurable: true
+    });
   });
 
   test('renders Thai QR Code Tools', () => {
@@ -24,21 +52,21 @@ describe('App Component', () => {
     expect(headingElement).toBeInTheDocument();
   });
 
-  test('renders QR scanner component', () => {
+  test('renders QR scanner component', async () => {
     render(<App />);
-    const scanButton = screen.getByRole('button', { name: /Start Camera Scanner/i });
+    const scanButton = await screen.findByRole('button', { name: /Start camera scanner/i }, { timeout: 3000 });
     expect(scanButton).toBeInTheDocument();
   });
 
-  test('renders file upload component', () => {
+  test('renders file upload component', async () => {
     render(<App />);
-    const uploadButton = screen.getByText(/Browse image/i);
+    const uploadButton = await screen.findByText(/Browse image/i);
     expect(uploadButton).toBeInTheDocument();
   });
 
-  test('renders text input component', () => {
+  test('renders text input component', async () => {
     render(<App />);
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
     expect(textInput).toBeInTheDocument();
   });
 
@@ -58,7 +86,7 @@ describe('App Component', () => {
     expect(historyStorage.loadHistoryFromStorage).toHaveBeenCalled();
   });
 
-  test('switches between scan and generate views', () => {
+  test('switches between scan and generate views', async () => {
     render(<App />);
 
     // Initially in scan view
@@ -70,12 +98,14 @@ describe('App Component', () => {
 
     if (generateButton) {
       fireEvent.click(generateButton);
-      // Check if view switched (might show generate form elements)
-      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+      // Check if view switched (might show generate form elements) - need to wait for lazy loading
+      await waitFor(() => {
+        expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+      });
     }
   });
 
-  test('toggles history panel', () => {
+  test('toggles history panel', async () => {
     render(<App />);
 
     // Find history toggle button
@@ -84,9 +114,11 @@ describe('App Component', () => {
     // Click to open history
     fireEvent.click(historyButton);
 
-    // History component should be rendered
-    const historyElements = screen.queryAllByText(/Scan history/i);
-    expect(historyElements.length).toBeGreaterThanOrEqual(1);
+    // History component should be rendered (lazy loaded, so use waitFor)
+    await waitFor(() => {
+      const historyElements = screen.queryAllByText(/Scan history/i);
+      expect(historyElements.length).toBeGreaterThanOrEqual(1);
+    });
 
     // Click to close history
     fireEvent.click(historyButton);
@@ -116,17 +148,16 @@ describe('App Component', () => {
 
     render(<App />);
 
-    // Switch to text input and enter data
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    // Wait for components to load
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const parseButton = await screen.findByText(/Parse QR data/i);
 
     fireEvent.change(textInput, { target: { value: '00020101' } });
     fireEvent.click(parseButton);
 
-    // Wait for data to be displayed
+    // Wait for data to be displayed - look for "Raw QR Data" section instead
     await waitFor(() => {
-      const dataElements = screen.queryAllByText(/Thai QR code data/i);
-      expect(dataElements.length).toBeGreaterThan(0);
+      expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
     });
 
     // Click clear button
@@ -197,11 +228,13 @@ describe('App Component', () => {
 
     // Simulate camera scan by finding QRScanner and triggering its callback
     // Since we can't directly access the component's callback, we'll verify the structure exists
-    const cameraTitles = screen.getAllByText(/Camera scanner/i);
-    expect(cameraTitles.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const cameraTitles = screen.getAllByText(/Camera scanner/i);
+      expect(cameraTitles.length).toBeGreaterThan(0);
+    });
   });
 
-  test('handles scan success from file upload', () => {
+  test('handles scan success from file upload', async () => {
     const mockQRData = {
       rawData: '00020101',
       parsedFields: [],
@@ -212,7 +245,9 @@ describe('App Component', () => {
 
     render(<App />);
 
-    expect(screen.getByText(/Browse image/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Browse image/i)).toBeInTheDocument();
+    });
   });
 
   test('handles scan success from text input', async () => {
@@ -226,8 +261,8 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const parseButton = await screen.findByText(/Parse QR data/i);
 
     fireEvent.change(textInput, { target: { value: '00020101' } });
     fireEvent.click(parseButton);
@@ -249,8 +284,8 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const parseButton = await screen.findByText(/Parse QR data/i);
 
     fireEvent.change(textInput, { target: { value: '00020101' } });
     fireEvent.click(parseButton);
@@ -373,8 +408,8 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const parseButton = await screen.findByText(/Parse QR data/i);
 
     fireEvent.change(textInput, { target: { value: 'invalid' } });
     fireEvent.click(parseButton);
@@ -399,8 +434,8 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const parseButton = await screen.findByText(/Parse QR data/i);
 
     // First scan fails
     fireEvent.change(textInput, { target: { value: 'invalid' } });
@@ -426,8 +461,8 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const textInput = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const parseButton = await screen.findByText(/Parse QR data/i);
 
     fireEvent.change(textInput, { target: { value: '00020101' } });
     fireEvent.click(parseButton);
