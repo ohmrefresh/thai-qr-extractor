@@ -3,8 +3,11 @@ import {
   generateThaiQR,
   validateQRInput,
   generateSampleQR,
+  generateSampleCreditTransferQR,
   ThaiQRGeneratorInput,
-  QRGenerationResult
+  QRGenerationResult,
+  PaymentType,
+  RecipientType
 } from '../utils/thaiQRGenerator';
 
 interface QRGeneratorProps {
@@ -14,7 +17,11 @@ interface QRGeneratorProps {
 
 const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => {
   const [formData, setFormData] = useState<ThaiQRGeneratorInput>({
+    paymentType: 'bill-payment',
     aid: '',
+    recipientType: 'mobile',
+    recipientId: '',
+    ota: '',
     billerId: '',
     reference1: '',
     reference2: '',
@@ -49,8 +56,13 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Check if we have the minimum required fields for preview
-    const hasRequiredFields = formData.aid && formData.billerId && formData.reference1;
+    // Check if we have the minimum required fields for preview based on payment type
+    let hasRequiredFields = false;
+    if (formData.paymentType === 'credit-transfer') {
+      hasRequiredFields = !!(formData.aid && formData.recipientId && formData.recipientType);
+    } else if (formData.paymentType === 'bill-payment') {
+      hasRequiredFields = !!(formData.aid && formData.billerId && formData.reference1);
+    }
 
     if (!hasRequiredFields) {
       setPreviewResult(null);
@@ -105,8 +117,26 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     }
   };
 
+  const handlePaymentTypeChange = (paymentType: PaymentType) => {
+    setFormData(prev => ({
+      ...prev,
+      paymentType,
+      // Reset fields when switching payment types
+      aid: '',
+      recipientId: '',
+      ota: '',
+      billerId: '',
+      reference1: '',
+      reference2: ''
+    }));
+    setResult(null);
+    setErrors([]);
+  };
+
   const handleLoadSample = () => {
-    const sampleData = generateSampleQR();
+    const sampleData = formData.paymentType === 'credit-transfer'
+      ? generateSampleCreditTransferQR()
+      : generateSampleQR();
     setFormData(sampleData);
     setResult(null);
     setErrors([]);
@@ -114,7 +144,11 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
 
   const handleClear = () => {
     setFormData({
+      paymentType: formData.paymentType, // Keep the payment type
       aid: '',
+      recipientType: 'mobile',
+      recipientId: '',
+      ota: '',
       billerId: '',
       reference1: '',
       reference2: '',
@@ -171,8 +205,48 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
       <div className="generator-content">
         <div className="generator-form">
           <div className="form-section">
+            <h3>Payment Type</h3>
+            <div className="payment-type-selector">
+              <button
+                type="button"
+                className={`payment-type-button ${formData.paymentType === 'credit-transfer' ? 'active' : ''}`}
+                onClick={() => handlePaymentTypeChange('credit-transfer')}
+              >
+                <div className="payment-type-content">
+                  <strong>Credit Transfer</strong>
+                  <span>Tag 29 - PromptPay ID</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                className={`payment-type-button ${formData.paymentType === 'bill-payment' ? 'active' : ''}`}
+                onClick={() => handlePaymentTypeChange('bill-payment')}
+              >
+                <div className="payment-type-content">
+                  <strong>Bill Payment</strong>
+                  <span>Tag 30 - Biller & References</span>
+                </div>
+              </button>
+            </div>
+
+            <div className="payment-type-info">
+              {formData.paymentType === 'credit-transfer' ? (
+                <div className="info-box">
+                  <strong>Tag 29 - PromptPay Credit Transfer</strong>
+                  <p>Used for credit transfer transactions with PromptPay ID (mobile number, national ID, e-wallet ID, or bank account).</p>
+                </div>
+              ) : (
+                <div className="info-box">
+                  <strong>Tag 30 - PromptPay Bill Payment</strong>
+                  <p>Used for bill payment transactions with biller ID and reference numbers for domestic or cross-border merchants.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-section">
             <h3>Required Information</h3>
-            
+
             <div className="form-group">
               <label htmlFor="aid">AID (Application Identifier) *</label>
               <select
@@ -182,58 +256,164 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 className="form-input"
               >
                 <option value="">Select AID Type</option>
-                <option value="A000000677010112">A000000677010112 - Domestic Merchant</option>
-                <option value="A000000677012006">A000000677012006 - Cross-Border Merchant</option>
-                <option value="A000000677010111">A000000677010111 - PromptPay</option>
+                {formData.paymentType === 'credit-transfer' ? (
+                  <>
+                    <option value="A000000677010111">A000000677010111 - Merchant-Presented QR</option>
+                    <option value="A000000677010114">A000000677010114 - Customer-Presented QR</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="A000000677010112">A000000677010112 - Domestic Merchant</option>
+                    <option value="A000000677012006">A000000677012006 - Cross-Border Merchant</option>
+                  </>
+                )}
               </select>
-              <span className="field-hint">Select the appropriate AID for your merchant type</span>
+              <span className="field-hint">
+                {formData.paymentType === 'credit-transfer'
+                  ? 'Select merchant-presented or customer-presented QR'
+                  : 'Select domestic or cross-border merchant'}
+              </span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="billerId">Biller ID *</label>
-              <input
-                id="billerId"
-                type="text"
-                value={formData.billerId}
-                onChange={(e) => handleInputChange('billerId', e.target.value)}
-                placeholder="e.g., 010566300012345"
-                maxLength={32}
-                className="form-input"
-              />
-              <span className="field-hint">Merchant or biller identification number</span>
-            </div>
+            {formData.paymentType === 'credit-transfer' ? (
+              <>
+                <div className="form-group">
+                  <label htmlFor="recipientType">Recipient Type *</label>
+                  <select
+                    id="recipientType"
+                    value={formData.recipientType || 'mobile'}
+                    onChange={(e) => handleInputChange('recipientType', e.target.value as RecipientType)}
+                    className="form-input"
+                  >
+                    <option value="mobile">Mobile Number (13 digits)</option>
+                    <option value="national-id">National ID / Tax ID (13 digits)</option>
+                    <option value="ewallet">E-Wallet ID (15 digits)</option>
+                    <option value="bank-account">Bank Account (up to 43 chars)</option>
+                  </select>
+                  <span className="field-hint">Type of recipient identifier</span>
+                </div>
 
-            <div className="form-group">
-              <label htmlFor="reference1">Reference 1 *</label>
-              <input
-                id="reference1"
-                type="text"
-                value={formData.reference1}
-                onChange={(e) => handleInputChange('reference1', e.target.value)}
-                placeholder="e.g., INV2024001"
-                maxLength={25}
-                className="form-input"
-              />
-              <span className="field-hint">Primary reference (invoice number, bill number, etc.)</span>
-            </div>
+                <div className="form-group">
+                  <label htmlFor="recipientId">Recipient ID *</label>
+                  <input
+                    id="recipientId"
+                    type="text"
+                    value={formData.recipientId || ''}
+                    onChange={(e) => handleInputChange('recipientId', e.target.value)}
+                    placeholder={
+                      formData.recipientType === 'mobile' ? 'e.g., 0066812345678' :
+                      formData.recipientType === 'national-id' ? 'e.g., 1234567890123' :
+                      formData.recipientType === 'ewallet' ? 'e.g., 123456789012345' :
+                      'e.g., 001234567890'
+                    }
+                    maxLength={43}
+                    className="form-input"
+                  />
+                  <span className="field-hint">
+                    {formData.recipientType === 'mobile' && 'Mobile number with country code (e.g., 0066XXXXXXXXX)'}
+                    {formData.recipientType === 'national-id' && 'National ID or Tax ID (13 digits)'}
+                    {formData.recipientType === 'ewallet' && 'E-Wallet ID (15 digits)'}
+                    {formData.recipientType === 'bank-account' && 'Bank account number (up to 43 characters)'}
+                  </span>
+                </div>
+
+                {formData.aid === 'A000000677010114' && (
+                  <div className="form-group">
+                    <label htmlFor="ota">OTA *</label>
+                    <input
+                      id="ota"
+                      type="text"
+                      value={formData.ota || ''}
+                      onChange={(e) => handleInputChange('ota', e.target.value)}
+                      placeholder="e.g., 1234567890"
+                      maxLength={10}
+                      className="form-input"
+                    />
+                    <span className="field-hint">OTA is mandatory for customer-presented QR (10 digits)</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label htmlFor="billerId">Biller ID *</label>
+                  <input
+                    id="billerId"
+                    type="text"
+                    value={formData.billerId || ''}
+                    onChange={(e) => handleInputChange('billerId', e.target.value)}
+                    placeholder="e.g., 010566300012345"
+                    maxLength={32}
+                    className="form-input"
+                  />
+                  <span className="field-hint">National ID/Tax ID with suffix (15 digits)</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reference1">Reference 1 *</label>
+                  <input
+                    id="reference1"
+                    type="text"
+                    value={formData.reference1 || ''}
+                    onChange={(e) => handleInputChange('reference1', e.target.value)}
+                    placeholder="e.g., INV2024001"
+                    maxLength={20}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Primary reference (invoice number, bill number, etc.)</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reference2">Reference 2</label>
+                  <input
+                    id="reference2"
+                    type="text"
+                    value={formData.reference2 || ''}
+                    onChange={(e) => handleInputChange('reference2', e.target.value)}
+                    placeholder="e.g., 0876543210"
+                    maxLength={20}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Secondary reference (optional, customer ID, phone number, etc.)</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="form-section">
             <h3>Optional Information</h3>
-            
-            <div className="form-group">
-              <label htmlFor="reference2">Reference 2</label>
-              <input
-                id="reference2"
-                type="text"
-                value={formData.reference2}
-                onChange={(e) => handleInputChange('reference2', e.target.value)}
-                placeholder="e.g., 0876543210"
-                maxLength={25}
-                className="form-input"
-              />
-              <span className="field-hint">Secondary reference (customer ID, phone number, etc.)</span>
-            </div>
+
+            {formData.paymentType === 'credit-transfer' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="reference1">Reference 1</label>
+                  <input
+                    id="reference1"
+                    type="text"
+                    value={formData.reference1 || ''}
+                    onChange={(e) => handleInputChange('reference1', e.target.value)}
+                    placeholder="e.g., Payment Ref 001"
+                    maxLength={25}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Primary reference (optional for credit transfer)</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reference2">Reference 2</label>
+                  <input
+                    id="reference2"
+                    type="text"
+                    value={formData.reference2 || ''}
+                    onChange={(e) => handleInputChange('reference2', e.target.value)}
+                    placeholder="e.g., Customer ID 123"
+                    maxLength={25}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Secondary reference (optional)</span>
+                </div>
+              </>
+            )}
 
             <div className="form-group">
               <label htmlFor="amount">Amount (THB)</label>
