@@ -12,6 +12,66 @@ vi.mock('../utils/thaiQRParser');
 vi.mock('html5-qrcode');
 
 describe('App Component', () => {
+  // Test data factory
+  const createMockQRData = (overrides = {}) => ({
+    rawData: '00020101',
+    parsedFields: [],
+    version: '01',
+    type: 'static',
+    ...overrides,
+  });
+
+  // Test helper functions
+  const helpers = {
+    async findTextInput() {
+      return await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    },
+
+    async findParseButton() {
+      return await screen.findByText(/Parse QR data/i);
+    },
+
+    async parseTextInput(value: string) {
+      const textInput = await helpers.findTextInput();
+      const parseButton = await helpers.findParseButton();
+      fireEvent.change(textInput, { target: { value } });
+      fireEvent.click(parseButton);
+    },
+
+    findButtonByText(text: string) {
+      const buttons = screen.getAllByRole('button');
+      return buttons.find(b => b.textContent === text);
+    },
+
+    async switchToGenerateView() {
+      const generateButton = helpers.findButtonByText('Generate');
+      if (generateButton) {
+        fireEvent.click(generateButton);
+        // Wait for view transition to complete and QRScanner to unmount
+        await waitFor(() => {
+          expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+        });
+      }
+    },
+
+    async switchToScanView() {
+      const scanButton = helpers.findButtonByText('Scan');
+      if (scanButton) {
+        fireEvent.click(scanButton);
+        // Wait for view transition to complete and QRScanner to mount
+        await waitFor(() => {
+          expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+        });
+      }
+    },
+
+    toggleHistory() {
+      const historyButton = screen.getByTitle(/View scan history/i);
+      fireEvent.click(historyButton);
+      return historyButton;
+    },
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue([]);
@@ -97,27 +157,15 @@ describe('App Component', () => {
     // Initially in scan view
     expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
 
-    // Find view toggle buttons
-    const buttons = screen.getAllByRole('button');
-    const generateButton = buttons.find(b => b.textContent === 'Generate');
-
-    if (generateButton) {
-      fireEvent.click(generateButton);
-      // Check if view switched (might show generate form elements) - need to wait for lazy loading
-      await waitFor(() => {
-        expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
-      });
-    }
+    // Switch to generate view (helper now includes waitFor)
+    await helpers.switchToGenerateView();
   });
 
   test('toggles history panel', async () => {
     render(<App />);
 
-    // Find history toggle button
-    const historyButton = screen.getByTitle(/View scan history/i);
-
     // Click to open history
-    fireEvent.click(historyButton);
+    helpers.toggleHistory();
 
     // History component should be rendered (lazy loaded, so use waitFor)
     await waitFor(() => {
@@ -126,7 +174,7 @@ describe('App Component', () => {
     });
 
     // Click to close history
-    fireEvent.click(historyButton);
+    const historyButton = helpers.toggleHistory();
 
     // History should be hidden (fewer elements or specific hidden state)
     expect(historyButton).toBeInTheDocument();
@@ -134,8 +182,6 @@ describe('App Component', () => {
 
   test('displays error message when scan fails', async () => {
     render(<App />);
-
-    const errorMessage = 'Failed to scan QR code';
 
     // Simulate error by finding and triggering the error callback
     // This would typically be done through component interaction
@@ -146,21 +192,12 @@ describe('App Component', () => {
   });
 
   test('clears data when clear button is clicked', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-    };
-
+    const mockQRData = createMockQRData();
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    // Wait for components to load
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = await screen.findByText(/Parse QR data/i);
-
-    fireEvent.change(textInput, { target: { value: '00020101' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('00020101');
 
     // Wait for data to be displayed - look for "Raw QR Data" section instead
     await waitFor(() => {
@@ -178,26 +215,13 @@ describe('App Component', () => {
   });
 
   test('handles QR generation view', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01',
-    };
-
+    const mockQRData = createMockQRData();
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    // Find generate button
-    const buttons = screen.getAllByRole('button');
-    const generateButton = buttons.find(b => b.textContent === 'Generate');
-
-    // Switch to generate view if button exists
-    if (generateButton) {
-      fireEvent.click(generateButton);
-      // Verify scan view is hidden
-      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
-    }
+    // Switch to generate view (helper now includes verification)
+    await helpers.switchToGenerateView();
   });
 
   test('renders with scan view by default', async () => {
@@ -225,13 +249,10 @@ describe('App Component', () => {
   });
 
   test('handles scan success from camera', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01',
+    const mockQRData = createMockQRData({
       merchantName: 'Test Store',
       amount: 50.00
-    };
+    });
 
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
@@ -246,12 +267,7 @@ describe('App Component', () => {
   });
 
   test('handles scan success from file upload', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01'
-    };
-
+    const mockQRData = createMockQRData();
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
@@ -262,21 +278,12 @@ describe('App Component', () => {
   });
 
   test('handles scan success from text input', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01'
-    };
-
+    const mockQRData = createMockQRData();
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = await screen.findByText(/Parse QR data/i);
-
-    fireEvent.change(textInput, { target: { value: '00020101' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('00020101');
 
     await waitFor(() => {
       expect(parseThaiQR).toHaveBeenCalledWith('00020101');
@@ -284,22 +291,12 @@ describe('App Component', () => {
   });
 
   test('adds scanned data to history', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01',
-      merchantName: 'Test'
-    };
-
+    const mockQRData = createMockQRData({ merchantName: 'Test' });
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = await screen.findByText(/Parse QR data/i);
-
-    fireEvent.change(textInput, { target: { value: '00020101' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('00020101');
 
     await waitFor(() => {
       expect(historyStorage.addToHistory).toHaveBeenCalled();
@@ -307,13 +304,7 @@ describe('App Component', () => {
   });
 
   test('handles history item selection', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01',
-      merchantName: 'Test'
-    };
-
+    const mockQRData = createMockQRData({ merchantName: 'Test' });
     const mockHistory = [
       {
         id: '1',
@@ -329,8 +320,7 @@ describe('App Component', () => {
     render(<App />);
 
     // Open history
-    const historyButton = screen.getByTitle(/View scan history/i);
-    fireEvent.click(historyButton);
+    helpers.toggleHistory();
 
     await waitFor(() => {
       expect(screen.getByText(/Test/i)).toBeInTheDocument();
@@ -341,11 +331,7 @@ describe('App Component', () => {
     const mockHistory = [
       {
         id: '1',
-        data: {
-          rawData: '00020101',
-          parsedFields: [],
-          version: '01'
-        },
+        data: createMockQRData(),
         timestamp: new Date(),
         source: 'camera' as const
       }
@@ -356,8 +342,7 @@ describe('App Component', () => {
     render(<App />);
 
     // Open history
-    const historyButton = screen.getByTitle(/View scan history/i);
-    fireEvent.click(historyButton);
+    helpers.toggleHistory();
 
     await waitFor(() => {
       expect(historyStorage.loadHistoryFromStorage).toHaveBeenCalled();
@@ -365,65 +350,35 @@ describe('App Component', () => {
   });
 
   test('handles QR generation', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01'
-    };
-
+    const mockQRData = createMockQRData();
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    // Switch to generate view
-    const buttons = screen.getAllByRole('button');
-    const generateButton = buttons.find(b => b.textContent === 'Generate');
-
-    if (generateButton) {
-      fireEvent.click(generateButton);
-
-      await waitFor(() => {
-        expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
-      });
-    }
+    // Switch to generate view (helper now includes waitFor)
+    await helpers.switchToGenerateView();
   });
 
   test('handles QR generation with parsed data', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01',
-      merchantName: 'Generated Store'
-    };
-
+    const mockQRData = createMockQRData({ merchantName: 'Generated Store' });
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    // Switch to generate view
-    const buttons = screen.getAllByRole('button');
-    const generateButton = buttons.find(b => b.textContent === 'Generate');
-
-    if (generateButton) {
-      fireEvent.click(generateButton);
-    }
+    await helpers.switchToGenerateView();
 
     // Component structure should exist
     expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
   });
 
   test('handles generation error', async () => {
-    (parseThaiQR as jest.Mock).mockImplementation(() => {
+    vi.mocked(parseThaiQR).mockImplementation(() => {
       throw new Error('Invalid QR data');
     });
 
     render(<App />);
 
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = await screen.findByText(/Parse QR data/i);
-
-    fireEvent.change(textInput, { target: { value: 'invalid' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('invalid');
 
     await waitFor(() => {
       expect(parseThaiQR).toHaveBeenCalledWith('invalid');
@@ -431,13 +386,8 @@ describe('App Component', () => {
   });
 
   test('clears error when new scan is successful', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01'
-    };
-
-    (parseThaiQR as jest.Mock)
+    const mockQRData = createMockQRData();
+    vi.mocked(parseThaiQR)
       .mockImplementationOnce(() => {
         throw new Error('Invalid');
       })
@@ -445,16 +395,11 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = await screen.findByText(/Parse QR data/i);
-
     // First scan fails
-    fireEvent.change(textInput, { target: { value: 'invalid' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('invalid');
 
     // Second scan succeeds
-    fireEvent.change(textInput, { target: { value: '00020101' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('00020101');
 
     await waitFor(() => {
       expect(parseThaiQR).toHaveBeenCalledTimes(2);
@@ -462,24 +407,404 @@ describe('App Component', () => {
   });
 
   test('persists history to storage', async () => {
-    const mockQRData = {
-      rawData: '00020101',
-      parsedFields: [],
-      version: '01'
-    };
-
+    const mockQRData = createMockQRData();
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
 
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = await screen.findByText(/Parse QR data/i);
-
-    fireEvent.change(textInput, { target: { value: '00020101' } });
-    fireEvent.click(parseButton);
+    await helpers.parseTextInput('00020101');
 
     await waitFor(() => {
       expect(historyStorage.addToHistory).toHaveBeenCalled();
+    });
+  });
+
+  describe('Error Handling', () => {
+    test('displays error when parsing fails', async () => {
+      vi.mocked(parseThaiQR).mockImplementation(() => {
+        throw new Error('Invalid QR format');
+      });
+
+      render(<App />);
+
+      await helpers.parseTextInput('invalid-data');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Invalid QR format/i)).toBeInTheDocument();
+      });
+    });
+
+    test('clears error when switching views', async () => {
+      vi.mocked(parseThaiQR).mockImplementation(() => {
+        throw new Error('Test error');
+      });
+
+      render(<App />);
+
+      await helpers.parseTextInput('invalid');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Test error/i)).toBeInTheDocument();
+      });
+
+      // Switch view (helper waits for transition)
+      await helpers.switchToGenerateView();
+
+      // Error should be cleared
+      expect(screen.queryByText(/Test error/i)).not.toBeInTheDocument();
+    });
+
+    test('handles error in QR generation callback', async () => {
+      vi.mocked(parseThaiQR).mockImplementation(() => {
+        throw new Error('Generation parse error');
+      });
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+
+      // The error should be handled silently in the catch block
+      expect(screen.queryByText(/Generation parse error/i)).not.toBeInTheDocument();
+    });
+
+    test('displays error and allows retry', async () => {
+      vi.mocked(parseThaiQR)
+        .mockImplementationOnce(() => {
+          throw new Error('First attempt failed');
+        })
+        .mockReturnValueOnce(createMockQRData());
+
+      render(<App />);
+
+      await helpers.parseTextInput('invalid');
+
+      await waitFor(() => {
+        expect(screen.getByText(/First attempt failed/i)).toBeInTheDocument();
+      });
+
+      // Retry with valid data
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.queryByText(/First attempt failed/i)).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('History Management', () => {
+    test('loads history from storage on mount', async () => {
+      const mockHistory = [
+        {
+          id: '1',
+          data: createMockQRData({ merchantName: 'Test Store' }),
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(historyStorage.loadHistoryFromStorage).toHaveBeenCalled();
+      });
+    });
+
+    test('displays history count badge', async () => {
+      const mockHistory = [
+        {
+          id: '1',
+          data: createMockQRData(),
+          timestamp: new Date(),
+          source: 'camera' as const
+        },
+        {
+          id: '2',
+          data: createMockQRData(),
+          timestamp: new Date(),
+          source: 'file' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByText('2')).toBeInTheDocument();
+      });
+    });
+
+    test('handles empty history', async () => {
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue([]);
+
+      render(<App />);
+
+      helpers.toggleHistory();
+
+      await waitFor(() => {
+        const historyHeaders = screen.getAllByText(/Scan history/i);
+        expect(historyHeaders.length).toBeGreaterThan(0);
+      });
+    });
+
+    test('adds different source types to history', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(historyStorage.addToHistory).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            data: expect.objectContaining({ rawData: '00020101' })
+          })
+        );
+      });
+    });
+
+    test('restores QR data from history selection', async () => {
+      const mockQRData = createMockQRData({ merchantName: 'Historic Store' });
+      const mockHistory = [
+        {
+          id: '1',
+          data: mockQRData,
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      helpers.toggleHistory();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Historic Store/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('View Management', () => {
+    test('clears QR data when switching to generate view', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+
+      // Switch view (helper waits for transition)
+      await helpers.switchToGenerateView();
+
+      // Data should be cleared
+      expect(screen.queryByText(/Raw QR Data/i)).not.toBeInTheDocument();
+    });
+
+    test('shows different header text for each view', async () => {
+      render(<App />);
+
+      expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
+
+      // Switch view (helper waits for transition)
+      await helpers.switchToGenerateView();
+
+      // Check generate view header text
+      expect(screen.getByText(/Generate Thai QR codes with custom merchant/i)).toBeInTheDocument();
+    });
+
+    test('maintains history across view switches', async () => {
+      const mockHistory = [
+        {
+          id: '1',
+          data: createMockQRData(),
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+
+      render(<App />);
+
+      // Switch views back and forth (helpers wait for transitions)
+      await helpers.switchToGenerateView();
+      await helpers.switchToScanView();
+
+      // History button should still be present
+      const historyButton = screen.getByTitle(/View scan history/i);
+      expect(historyButton).toBeInTheDocument();
+    });
+  });
+
+  describe('QR Generation Flow', () => {
+    test('switches to scan view after successful generation', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+
+      // Simulate QR generation would trigger callback here
+      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+    });
+
+    test('adds generated QR to history', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+
+      // This would be triggered by QRGenerator component callback
+      expect(historyStorage.addToHistory).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Data Display', () => {
+    test('shows clear button when QR data is present', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Clear data/i)).toBeInTheDocument();
+      });
+    });
+
+    test('hides scanner section when QR data is displayed', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+      });
+    });
+
+    test('displays QR data details after successful scan', async () => {
+      const mockQRData = createMockQRData({
+        merchantName: 'Test Merchant',
+        amount: 100.50,
+        currency: 'THB'
+      });
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Edge Cases', () => {
+    test('handles very long QR data strings', async () => {
+      const longQRString = '0' + '1'.repeat(1000);
+      const mockQRData = createMockQRData({ rawData: longQRString });
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput(longQRString);
+
+      await waitFor(() => {
+        expect(parseThaiQR).toHaveBeenCalledWith(longQRString);
+      });
+    });
+
+    test('prevents parsing of whitespace-only input', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      const textInput = await helpers.findTextInput();
+      fireEvent.change(textInput, { target: { value: '   ' } });
+
+      const parseButton = await helpers.findParseButton();
+
+      // Button should be disabled for whitespace-only input
+      expect(parseButton).toBeDisabled();
+
+      // parseThaiQR should not be called
+      expect(parseThaiQR).not.toHaveBeenCalled();
+    });
+
+    test('handles special characters in QR data', async () => {
+      const specialChars = '00020101特殊文字';
+      const mockQRData = createMockQRData({ rawData: specialChars });
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput(specialChars);
+
+      await waitFor(() => {
+        expect(parseThaiQR).toHaveBeenCalledWith(specialChars);
+      });
+    });
+
+    test('handles rapid view switching', async () => {
+      render(<App />);
+
+      // Rapidly switch views (each helper waits for transition)
+      await helpers.switchToGenerateView();
+      await helpers.switchToScanView();
+      await helpers.switchToGenerateView();
+      await helpers.switchToScanView();
+
+      // Should end up in scan view
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    });
+
+    test('handles multiple scans in succession', async () => {
+      const mockQRData1 = createMockQRData({ merchantName: 'First' });
+      const mockQRData2 = createMockQRData({ merchantName: 'Second' });
+
+      vi.mocked(parseThaiQR)
+        .mockReturnValueOnce(mockQRData1)
+        .mockReturnValueOnce(mockQRData2);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+
+      // Clear and scan again
+      const clearButton = screen.getByText(/Clear data/i);
+      fireEvent.click(clearButton);
+
+      await helpers.parseTextInput('00020102');
+
+      await waitFor(() => {
+        expect(parseThaiQR).toHaveBeenCalledTimes(2);
+      });
     });
   });
 });

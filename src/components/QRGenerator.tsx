@@ -161,24 +161,44 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
   };
 
   const handleDownload = () => {
-    if (!result) return;
-    
+    const qrResult = result || previewResult;
+    if (!qrResult) return;
+
     const link = document.createElement('a');
     link.download = 'thai-qr-code.png';
-    link.href = result.qrCodeDataURL;
+    link.href = qrResult.qrCodeDataURL;
     link.click();
   };
 
   const handleCopyQRString = async () => {
-    if (!result) return;
-    
+    const qrResult = result || previewResult;
+    if (!qrResult) return;
+
     try {
-      await navigator.clipboard.writeText(result.qrString);
+      await navigator.clipboard.writeText(qrResult.qrString);
       // You could add a toast notification here
     } catch (error) {
       console.error('Failed to copy QR string:', error);
     }
   };
+
+  // Check if all required fields are filled
+  const hasRequiredFields = (): boolean => {
+    if (formData.paymentType === 'credit-transfer') {
+      const baseRequirements = !!(formData.aid && formData.recipientId && formData.recipientType);
+      // Check OTA requirement for customer-presented QR
+      if (formData.aid === 'A000000677010114') {
+        return baseRequirements && !!formData.ota;
+      }
+      return baseRequirements;
+    } else if (formData.paymentType === 'bill-payment') {
+      return !!(formData.aid && formData.billerId && formData.reference1);
+    }
+    return false;
+  };
+
+  // Buttons are enabled when we have a valid preview or finalized result
+  const canExport = (result || previewResult) && hasRequiredFields();
 
   return (
     <div className="qr-generator">
@@ -525,7 +545,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 )}
 
                 <div className="qr-actions">
-                  <button onClick={handleDownload} className="download-button" disabled={!result}>
+                  <button onClick={handleDownload} className="download-button" disabled={!canExport}>
                     <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7,10 12,15 17,10"></polyline>
@@ -534,7 +554,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     Download PNG
                   </button>
 
-                  <button onClick={handleCopyQRString} className="copy-button" disabled={!result}>
+                  <button onClick={handleCopyQRString} className="copy-button" disabled={!canExport}>
                     <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -558,7 +578,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     <path d="M9,9h0a3,3,0,0,1,6,0c0,2-3,3-3,3"></path>
                     <path d="M12,17h.01"></path>
                   </svg>
-                  Click "Generate QR Code" to finalize and enable download/copy
+                  This is a live preview. You can download or copy the QR code directly, or click "Generate QR Code" to finalize
                 </p>
               )}
             </>
