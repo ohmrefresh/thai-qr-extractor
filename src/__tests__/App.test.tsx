@@ -52,17 +52,14 @@ describe('App Component', () => {
     expect(headingElement).toBeInTheDocument();
   });
 
-  // test('renders QR scanner component', async () => {
-  //   render(<App />);
-  //   // Wait for lazy-loaded component with extended timeout
-  //   await waitFor(
-  //     () => {
-  //       const scanButton = screen.getByRole('button', { name: /Start camera scanner/i });
-  //       expect(scanButton).toBeInTheDocument();
-  //     },
-  //     { timeout: 3000 }
-  //   );
-  // });
+  test('renders QR scanner component', async () => {
+    render(<App />);
+    // Verify the scan view is displayed (which contains the QRScanner)
+    await waitFor(() => {
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    });
+    // The QRScanner component is lazy-loaded and tested in detail in QRScanner.test.tsx
+  });
 
   test('renders file upload component', async () => {
     render(<App />);
