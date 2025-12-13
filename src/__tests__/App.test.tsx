@@ -70,7 +70,7 @@ describe('App Component', () => {
     expect(textInput).toBeInTheDocument();
   });
 
-  test('loads history from storage on mount', () => {
+  test('loads history from storage on mount', async () => {
     const mockHistory = [
       {
         id: '1',
@@ -83,7 +83,9 @@ describe('App Component', () => {
 
     render(<App />);
 
-    expect(historyStorage.loadHistoryFromStorage).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(historyStorage.loadHistoryFromStorage).toHaveBeenCalled();
+    });
   });
 
   test('switches between scan and generate views', async () => {
@@ -127,7 +129,7 @@ describe('App Component', () => {
     expect(historyButton).toBeInTheDocument();
   });
 
-  test('displays error message when scan fails', () => {
+  test('displays error message when scan fails', async () => {
     render(<App />);
 
     const errorMessage = 'Failed to scan QR code';
@@ -135,7 +137,9 @@ describe('App Component', () => {
     // Simulate error by finding and triggering the error callback
     // This would typically be done through component interaction
     // For now, we verify the component structure exists
-    expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    });
   });
 
   test('clears data when clear button is clicked', async () => {
@@ -193,11 +197,13 @@ describe('App Component', () => {
     }
   });
 
-  test('renders with scan view by default', () => {
+  test('renders with scan view by default', async () => {
     render(<App />);
 
     // Scan view should be visible by default
-    expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    });
 
     // Find scan button from view toggle
     const buttons = screen.getAllByRole('button');
@@ -206,11 +212,13 @@ describe('App Component', () => {
     expect(scanButton).toBeInTheDocument();
   });
 
-  test('renders history toggle button', () => {
+  test('renders history toggle button', async () => {
     render(<App />);
 
-    const historyButton = screen.getByTitle(/View scan history/i);
-    expect(historyButton).toBeInTheDocument();
+    await waitFor(() => {
+      const historyButton = screen.getByTitle(/View scan history/i);
+      expect(historyButton).toBeInTheDocument();
+    });
   });
 
   test('handles scan success from camera', async () => {

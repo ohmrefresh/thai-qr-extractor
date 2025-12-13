@@ -21,14 +21,6 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
 
   const [expandedFields, setExpandedFields] = useState<Set<number>>(getInitialExpandedFields());
 
-  const formatAmount = (amount?: number): string => {
-    if (!amount) return 'N/A';
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB'
-    }).format(amount);
-  };
-
   const toggleFieldExpansion = (index: number) => {
     const newExpanded = new Set(expandedFields);
     if (newExpanded.has(index)) {

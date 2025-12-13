@@ -52,11 +52,13 @@ describe('QRScanner Component', () => {
     vi.clearAllMocks();
   });
 
-  test('renders QRScanner component', () => {
+  test('renders QRScanner component', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
-    
-    const cameraTitles = screen.getAllByText(/Camera scanner/i);
-    expect(cameraTitles.length).toBeGreaterThan(0);
+
+    await waitFor(() => {
+      const cameraTitles = screen.getAllByText(/Camera scanner/i);
+      expect(cameraTitles.length).toBeGreaterThan(0);
+    });
   });
 
   test('loads available cameras on mount', async () => {
@@ -169,8 +171,10 @@ describe('QRScanner Component', () => {
   test('displays status messages correctly', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
-    // Initial status
-    expect(screen.getByText(/Camera idle/i)).toBeInTheDocument();
+    // Initial status - wait for cameras to load first
+    await waitFor(() => {
+      expect(screen.getByText(/Camera idle/i)).toBeInTheDocument();
+    });
   });
 
   test('handles scanning error', async () => {
@@ -215,10 +219,12 @@ describe('QRScanner Component', () => {
     });
   });
 
-  test('displays scanner placeholder when not scanning', () => {
+  test('displays scanner placeholder when not scanning', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
-    expect(screen.getByText(/Start the scanner to stream and decode/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Start the scanner to stream and decode/i)).toBeInTheDocument();
+    });
   });
 
   test('shows correct status pill classes', async () => {
