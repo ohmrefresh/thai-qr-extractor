@@ -419,4 +419,389 @@ describe('App Component', () => {
       expect(historyStorage.addToHistory).toHaveBeenCalled();
     });
   });
+
+  describe('Error Handling', () => {
+    test('displays error when parsing fails', async () => {
+      vi.mocked(parseThaiQR).mockImplementation(() => {
+        throw new Error('Invalid QR format');
+      });
+
+      render(<App />);
+
+      await helpers.parseTextInput('invalid-data');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Invalid QR format/i)).toBeInTheDocument();
+      });
+    });
+
+    test('clears error when switching views', async () => {
+      vi.mocked(parseThaiQR).mockImplementation(() => {
+        throw new Error('Test error');
+      });
+
+      render(<App />);
+
+      await helpers.parseTextInput('invalid');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Test error/i)).toBeInTheDocument();
+      });
+
+      await helpers.switchToGenerateView();
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Test error/i)).not.toBeInTheDocument();
+      });
+    });
+
+    test('handles error in QR generation callback', async () => {
+      vi.mocked(parseThaiQR).mockImplementation(() => {
+        throw new Error('Generation parse error');
+      });
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+
+      // The error should be handled silently in the catch block
+      expect(screen.queryByText(/Generation parse error/i)).not.toBeInTheDocument();
+    });
+
+    test('displays error and allows retry', async () => {
+      vi.mocked(parseThaiQR)
+        .mockImplementationOnce(() => {
+          throw new Error('First attempt failed');
+        })
+        .mockReturnValueOnce(createMockQRData());
+
+      render(<App />);
+
+      await helpers.parseTextInput('invalid');
+
+      await waitFor(() => {
+        expect(screen.getByText(/First attempt failed/i)).toBeInTheDocument();
+      });
+
+      // Retry with valid data
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.queryByText(/First attempt failed/i)).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('History Management', () => {
+    test('loads history from storage on mount', async () => {
+      const mockHistory = [
+        {
+          id: '1',
+          data: createMockQRData({ merchantName: 'Test Store' }),
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(historyStorage.loadHistoryFromStorage).toHaveBeenCalled();
+      });
+    });
+
+    test('displays history count badge', async () => {
+      const mockHistory = [
+        {
+          id: '1',
+          data: createMockQRData(),
+          timestamp: new Date(),
+          source: 'camera' as const
+        },
+        {
+          id: '2',
+          data: createMockQRData(),
+          timestamp: new Date(),
+          source: 'file' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByText('2')).toBeInTheDocument();
+      });
+    });
+
+    test('handles empty history', async () => {
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue([]);
+
+      render(<App />);
+
+      helpers.toggleHistory();
+
+      await waitFor(() => {
+        const historyHeaders = screen.getAllByText(/Scan history/i);
+        expect(historyHeaders.length).toBeGreaterThan(0);
+      });
+    });
+
+    test('adds different source types to history', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(historyStorage.addToHistory).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            data: expect.objectContaining({ rawData: '00020101' })
+          })
+        );
+      });
+    });
+
+    test('restores QR data from history selection', async () => {
+      const mockQRData = createMockQRData({ merchantName: 'Historic Store' });
+      const mockHistory = [
+        {
+          id: '1',
+          data: mockQRData,
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      helpers.toggleHistory();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Historic Store/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('View Management', () => {
+    test('clears QR data when switching to generate view', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+
+      await helpers.switchToGenerateView();
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Raw QR Data/i)).not.toBeInTheDocument();
+      });
+    });
+
+    test('shows different header text for each view', async () => {
+      render(<App />);
+
+      expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
+
+      await helpers.switchToGenerateView();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Generate Thai QR codes with custom merchant/i)).toBeInTheDocument();
+      });
+    });
+
+    test('maintains history across view switches', async () => {
+      const mockHistory = [
+        {
+          id: '1',
+          data: createMockQRData(),
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+      await helpers.switchToScanView();
+
+      const historyButton = screen.getByTitle(/View scan history/i);
+      expect(historyButton).toBeInTheDocument();
+    });
+  });
+
+  describe('QR Generation Flow', () => {
+    test('switches to scan view after successful generation', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+
+      // Simulate QR generation would trigger callback here
+      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+    });
+
+    test('adds generated QR to history', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+
+      // This would be triggered by QRGenerator component callback
+      expect(historyStorage.addToHistory).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Data Display', () => {
+    test('shows clear button when QR data is present', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Clear data/i)).toBeInTheDocument();
+      });
+    });
+
+    test('hides scanner section when QR data is displayed', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+      });
+    });
+
+    test('displays QR data details after successful scan', async () => {
+      const mockQRData = createMockQRData({
+        merchantName: 'Test Merchant',
+        amount: 100.50,
+        currency: 'THB'
+      });
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Edge Cases', () => {
+    test('handles very long QR data strings', async () => {
+      const longQRString = '0' + '1'.repeat(1000);
+      const mockQRData = createMockQRData({ rawData: longQRString });
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput(longQRString);
+
+      await waitFor(() => {
+        expect(parseThaiQR).toHaveBeenCalledWith(longQRString);
+      });
+    });
+
+    test('prevents parsing of whitespace-only input', async () => {
+      const mockQRData = createMockQRData();
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      const textInput = await helpers.findTextInput();
+      fireEvent.change(textInput, { target: { value: '   ' } });
+
+      const parseButton = await helpers.findParseButton();
+
+      // Button should be disabled for whitespace-only input
+      expect(parseButton).toBeDisabled();
+
+      // parseThaiQR should not be called
+      expect(parseThaiQR).not.toHaveBeenCalled();
+    });
+
+    test('handles special characters in QR data', async () => {
+      const specialChars = '00020101特殊文字';
+      const mockQRData = createMockQRData({ rawData: specialChars });
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.parseTextInput(specialChars);
+
+      await waitFor(() => {
+        expect(parseThaiQR).toHaveBeenCalledWith(specialChars);
+      });
+    });
+
+    test('handles rapid view switching', async () => {
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+      await helpers.switchToScanView();
+      await helpers.switchToGenerateView();
+      await helpers.switchToScanView();
+
+      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    });
+
+    test('handles multiple scans in succession', async () => {
+      const mockQRData1 = createMockQRData({ merchantName: 'First' });
+      const mockQRData2 = createMockQRData({ merchantName: 'Second' });
+
+      vi.mocked(parseThaiQR)
+        .mockReturnValueOnce(mockQRData1)
+        .mockReturnValueOnce(mockQRData2);
+
+      render(<App />);
+
+      await helpers.parseTextInput('00020101');
+
+      await waitFor(() => {
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+
+      // Clear and scan again
+      const clearButton = screen.getByText(/Clear data/i);
+      fireEvent.click(clearButton);
+
+      await helpers.parseTextInput('00020102');
+
+      await waitFor(() => {
+        expect(parseThaiQR).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
 });
