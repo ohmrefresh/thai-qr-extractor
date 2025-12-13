@@ -38,81 +38,49 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run tests with coverage
-      run: npm run coverage
-
-    - name: Code Coverage Summary
-      uses: irongut/CodeCoverageSummary@v1.3.0
-      with:
-        filename: coverage/cobertura-coverage.xml
-        badge: true
-        fail_below_min: false
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: true
-        indicators: true
-        output: both
-        thresholds: '60 80'
+    - name: Run linter
+      run: npm run lint --if-present || echo "No linter configured"
       continue-on-error: true
 
-    - name: Coverage Report Summary
-      if: always()
-      run: |
-        echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        if [ -f coverage/coverage-summary.json ]; then
-          node -e "
-          const coverage = require('./coverage/coverage-summary.json');
-          const total = coverage.total;
-          console.log('| Metric | Coverage | Status |');
-          console.log('|--------|----------|--------|');
-          console.log('| **Statements** | ' + total.statements.pct + '% | ' + (total.statements.pct >= 80 ? '✅' : total.statements.pct >= 60 ? '⚠️' : '❌') + ' |');
-          console.log('| **Branches** | ' + total.branches.pct + '% | ' + (total.branches.pct >= 80 ? '✅' : total.branches.pct >= 60 ? '⚠️' : '❌') + ' |');
-          console.log('| **Functions** | ' + total.functions.pct + '% | ' + (total.functions.pct >= 80 ? '✅' : total.functions.pct >= 60 ? '⚠️' : '❌') + ' |');
-          console.log('| **Lines** | ' + total.lines.pct + '% | ' + (total.lines.pct >= 80 ? '✅' : total.lines.pct >= 60 ? '⚠️' : '❌') + ' |');
-          " >> $GITHUB_STEP_SUMMARY
-        fi
+    - name: Type check
+      run: npm run type-check --if-present || npx tsc --noEmit
+      continue-on-error: false
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-      continue-on-error: true
-
-    - name: Upload coverage to Coveralls
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./coverage/lcov.info
-      continue-on-error: true
-
-    - name: Archive coverage artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: |
-          coverage/
-          !coverage/**/*.map
-
-    - name: Cache build
-      uses: actions/cache@v4
-      with:
-        path: |
-          build
-          node_modules/.vite
-        key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-
-          ${{ runner.os }}-build-
+    - name: Run tests
+      run: npm test -- --run
+      env:
+        CI: true
 
     - name: Build
       run: npm run build
       env:
         PUBLIC_URL: /thai-qr-extractor
+
+    - name: Generate build size report
+      run: |
+        echo "## 📦 Build Size Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Build Output" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Get total build size
+        TOTAL_SIZE=$(du -sh build | cut -f1)
+        echo "**Total build size:** \`$TOTAL_SIZE\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # List largest files
+        echo "### Largest Files" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+
+        find build -type f -exec du -h {} + | sort -rh | head -10 | while read size file; do
+          filename=$(basename "$file")
+          echo "| \`$filename\` | $size |" >> $GITHUB_STEP_SUMMARY
+        done
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Build completed successfully! ✅" >> $GITHUB_STEP_SUMMARY
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -133,3 +101,18 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The application has been successfully deployed to GitHub Pages!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow:** [${{ github.workflow }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
