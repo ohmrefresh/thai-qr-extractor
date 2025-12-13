@@ -47,6 +47,10 @@ describe('App Component', () => {
       const generateButton = helpers.findButtonByText('Generate');
       if (generateButton) {
         fireEvent.click(generateButton);
+        // Wait for view transition to complete and QRScanner to unmount
+        await waitFor(() => {
+          expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+        });
       }
     },
 
@@ -54,6 +58,10 @@ describe('App Component', () => {
       const scanButton = helpers.findButtonByText('Scan');
       if (scanButton) {
         fireEvent.click(scanButton);
+        // Wait for view transition to complete and QRScanner to mount
+        await waitFor(() => {
+          expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+        });
       }
     },
 
@@ -149,12 +157,8 @@ describe('App Component', () => {
     // Initially in scan view
     expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
 
+    // Switch to generate view (helper now includes waitFor)
     await helpers.switchToGenerateView();
-
-    // Check if view switched
-    await waitFor(() => {
-      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
-    });
   });
 
   test('toggles history panel', async () => {
@@ -216,10 +220,8 @@ describe('App Component', () => {
 
     render(<App />);
 
+    // Switch to generate view (helper now includes verification)
     await helpers.switchToGenerateView();
-
-    // Verify scan view is hidden
-    expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
   });
 
   test('renders with scan view by default', async () => {
@@ -353,11 +355,8 @@ describe('App Component', () => {
 
     render(<App />);
 
+    // Switch to generate view (helper now includes waitFor)
     await helpers.switchToGenerateView();
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
-    });
   });
 
   test('handles QR generation with parsed data', async () => {
@@ -448,11 +447,11 @@ describe('App Component', () => {
         expect(screen.getByText(/Test error/i)).toBeInTheDocument();
       });
 
+      // Switch view (helper waits for transition)
       await helpers.switchToGenerateView();
 
-      await waitFor(() => {
-        expect(screen.queryByText(/Test error/i)).not.toBeInTheDocument();
-      });
+      // Error should be cleared
+      expect(screen.queryByText(/Test error/i)).not.toBeInTheDocument();
     });
 
     test('handles error in QR generation callback', async () => {
@@ -605,11 +604,11 @@ describe('App Component', () => {
         expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
       });
 
+      // Switch view (helper waits for transition)
       await helpers.switchToGenerateView();
 
-      await waitFor(() => {
-        expect(screen.queryByText(/Raw QR Data/i)).not.toBeInTheDocument();
-      });
+      // Data should be cleared
+      expect(screen.queryByText(/Raw QR Data/i)).not.toBeInTheDocument();
     });
 
     test('shows different header text for each view', async () => {
@@ -617,11 +616,11 @@ describe('App Component', () => {
 
       expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
 
+      // Switch view (helper waits for transition)
       await helpers.switchToGenerateView();
 
-      await waitFor(() => {
-        expect(screen.getByText(/Generate Thai QR codes with custom merchant/i)).toBeInTheDocument();
-      });
+      // Check generate view header text
+      expect(screen.getByText(/Generate Thai QR codes with custom merchant/i)).toBeInTheDocument();
     });
 
     test('maintains history across view switches', async () => {
@@ -638,9 +637,11 @@ describe('App Component', () => {
 
       render(<App />);
 
+      // Switch views back and forth (helpers wait for transitions)
       await helpers.switchToGenerateView();
       await helpers.switchToScanView();
 
+      // History button should still be present
       const historyButton = screen.getByTitle(/View scan history/i);
       expect(historyButton).toBeInTheDocument();
     });
@@ -769,11 +770,13 @@ describe('App Component', () => {
     test('handles rapid view switching', async () => {
       render(<App />);
 
+      // Rapidly switch views (each helper waits for transition)
       await helpers.switchToGenerateView();
       await helpers.switchToScanView();
       await helpers.switchToGenerateView();
       await helpers.switchToScanView();
 
+      // Should end up in scan view
       expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
     });
 
