@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { 
-  generateThaiQR, 
-  validateQRInput, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  generateThaiQR,
+  validateQRInput,
   generateSampleQR,
-  ThaiQRGeneratorInput, 
-  QRGenerationResult 
+  generateSampleCreditTransferQR,
+  ThaiQRGeneratorInput,
+  QRGenerationResult,
+  PaymentType,
+  RecipientType
 } from '../utils/thaiQRGenerator';
 
 interface QRGeneratorProps {
@@ -14,7 +17,11 @@ interface QRGeneratorProps {
 
 const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => {
   const [formData, setFormData] = useState<ThaiQRGeneratorInput>({
+    paymentType: 'bill-payment',
     aid: '',
+    recipientType: 'mobile',
+    recipientId: '',
+    ota: '',
     billerId: '',
     reference1: '',
     reference2: '',
@@ -22,22 +29,68 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     merchantName: '',
     merchantCity: ''
   });
-  
+
   const [result, setResult] = useState<QRGenerationResult | null>(null);
+  const [previewResult, setPreviewResult] = useState<QRGenerationResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (field: keyof ThaiQRGeneratorInput, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
+
     // Clear errors when user starts typing
     if (errors.length > 0) {
       setErrors([]);
     }
   };
+
+  // Live preview generation with debouncing
+  useEffect(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Check if we have the minimum required fields for preview based on payment type
+    let hasRequiredFields = false;
+    if (formData.paymentType === 'credit-transfer') {
+      hasRequiredFields = !!(formData.aid && formData.recipientId && formData.recipientType);
+    } else if (formData.paymentType === 'bill-payment') {
+      hasRequiredFields = !!(formData.aid && formData.billerId && formData.reference1);
+    }
+
+    if (!hasRequiredFields) {
+      setPreviewResult(null);
+      return;
+    }
+
+    // Debounce the preview generation
+    debounceTimerRef.current = setTimeout(async () => {
+      setIsGeneratingPreview(true);
+
+      try {
+        const qrResult = await generateThaiQR(formData);
+        setPreviewResult(qrResult);
+      } catch (error) {
+        // Silently fail for preview - user can still click Generate for full validation
+        setPreviewResult(null);
+      } finally {
+        setIsGeneratingPreview(false);
+      }
+    }, 500); // 500ms debounce delay
+
+    // Cleanup function
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [formData]);
 
   const handleGenerate = async () => {
     const validationErrors = validateQRInput(formData);
@@ -64,8 +117,26 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     }
   };
 
+  const handlePaymentTypeChange = (paymentType: PaymentType) => {
+    setFormData(prev => ({
+      ...prev,
+      paymentType,
+      // Reset fields when switching payment types
+      aid: '',
+      recipientId: '',
+      ota: '',
+      billerId: '',
+      reference1: '',
+      reference2: ''
+    }));
+    setResult(null);
+    setErrors([]);
+  };
+
   const handleLoadSample = () => {
-    const sampleData = generateSampleQR();
+    const sampleData = formData.paymentType === 'credit-transfer'
+      ? generateSampleCreditTransferQR()
+      : generateSampleQR();
     setFormData(sampleData);
     setResult(null);
     setErrors([]);
@@ -73,7 +144,11 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
 
   const handleClear = () => {
     setFormData({
+      paymentType: formData.paymentType, // Keep the payment type
       aid: '',
+      recipientType: 'mobile',
+      recipientId: '',
+      ota: '',
       billerId: '',
       reference1: '',
       reference2: '',
@@ -116,10 +191,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
             <rect x="3" y="14" width="7" height="7"></rect>
           </svg>
         </div>
-        <div>
-          <h2>Generate Thai QR code</h2>
-          <p>Create QR codes with Tag 30 merchant account information.</p>
-        </div>
+       
         {onClose && (
           <button className="close-button" onClick={onClose} aria-label="Close generator">
             <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -133,8 +205,48 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
       <div className="generator-content">
         <div className="generator-form">
           <div className="form-section">
+            <h3>Payment Type</h3>
+            <div className="payment-type-selector">
+              <button
+                type="button"
+                className={`payment-type-button ${formData.paymentType === 'credit-transfer' ? 'active' : ''}`}
+                onClick={() => handlePaymentTypeChange('credit-transfer')}
+              >
+                <div className="payment-type-content">
+                  <strong>Credit Transfer</strong>
+                  <span>Tag 29 - PromptPay ID</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                className={`payment-type-button ${formData.paymentType === 'bill-payment' ? 'active' : ''}`}
+                onClick={() => handlePaymentTypeChange('bill-payment')}
+              >
+                <div className="payment-type-content">
+                  <strong>Bill Payment</strong>
+                  <span>Tag 30 - Biller & References</span>
+                </div>
+              </button>
+            </div>
+
+            <div className="payment-type-info">
+              {formData.paymentType === 'credit-transfer' ? (
+                <div className="info-box">
+                  <strong>Tag 29 - PromptPay Credit Transfer</strong>
+                  <p>Used for credit transfer transactions with PromptPay ID (mobile number, national ID, e-wallet ID, or bank account).</p>
+                </div>
+              ) : (
+                <div className="info-box">
+                  <strong>Tag 30 - PromptPay Bill Payment</strong>
+                  <p>Used for bill payment transactions with biller ID and reference numbers for domestic or cross-border merchants.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-section">
             <h3>Required Information</h3>
-            
+
             <div className="form-group">
               <label htmlFor="aid">AID (Application Identifier) *</label>
               <select
@@ -144,58 +256,164 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 className="form-input"
               >
                 <option value="">Select AID Type</option>
-                <option value="A000000677010112">A000000677010112 - Domestic Merchant</option>
-                <option value="A000000677012006">A000000677012006 - Cross-Border Merchant</option>
-                <option value="A000000677010111">A000000677010111 - PromptPay</option>
+                {formData.paymentType === 'credit-transfer' ? (
+                  <>
+                    <option value="A000000677010111">A000000677010111 - Merchant-Presented QR</option>
+                    <option value="A000000677010114">A000000677010114 - Customer-Presented QR</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="A000000677010112">A000000677010112 - Domestic Merchant</option>
+                    <option value="A000000677012006">A000000677012006 - Cross-Border Merchant</option>
+                  </>
+                )}
               </select>
-              <span className="field-hint">Select the appropriate AID for your merchant type</span>
+              <span className="field-hint">
+                {formData.paymentType === 'credit-transfer'
+                  ? 'Select merchant-presented or customer-presented QR'
+                  : 'Select domestic or cross-border merchant'}
+              </span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="billerId">Biller ID *</label>
-              <input
-                id="billerId"
-                type="text"
-                value={formData.billerId}
-                onChange={(e) => handleInputChange('billerId', e.target.value)}
-                placeholder="e.g., 010566300012345"
-                maxLength={32}
-                className="form-input"
-              />
-              <span className="field-hint">Merchant or biller identification number</span>
-            </div>
+            {formData.paymentType === 'credit-transfer' ? (
+              <>
+                <div className="form-group">
+                  <label htmlFor="recipientType">Recipient Type *</label>
+                  <select
+                    id="recipientType"
+                    value={formData.recipientType || 'mobile'}
+                    onChange={(e) => handleInputChange('recipientType', e.target.value as RecipientType)}
+                    className="form-input"
+                  >
+                    <option value="mobile">Mobile Number (13 digits)</option>
+                    <option value="national-id">National ID / Tax ID (13 digits)</option>
+                    <option value="ewallet">E-Wallet ID (15 digits)</option>
+                    <option value="bank-account">Bank Account (up to 43 chars)</option>
+                  </select>
+                  <span className="field-hint">Type of recipient identifier</span>
+                </div>
 
-            <div className="form-group">
-              <label htmlFor="reference1">Reference 1 *</label>
-              <input
-                id="reference1"
-                type="text"
-                value={formData.reference1}
-                onChange={(e) => handleInputChange('reference1', e.target.value)}
-                placeholder="e.g., INV2024001"
-                maxLength={25}
-                className="form-input"
-              />
-              <span className="field-hint">Primary reference (invoice number, bill number, etc.)</span>
-            </div>
+                <div className="form-group">
+                  <label htmlFor="recipientId">Recipient ID *</label>
+                  <input
+                    id="recipientId"
+                    type="text"
+                    value={formData.recipientId || ''}
+                    onChange={(e) => handleInputChange('recipientId', e.target.value)}
+                    placeholder={
+                      formData.recipientType === 'mobile' ? 'e.g., 0066812345678' :
+                      formData.recipientType === 'national-id' ? 'e.g., 1234567890123' :
+                      formData.recipientType === 'ewallet' ? 'e.g., 123456789012345' :
+                      'e.g., 001234567890'
+                    }
+                    maxLength={43}
+                    className="form-input"
+                  />
+                  <span className="field-hint">
+                    {formData.recipientType === 'mobile' && 'Mobile number with country code (e.g., 0066XXXXXXXXX)'}
+                    {formData.recipientType === 'national-id' && 'National ID or Tax ID (13 digits)'}
+                    {formData.recipientType === 'ewallet' && 'E-Wallet ID (15 digits)'}
+                    {formData.recipientType === 'bank-account' && 'Bank account number (up to 43 characters)'}
+                  </span>
+                </div>
+
+                {formData.aid === 'A000000677010114' && (
+                  <div className="form-group">
+                    <label htmlFor="ota">OTA *</label>
+                    <input
+                      id="ota"
+                      type="text"
+                      value={formData.ota || ''}
+                      onChange={(e) => handleInputChange('ota', e.target.value)}
+                      placeholder="e.g., 1234567890"
+                      maxLength={10}
+                      className="form-input"
+                    />
+                    <span className="field-hint">OTA is mandatory for customer-presented QR (10 digits)</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label htmlFor="billerId">Biller ID *</label>
+                  <input
+                    id="billerId"
+                    type="text"
+                    value={formData.billerId || ''}
+                    onChange={(e) => handleInputChange('billerId', e.target.value)}
+                    placeholder="e.g., 010566300012345"
+                    maxLength={32}
+                    className="form-input"
+                  />
+                  <span className="field-hint">National ID/Tax ID with suffix (15 digits)</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reference1">Reference 1 *</label>
+                  <input
+                    id="reference1"
+                    type="text"
+                    value={formData.reference1 || ''}
+                    onChange={(e) => handleInputChange('reference1', e.target.value)}
+                    placeholder="e.g., INV2024001"
+                    maxLength={20}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Primary reference (invoice number, bill number, etc.)</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reference2">Reference 2</label>
+                  <input
+                    id="reference2"
+                    type="text"
+                    value={formData.reference2 || ''}
+                    onChange={(e) => handleInputChange('reference2', e.target.value)}
+                    placeholder="e.g., 0876543210"
+                    maxLength={20}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Secondary reference (optional, customer ID, phone number, etc.)</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="form-section">
             <h3>Optional Information</h3>
-            
-            <div className="form-group">
-              <label htmlFor="reference2">Reference 2</label>
-              <input
-                id="reference2"
-                type="text"
-                value={formData.reference2}
-                onChange={(e) => handleInputChange('reference2', e.target.value)}
-                placeholder="e.g., 0876543210"
-                maxLength={25}
-                className="form-input"
-              />
-              <span className="field-hint">Secondary reference (customer ID, phone number, etc.)</span>
-            </div>
+
+            {formData.paymentType === 'credit-transfer' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="reference1">Reference 1</label>
+                  <input
+                    id="reference1"
+                    type="text"
+                    value={formData.reference1 || ''}
+                    onChange={(e) => handleInputChange('reference1', e.target.value)}
+                    placeholder="e.g., Payment Ref 001"
+                    maxLength={25}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Primary reference (optional for credit transfer)</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reference2">Reference 2</label>
+                  <input
+                    id="reference2"
+                    type="text"
+                    value={formData.reference2 || ''}
+                    onChange={(e) => handleInputChange('reference2', e.target.value)}
+                    placeholder="e.g., Customer ID 123"
+                    maxLength={25}
+                    className="form-input"
+                  />
+                  <span className="field-hint">Secondary reference (optional)</span>
+                </div>
+              </>
+            )}
 
             <div className="form-group">
               <label htmlFor="amount">Amount (THB)</label>
@@ -290,18 +508,24 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
 
         <div className="qr-result">
           <h3>QR Code Preview</h3>
-          
-          {result ? (
+
+          {(result || previewResult) ? (
             <>
               <div className="qr-display">
-                <img 
-                  src={result.qrCodeDataURL} 
+                <img
+                  src={(result || previewResult)!.qrCodeDataURL}
                   alt="Generated Thai QR Code"
                   className="qr-image"
                 />
-                
+
+                {!result && previewResult && (
+                  <div className="preview-badge">
+                    <span>Live Preview</span>
+                  </div>
+                )}
+
                 <div className="qr-actions">
-                  <button onClick={handleDownload} className="download-button">
+                  <button onClick={handleDownload} className="download-button" disabled={!result}>
                     <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7,10 12,15 17,10"></polyline>
@@ -309,8 +533,8 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     </svg>
                     Download PNG
                   </button>
-                  
-                  <button onClick={handleCopyQRString} className="copy-button">
+
+                  <button onClick={handleCopyQRString} className="copy-button" disabled={!result}>
                     <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -323,9 +547,20 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
               <div className="qr-string">
                 <h4>QR Code String:</h4>
                 <div className="qr-string-display">
-                  <code>{result.qrString}</code>
+                  <code>{(result || previewResult)!.qrString}</code>
                 </div>
               </div>
+
+              {!result && previewResult && (
+                <p className="preview-hint">
+                  <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9,9h0a3,3,0,0,1,6,0c0,2-3,3-3,3"></path>
+                    <path d="M12,17h.01"></path>
+                  </svg>
+                  Click "Generate QR Code" to finalize and enable download/copy
+                </p>
+              )}
             </>
           ) : (
             <div className="qr-placeholder">
@@ -335,11 +570,11 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 <rect x="14" y="14" width="7" height="7"></rect>
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
-              <p>Fill in the form and click "Generate QR Code" to see your QR code here</p>
-              {isGenerating && (
+              <p>Fill in the required fields to see a live preview</p>
+              {isGeneratingPreview && (
                 <div className="generating-spinner">
                   <div className="spinner"></div>
-                  <span>Generating QR code...</span>
+                  <span>Generating preview...</span>
                 </div>
               )}
             </div>

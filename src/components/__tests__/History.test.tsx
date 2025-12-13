@@ -1,12 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import History, { HistoryItem } from './History';
+import { vi } from 'vitest';
+import History, { HistoryItem } from '../History';
 
 describe('History Component', () => {
-  const mockOnSelectItem = jest.fn();
-  const mockOnClearHistory = jest.fn();
-  const mockOnDeleteItem = jest.fn();
-  const mockOnClose = jest.fn();
+  const mockOnSelectItem = vi.fn();
+  const mockOnClearHistory = vi.fn();
+  const mockOnDeleteItem = vi.fn();
+  const mockOnClose = vi.fn();
 
   const createMockHistoryItem = (overrides?: Partial<HistoryItem>): HistoryItem => ({
     id: '1',
@@ -25,7 +26,7 @@ describe('History Component', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders nothing when isOpen is false', () => {

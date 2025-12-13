@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ThaiQRData, QRSubTag } from '../utils/thaiQRParser';
+import { ThaiQRData, QRSubTag, QRField } from '../utils/thaiQRParser';
+import { formatCurrencyDisplay } from '../utils/currencyMapping';
 
 interface QRDataDisplayProps {
   data: ThaiQRData;
@@ -20,14 +21,6 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
 
   const [expandedFields, setExpandedFields] = useState<Set<number>>(getInitialExpandedFields());
 
-  const formatAmount = (amount?: number): string => {
-    if (!amount) return 'N/A';
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB'
-    }).format(amount);
-  };
-
   const toggleFieldExpansion = (index: number) => {
     const newExpanded = new Set(expandedFields);
     if (newExpanded.has(index)) {
@@ -36,6 +29,24 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
       newExpanded.add(index);
     }
     setExpandedFields(newExpanded);
+  };
+
+  const formatFieldValue = (field: QRField): string => {
+    // Format Transaction Currency (tag 53) with flag and country
+    if (field.tag === '53') {
+      return formatCurrencyDisplay(field.value);
+    }
+
+    return field.value;
+  };
+
+  const formatSubTagValue = (subTag: QRSubTag): string => {
+    // Format Transaction Currency sub-tag (tag 04 with "Currency" in description)
+    if (subTag.tag === '04' && subTag.description.toLowerCase().includes('currency')) {
+      return formatCurrencyDisplay(subTag.value);
+    }
+
+    return subTag.value;
   };
 
   const renderSubTags = (subTags: QRSubTag[]) => (
@@ -50,7 +61,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
         <div key={subIndex} className="subtag-row">
           <span className="subtag-cell subtag-cell--tag">{subTag.tag}</span>
           <span className="subtag-cell subtag-cell--length">{subTag.length}</span>
-          <span className="subtag-cell subtag-cell--value">{subTag.value}</span>
+          <span className="subtag-cell subtag-cell--value">{formatSubTagValue(subTag)}</span>
           <span className="subtag-cell subtag-cell--description">{subTag.description}</span>
         </div>
       ))}
@@ -70,10 +81,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
               <path d="M12 21c0 .552.448 1 1 1h6c.552 0 1-.448 1-1v-6c0-.552-.448-1-1-1s-1 .448-1 1v5h-5c-.552 0-1 .448-1 1z"></path>
             </svg>
           </div>
-          <div>
-            <h2>Thai QR code data</h2>
-            <p className="data-subtitle">Decoded payload and structured EMVCo fields from your latest scan.</p>
-          </div>
+          
         </div>
         <button onClick={onClear} className="clear-button">
           <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -86,52 +94,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
         </button>
       </div>
 
-      <div className="summary-section">
-        <h3 className="section-title">
-          <svg className="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14,2 14,8 20,8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10,9 9,9 8,9"></polyline>
-          </svg>
-          Summary
-        </h3>
-        <div className="summary-grid">
-          <div className="summary-item">
-            <label>Version:</label>
-            <span>{data.version || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <label>Type:</label>
-            <span>{data.type || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <label>Merchant:</label>
-            <span>{data.merchantName || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <label>Merchant ID:</label>
-            <span>{data.merchantId || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <label>Amount:</label>
-            <span>{formatAmount(data.amount)}</span>
-          </div>
-          <div className="summary-item">
-            <label>Currency:</label>
-            <span>{data.currency || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <label>Reference:</label>
-            <span>{data.reference || 'N/A'}</span>
-          </div>
-          <div className="summary-item">
-            <label>Checksum:</label>
-            <span>{data.checksum || 'N/A'}</span>
-          </div>
-        </div>
-      </div>
+  
 
       <div className="raw-data-section">
         <h3 className="section-title">
@@ -180,7 +143,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
                   <span className="tag-value">{field.tag}</span>
                 </span>
                 <span className="length">{field.length}</span>
-                <span className="value">{field.value}</span>
+                <span className="value">{formatFieldValue(field)}</span>
                 <span className="description">
                   {field.description}
                   {field.subTags && field.subTags.length > 0 && (

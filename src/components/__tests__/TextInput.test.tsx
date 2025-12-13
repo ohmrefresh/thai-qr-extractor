@@ -1,22 +1,23 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import TextInput from './TextInput';
+import { vi } from 'vitest';
+import TextInput from '../TextInput';
 
 // Mock thaiQRParser
-jest.mock('../utils/thaiQRParser', () => ({
-  parseThaiQR: jest.fn(),
+vi.mock('../../utils/thaiQRParser', () => ({
+  parseThaiQR: vi.fn(),
 }));
 
-import { parseThaiQR } from '../utils/thaiQRParser';
+import { parseThaiQR } from '../../utils/thaiQRParser';
 
 describe('TextInput Component', () => {
-  let onScanSuccess: jest.Mock;
-  let onScanError: jest.Mock;
+  let onScanSuccess: ReturnType<typeof vi.fn>;
+  let onScanError: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    onScanSuccess = jest.fn();
-    onScanError = jest.fn();
-    jest.clearAllMocks();
+    onScanSuccess = vi.fn();
+    onScanError = vi.fn();
+    vi.clearAllMocks();
   });
 
   test('renders text input component', () => {
@@ -57,7 +58,7 @@ describe('TextInput Component', () => {
       parsedFields: [],
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockParsedData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
     const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
@@ -78,7 +79,7 @@ describe('TextInput Component', () => {
       parsedFields: [],
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockParsedData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
     const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i) as HTMLTextAreaElement;
@@ -105,7 +106,7 @@ describe('TextInput Component', () => {
   });
 
   test('calls onScanError when parsing fails', async () => {
-    (parseThaiQR as jest.Mock).mockImplementation(() => {
+    vi.mocked(parseThaiQR).mockImplementation(() => {
       throw new Error('Invalid QR format');
     });
 
@@ -153,7 +154,7 @@ describe('TextInput Component', () => {
       parsedFields: [],
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockParsedData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
     const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
@@ -172,7 +173,7 @@ describe('TextInput Component', () => {
       parsedFields: [],
     };
 
-    (parseThaiQR as jest.Mock).mockReturnValue(mockParsedData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
     const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);

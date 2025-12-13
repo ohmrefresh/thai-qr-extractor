@@ -1,32 +1,33 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import FileUpload from './FileUpload';
+import { vi } from 'vitest';
+import FileUpload from '../FileUpload';
 
 // Mock jsQR
-jest.mock('jsqr', () => {
-  return jest.fn();
-});
+vi.mock('jsqr', () => ({
+  default: vi.fn(),
+}));
 
 // Mock thaiQRParser
-jest.mock('../utils/thaiQRParser', () => ({
-  parseThaiQR: jest.fn(),
+vi.mock('../../utils/thaiQRParser', () => ({
+  parseThaiQR: vi.fn(),
 }));
 
 import jsQR from 'jsqr';
-import { parseThaiQR } from '../utils/thaiQRParser';
+import { parseThaiQR } from '../../utils/thaiQRParser';
 
 describe('FileUpload Component', () => {
-  let onScanSuccess: jest.Mock;
-  let onScanError: jest.Mock;
+  let onScanSuccess: ReturnType<typeof vi.fn>;
+  let onScanError: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    onScanSuccess = jest.fn();
-    onScanError = jest.fn();
-    jest.clearAllMocks();
+    onScanSuccess = vi.fn();
+    onScanError = vi.fn();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('renders upload button', () => {
@@ -45,7 +46,7 @@ describe('FileUpload Component', () => {
     render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    const clickSpy = jest.spyOn(fileInput, 'click');
+    const clickSpy = vi.spyOn(fileInput, 'click');
 
     const uploadButton = screen.getByText(/Browse image/i);
     fireEvent.click(uploadButton);
@@ -72,10 +73,10 @@ describe('FileUpload Component', () => {
       parsedFields: [],
     };
 
-    (jsQR as jest.Mock).mockReturnValue({
+    vi.mocked(jsQR).mockReturnValue({
       data: '00020101021129370016A000000677010111011300668123456785802TH',
     });
-    (parseThaiQR as jest.Mock).mockReturnValue(mockParsedData);
+    vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
@@ -84,12 +85,14 @@ describe('FileUpload Component', () => {
 
     // Mock FileReader
     const mockFileReader = {
-      readAsDataURL: jest.fn(),
+      readAsDataURL: vi.fn(),
       onload: null as any,
       result: 'data:image/png;base64,fakedata',
     };
 
-    global.FileReader = jest.fn(() => mockFileReader) as any;
+    global.FileReader = function() {
+      return mockFileReader;
+    } as any;
 
     // Mock Image
     const mockImage = {
@@ -98,19 +101,21 @@ describe('FileUpload Component', () => {
       width: 100,
       height: 100,
     };
-    global.Image = jest.fn(() => mockImage) as any;
+    global.Image = function() {
+      return mockImage;
+    } as any;
 
     // Mock canvas
-    const mockGetContext = jest.fn(() => ({
-      drawImage: jest.fn(),
-      getImageData: jest.fn(() => ({
+    const mockGetContext = vi.fn(() => ({
+      drawImage: vi.fn(),
+      getImageData: vi.fn(() => ({
         data: new Uint8ClampedArray(100 * 100 * 4),
         width: 100,
         height: 100,
       })),
     }));
 
-    document.createElement = jest.fn((tagName) => {
+    document.createElement = vi.fn((tagName: string) => {
       if (tagName === 'canvas') {
         return {
           getContext: mockGetContext,

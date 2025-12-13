@@ -1,49 +1,47 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import QRScanner from './QRScanner';
+import { vi } from 'vitest';
+import QRScanner from '../QRScanner';
 import { Html5Qrcode } from 'html5-qrcode';
 
 // Mock Html5Qrcode
-jest.mock('html5-qrcode', () => {
-  const mockGetCameras = jest.fn();
-  const MockHtml5Qrcode = jest.fn();
-  
-  return {
-    Html5Qrcode: Object.assign(MockHtml5Qrcode, {
-      getCameras: mockGetCameras
-    }),
-    Html5QrcodeSupportedFormats: {
-      QR_CODE: 0
-    }
-  };
-});
+vi.mock('html5-qrcode');
 
 describe('QRScanner Component', () => {
-  let mockOnScanSuccess: jest.Mock;
-  let mockOnScanError: jest.Mock;
+  let mockOnScanSuccess: ReturnType<typeof vi.fn>;
+  let mockOnScanError: ReturnType<typeof vi.fn>;
   let mockHtml5QrcodeInstance: any;
+  let mockGetCameras: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockOnScanSuccess = jest.fn();
-    mockOnScanError = jest.fn();
+    mockOnScanSuccess = vi.fn();
+    mockOnScanError = vi.fn();
 
     // Mock Html5Qrcode instance
     mockHtml5QrcodeInstance = {
-      start: jest.fn().mockResolvedValue(undefined),
-      stop: jest.fn().mockResolvedValue(undefined),
-      clear: jest.fn().mockResolvedValue(undefined),
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
     };
 
-    (Html5Qrcode as unknown as jest.Mock).mockImplementation(() => mockHtml5QrcodeInstance);
-    (Html5Qrcode as any).getCameras.mockResolvedValue([
+    // Setup mock for getCameras
+    mockGetCameras = vi.fn().mockResolvedValue([
       { id: 'camera1', label: 'Front Camera' },
       { id: 'camera2', label: 'Back Camera' }
     ]);
 
+    // Mock Html5Qrcode constructor and static method
+    vi.mocked(Html5Qrcode).mockImplementation(function(this: any) {
+      return mockHtml5QrcodeInstance;
+    } as any);
+
+    // @ts-ignore - Mock static method
+    Html5Qrcode.getCameras = mockGetCameras;
+
     // Mock navigator.mediaDevices
     Object.defineProperty(global.navigator, 'mediaDevices', {
       value: {
-        enumerateDevices: jest.fn()
+        enumerateDevices: vi.fn()
       },
       writable: true,
       configurable: true
@@ -51,14 +49,16 @@ describe('QRScanner Component', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  test('renders QRScanner component', () => {
+  test('renders QRScanner component', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
-    
-    const cameraTitles = screen.getAllByText(/Camera scanner/i);
-    expect(cameraTitles.length).toBeGreaterThan(0);
+
+    await waitFor(() => {
+      const cameraTitles = screen.getAllByText(/Camera scanner/i);
+      expect(cameraTitles.length).toBeGreaterThan(0);
+    });
   });
 
   test('loads available cameras on mount', async () => {
@@ -78,7 +78,7 @@ describe('QRScanner Component', () => {
   });
 
   test('shows error when no cameras are found', async () => {
-    (Html5Qrcode as any).getCameras = jest.fn().mockResolvedValue([]);
+    mockGetCameras.mockResolvedValue([]);
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
@@ -88,7 +88,7 @@ describe('QRScanner Component', () => {
   });
 
   test('handles camera access error gracefully', async () => {
-    (Html5Qrcode as any).getCameras = jest.fn().mockRejectedValue(new Error('Permission denied'));
+    mockGetCameras.mockRejectedValue(new Error('Permission denied'));
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
@@ -171,12 +171,14 @@ describe('QRScanner Component', () => {
   test('displays status messages correctly', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
-    // Initial status
-    expect(screen.getByText(/Camera idle/i)).toBeInTheDocument();
+    // Initial status - wait for cameras to load first
+    await waitFor(() => {
+      expect(screen.getByText(/Camera idle/i)).toBeInTheDocument();
+    });
   });
 
   test('handles scanning error', async () => {
-    mockHtml5QrcodeInstance.start = jest.fn().mockRejectedValue(new Error('Camera error'));
+    mockHtml5QrcodeInstance.start = vi.fn().mockRejectedValue(new Error('Camera error'));
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
@@ -193,7 +195,7 @@ describe('QRScanner Component', () => {
   });
 
   test('disables controls when no cameras available', async () => {
-    (Html5Qrcode as any).getCameras = jest.fn().mockResolvedValue([]);
+    mockGetCameras.mockResolvedValue([]);
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
@@ -217,10 +219,12 @@ describe('QRScanner Component', () => {
     });
   });
 
-  test('displays scanner placeholder when not scanning', () => {
+  test('displays scanner placeholder when not scanning', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
-    expect(screen.getByText(/Start the scanner to stream and decode/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Start the scanner to stream and decode/i)).toBeInTheDocument();
+    });
   });
 
   test('shows correct status pill classes', async () => {
