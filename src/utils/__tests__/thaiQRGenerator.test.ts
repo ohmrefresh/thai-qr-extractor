@@ -381,7 +381,7 @@ describe('Thai QR Generator', () => {
         paymentType: 'credit-transfer' as const,
         aid: 'A000000677010111',
         recipientType: 'mobile' as const,
-        recipientId: '0873835732'
+        recipientId: '0811111111'
       };
 
       const result = await generateThaiQR(input);
@@ -390,7 +390,7 @@ describe('Thai QR Generator', () => {
       const tag29Field = parsedData.parsedFields.find(field => field.tag === '29');
       const mobileSubTag = tag29Field?.subTags?.find(st => st.tag === '01');
 
-      expect(mobileSubTag?.value).toBe('0066873835732');
+      expect(mobileSubTag?.value).toBe('0066811111111');
     });
 
     test('generates QR with national ID recipient', async () => {

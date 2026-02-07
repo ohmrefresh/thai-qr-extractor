@@ -305,7 +305,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     onChange={(e) => handleInputChange('recipientType', e.target.value as RecipientType)}
                     className="form-input"
                   >
-                    <option value="mobile">Mobile Number (13 digits)</option>
+                    <option value="mobile">Mobile Number (auto format to 0066...)</option>
                     <option value="national-id">National ID / Tax ID (13 digits)</option>
                     <option value="ewallet">E-Wallet ID (15 digits)</option>
                     <option value="bank-account">Bank Account (up to 43 chars)</option>
@@ -314,14 +314,16 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="recipientId">Recipient ID *</label>
+                  <label htmlFor="recipientId">
+                    {formData.recipientType === 'mobile' ? 'Mobile Number *' : 'Recipient ID *'}
+                  </label>
                   <input
                     id="recipientId"
                     type="text"
                     value={formData.recipientId || ''}
                     onChange={(e) => handleInputChange('recipientId', e.target.value)}
                     placeholder={
-                      formData.recipientType === 'mobile' ? 'e.g., 0066812345678' :
+                      formData.recipientType === 'mobile' ? 'e.g., 0811111111' :
                       formData.recipientType === 'national-id' ? 'e.g., 1234567890123' :
                       formData.recipientType === 'ewallet' ? 'e.g., 123456789012345' :
                       'e.g., 001234567890'
@@ -330,7 +332,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     className="form-input"
                   />
                   <span className="field-hint">
-                    {formData.recipientType === 'mobile' && 'Mobile number with country code (e.g., 0066XXXXXXXXX)'}
+                    {formData.recipientType === 'mobile' && 'Enter 0XXXXXXXXX, 66XXXXXXXXX, or 0066XXXXXXXXX. We normalize to 0066XXXXXXXXX.'}
                     {formData.recipientType === 'national-id' && 'National ID or Tax ID (13 digits)'}
                     {formData.recipientType === 'ewallet' && 'E-Wallet ID (15 digits)'}
                     {formData.recipientType === 'bank-account' && 'Bank account number (up to 43 characters)'}

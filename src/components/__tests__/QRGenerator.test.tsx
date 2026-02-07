@@ -317,7 +317,7 @@ describe('QRGenerator Component', () => {
 
       // Should show recipient fields instead of biller fields
       expect(screen.getByLabelText(/Recipient Type/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Recipient ID/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Recipient ID|Mobile Number/i)).toBeInTheDocument();
     });
 
     test('shows bill payment fields when bill payment is selected', () => {
@@ -336,7 +336,7 @@ describe('QRGenerator Component', () => {
 
       // Should show recipient fields
       expect(screen.getByLabelText(/Recipient Type/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Recipient ID/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Recipient ID|Mobile Number/i)).toBeInTheDocument();
     });
 
     test('clears form data when switching payment types', () => {
