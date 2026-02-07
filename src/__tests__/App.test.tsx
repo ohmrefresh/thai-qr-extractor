@@ -40,27 +40,28 @@ describe('App Component', () => {
 
     findButtonByText(text: string) {
       const buttons = screen.getAllByRole('button');
-      return buttons.find(b => b.textContent === text);
+      return buttons.find(b => b.textContent?.includes(text));
     },
 
     async switchToGenerateView() {
-      const generateButton = helpers.findButtonByText('Generate');
+      const generateButton = helpers.findButtonByText('Generate QR Code');
       if (generateButton) {
         fireEvent.click(generateButton);
         // Wait for view transition to complete and QRScanner to unmount
         await waitFor(() => {
-          expect(screen.queryByText(/QR Code Scanner/i)).not.toBeInTheDocument();
+          // After switching to generate view, the scanner section should not be visible
+          expect(screen.queryByRole('heading', { name: /QR Code Scanner/i })).not.toBeInTheDocument();
         });
       }
     },
 
     async switchToScanView() {
-      const scanButton = helpers.findButtonByText('Scan');
+      const scanButton = helpers.findButtonByText('Scan QR Code');
       if (scanButton) {
         fireEvent.click(scanButton);
         // Wait for view transition to complete and QRScanner to mount
         await waitFor(() => {
-          expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
+          expect(screen.getByRole('heading', { name: /QR Code Scanner/i })).toBeInTheDocument();
         });
       }
     },
@@ -216,7 +217,7 @@ describe('App Component', () => {
 
     // Find scan button from view toggle
     const buttons = screen.getAllByRole('button');
-    const scanButton = buttons.find(b => b.textContent === 'Scan');
+    const scanButton = buttons.find(b => b.textContent?.includes('Scan'));
 
     expect(scanButton).toBeInTheDocument();
   });
@@ -478,7 +479,7 @@ describe('App Component', () => {
       });
       
       // Verify scan view is active (by checking scan tab has active class)
-      const scanTab = screen.getByRole('button', { name: /^Scan$/i });
+      const scanTab = screen.getByRole('button', { name: /Scan QR Code/i });
       expect(scanTab.classList.contains('active')).toBe(true);
     });
 
@@ -536,7 +537,7 @@ describe('App Component', () => {
       // Check generate tab exists
       const generateTab = navElement?.querySelector('.nav-tab.active');
       expect(generateTab).toBeInTheDocument();
-      expect(generateTab?.textContent).toMatch(/Generate/i);
+      expect(generateTab?.textContent).toMatch(/Generate QR Code/i);
     });
 
     test('maintains history across view switches', async () => {
@@ -572,8 +573,9 @@ describe('App Component', () => {
 
       await helpers.switchToGenerateView();
 
-      // Simulate QR generation would trigger callback here
-      expect(screen.queryByText(/QR Code Scanner/i)).not.toBeInTheDocument();
+      // After switching to generate view, scanner heading should not be visible
+      // Note: The view switch happens immediately, not after generation
+      expect(screen.queryByRole('heading', { name: /QR Code Scanner/i })).not.toBeInTheDocument();
     });
 
     test('adds generated QR to history', async () => {
