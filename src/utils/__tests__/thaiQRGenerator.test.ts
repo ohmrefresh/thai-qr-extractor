@@ -136,6 +136,21 @@ describe('Thai QR Generator', () => {
     expect(parsedData.merchantName).toBeUndefined();
   });
 
+  test('does not include Merchant Category Code field in generated QR', async () => {
+    const input = {
+      paymentType: 'bill-payment' as const,
+      aid: 'A000000677010112',
+      billerId: '010566300012345',
+      reference1: 'INV2024001'
+    };
+
+    const result = await generateThaiQR(input);
+    const parsedData = parseThaiQR(result.qrString);
+
+    const merchantCategoryCodeField = parsedData.parsedFields.find(field => field.tag === '52');
+    expect(merchantCategoryCodeField).toBeUndefined();
+  });
+
   test('validates missing AID', () => {
     const input = {
       paymentType: 'bill-payment' as const,

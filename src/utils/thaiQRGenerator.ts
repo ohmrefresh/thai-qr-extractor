@@ -3,8 +3,7 @@ import {
   CURRENCY_CODE_THB,
   COUNTRY_CODE_THAILAND,
   PAYLOAD_FORMAT_VERSION,
-  POINT_OF_INITIATION_STATIC,
-  DEFAULT_MERCHANT_CATEGORY
+  POINT_OF_INITIATION_STATIC
 } from '../constants/qrFields';
 
 export type PaymentType = 'credit-transfer' | 'bill-payment';
@@ -269,7 +268,6 @@ export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGen
       }
     }
 
-    qrString += formatTLV('52', DEFAULT_MERCHANT_CATEGORY);
     qrString += formatTLV('53', CURRENCY_CODE_THB);
 
     if (input.amount && input.amount > 0) {
