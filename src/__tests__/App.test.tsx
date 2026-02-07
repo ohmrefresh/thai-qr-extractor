@@ -24,7 +24,7 @@ describe('App Component', () => {
   // Test helper functions
   const helpers = {
     async findTextInput() {
-      return await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+      return await screen.findByPlaceholderText(/00020101021229370016/i);
     },
 
     async findParseButton() {
@@ -132,7 +132,7 @@ describe('App Component', () => {
     const pasteTab = await screen.findByText(/Paste Text/i);
     fireEvent.click(pasteTab);
     
-    const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
+    const textInput = await screen.findByPlaceholderText(/00020101021229370016/i);
     expect(textInput).toBeInTheDocument();
   });
 

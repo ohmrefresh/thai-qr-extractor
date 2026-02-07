@@ -22,21 +22,21 @@ describe('TextInput Component', () => {
 
   test('renders text input component', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    expect(screen.getByText(/Paste QR payload/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Paste raw QR code data here/i)).toBeInTheDocument();
+    expect(screen.getByText(/Paste QR Payload/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/00020101021229370016/i)).toBeInTheDocument();
   });
 
   test('renders parse button and it is disabled when input is empty', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const parseButton = screen.getByText(/Parse QR Data/i);
     expect(parseButton).toBeInTheDocument();
     expect(parseButton).toBeDisabled();
   });
 
   test('enables parse button when text is entered', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
+    const parseButton = screen.getByText(/Parse QR Data/i);
 
     fireEvent.change(textarea, { target: { value: '00020101' } });
 
@@ -45,7 +45,7 @@ describe('TextInput Component', () => {
 
   test('updates input value when text is changed', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i) as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i) as HTMLTextAreaElement;
 
     fireEvent.change(textarea, { target: { value: 'test input' } });
 
@@ -61,8 +61,8 @@ describe('TextInput Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
+    const parseButton = screen.getByText(/Parse QR Data/i);
 
     fireEvent.change(textarea, { target: { value: '00020101' } });
     fireEvent.click(parseButton);
@@ -82,8 +82,8 @@ describe('TextInput Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i) as HTMLTextAreaElement;
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i) as HTMLTextAreaElement;
+    const parseButton = screen.getByText(/Parse QR Data/i);
 
     fireEvent.change(textarea, { target: { value: '00020101' } });
     fireEvent.click(parseButton);
@@ -95,8 +95,8 @@ describe('TextInput Component', () => {
 
   test('parse button is disabled when input is empty or whitespace', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
+    const parseButton = screen.getByText(/Parse QR Data/i);
 
     // Set to whitespace
     fireEvent.change(textarea, { target: { value: '   ' } });
@@ -111,8 +111,8 @@ describe('TextInput Component', () => {
     });
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
-    const parseButton = screen.getByText(/Parse QR data/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
+    const parseButton = screen.getByText(/Parse QR Data/i);
 
     fireEvent.change(textarea, { target: { value: 'invalid-data' } });
     fireEvent.click(parseButton);
@@ -124,7 +124,7 @@ describe('TextInput Component', () => {
 
   test('shows clear button when input has text', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
 
     // Initially no clear button
     expect(screen.queryByText(/Clear/i)).not.toBeInTheDocument();
@@ -137,7 +137,7 @@ describe('TextInput Component', () => {
 
   test('clears input when clear button is clicked', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i) as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i) as HTMLTextAreaElement;
 
     fireEvent.change(textarea, { target: { value: 'some text' } });
     expect(textarea.value).toBe('some text');
@@ -157,7 +157,7 @@ describe('TextInput Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
 
     fireEvent.change(textarea, { target: { value: '00020101' } });
     fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: true });
@@ -176,7 +176,7 @@ describe('TextInput Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockParsedData);
 
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
 
     fireEvent.change(textarea, { target: { value: '00020101' } });
     fireEvent.keyDown(textarea, { key: 'Enter', metaKey: true });
@@ -188,7 +188,7 @@ describe('TextInput Component', () => {
 
   test('does not parse on Enter without Ctrl or Cmd', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const textarea = screen.getByPlaceholderText(/Paste raw QR code data here/i);
+    const textarea = screen.getByPlaceholderText(/00020101021229370016/i);
 
     fireEvent.change(textarea, { target: { value: '00020101' } });
     fireEvent.keyDown(textarea, { key: 'Enter' });
@@ -199,6 +199,6 @@ describe('TextInput Component', () => {
 
   test('renders keyboard shortcut hint', () => {
     render(<TextInput onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    expect(screen.getByText(/Tip: Press Ctrl\+Enter \(Cmd\+Enter\) to parse instantly/i)).toBeInTheDocument();
+    expect(screen.getByText(/to parse instantly/i)).toBeInTheDocument();
   });
 });

@@ -32,14 +32,14 @@ describe('FileUpload Component', () => {
 
   test('renders upload button', () => {
     render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    const uploadButton = screen.getByText(/Browse image/i);
+    const uploadButton = screen.getByText(/Click or drop image here/i);
     expect(uploadButton).toBeInTheDocument();
   });
 
   test('renders card title and subtitle', () => {
     render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-    expect(screen.getByText(/Upload image/i)).toBeInTheDocument();
-    expect(screen.getByText(/Select a QR code image from your device/i)).toBeInTheDocument();
+    expect(screen.getByText(/Upload Image/i)).toBeInTheDocument();
+    expect(screen.getByText(/Select or drag a QR code image for instant decoding/i)).toBeInTheDocument();
   });
 
   test('triggers file input when button is clicked', () => {
@@ -48,7 +48,7 @@ describe('FileUpload Component', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const clickSpy = vi.spyOn(fileInput, 'click');
 
-    const uploadButton = screen.getByText(/Browse image/i);
+    const uploadButton = screen.getByText(/Click or drop image here/i);
     fireEvent.click(uploadButton);
 
     expect(clickSpy).toHaveBeenCalled();
@@ -115,6 +115,7 @@ describe('FileUpload Component', () => {
       })),
     }));
 
+    const originalCreateElement = document.createElement;
     document.createElement = vi.fn((tagName: string) => {
       if (tagName === 'canvas') {
         return {
@@ -123,7 +124,7 @@ describe('FileUpload Component', () => {
           height: 0,
         } as any;
       }
-      return document.createElement(tagName);
+      return originalCreateElement.call(document, tagName);
     });
 
     fireEvent.change(fileInput, { target: { files: [file] } });
