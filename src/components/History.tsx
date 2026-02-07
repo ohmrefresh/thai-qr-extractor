@@ -32,6 +32,14 @@ const History: React.FC<HistoryProps> = ({
   const [editingName, setEditingName] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
 
+  React.useEffect(() => {
+    if (!isOpen) {
+      setSearchTerm('');
+      setEditingItemId(null);
+      setEditingName('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const formatTimestamp = (timestamp: Date) => {

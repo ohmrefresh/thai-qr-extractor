@@ -381,4 +381,46 @@ describe('History Component', () => {
     expect(screen.queryByText(/Coffee Shop/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Noodle House/i)).toBeInTheDocument();
   });
+
+  test('clears search input when modal is closed and reopened', () => {
+    const historyItems = [createMockHistoryItem()];
+
+    const { rerender } = render(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Search history/i), { target: { value: 'Test' } });
+    expect(screen.getByPlaceholderText(/Search history/i)).toHaveValue('Test');
+
+    rerender(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={false}
+        onClose={mockOnClose}
+      />
+    );
+
+    rerender(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    expect(screen.getByPlaceholderText(/Search history/i)).toHaveValue('');
+  });
 });
