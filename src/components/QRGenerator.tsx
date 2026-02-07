@@ -402,85 +402,55 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
             )}
           </div>
 
-          <div className="form-section">
-            <h3>Optional Information</h3>
+          {formData.paymentType === 'bill-payment' && (
+            <div className="form-section">
+              <h3>Optional Information</h3>
 
-            {formData.paymentType === 'credit-transfer' && (
-              <>
-                <div className="form-group">
-                  <label htmlFor="reference1">Reference 1</label>
-                  <input
-                    id="reference1"
-                    type="text"
-                    value={formData.reference1 || ''}
-                    onChange={(e) => handleInputChange('reference1', e.target.value)}
-                    placeholder="e.g., Payment Ref 001"
-                    maxLength={25}
-                    className="form-input"
-                  />
-                  <span className="field-hint">Primary reference (optional for credit transfer)</span>
-                </div>
+              <div className="form-group">
+                <label htmlFor="amount">Amount (THB)</label>
+                <input
+                  id="amount"
+                  type="number"
+                  value={formData.amount || ''}
+                  onChange={(e) => handleInputChange('amount', e.target.value ? parseFloat(e.target.value) : undefined)}
+                  placeholder="e.g., 100.00"
+                  min="0"
+                  max="999999.99"
+                  step="0.01"
+                  className="form-input"
+                />
+                <span className="field-hint">Transaction amount in Thai Baht</span>
+              </div>
 
-                <div className="form-group">
-                  <label htmlFor="reference2">Reference 2</label>
-                  <input
-                    id="reference2"
-                    type="text"
-                    value={formData.reference2 || ''}
-                    onChange={(e) => handleInputChange('reference2', e.target.value)}
-                    placeholder="e.g., Customer ID 123"
-                    maxLength={25}
-                    className="form-input"
-                  />
-                  <span className="field-hint">Secondary reference (optional)</span>
-                </div>
-              </>
-            )}
+              <div className="form-group">
+                <label htmlFor="merchantName">Merchant Name</label>
+                <input
+                  id="merchantName"
+                  type="text"
+                  value={formData.merchantName}
+                  onChange={(e) => handleInputChange('merchantName', e.target.value)}
+                  placeholder="e.g., ABC Company"
+                  maxLength={25}
+                  className="form-input"
+                />
+                <span className="field-hint">Business or merchant name</span>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="amount">Amount (THB)</label>
-              <input
-                id="amount"
-                type="number"
-                value={formData.amount || ''}
-                onChange={(e) => handleInputChange('amount', e.target.value ? parseFloat(e.target.value) : undefined)}
-                placeholder="e.g., 100.00"
-                min="0"
-                max="999999.99"
-                step="0.01"
-                className="form-input"
-              />
-              <span className="field-hint">Transaction amount in Thai Baht</span>
+              <div className="form-group">
+                <label htmlFor="merchantCity">Merchant City</label>
+                <input
+                  id="merchantCity"
+                  type="text"
+                  value={formData.merchantCity}
+                  onChange={(e) => handleInputChange('merchantCity', e.target.value)}
+                  placeholder="e.g., Bangkok"
+                  maxLength={15}
+                  className="form-input"
+                />
+                <span className="field-hint">City where merchant is located</span>
+              </div>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="merchantName">Merchant Name</label>
-              <input
-                id="merchantName"
-                type="text"
-                value={formData.merchantName}
-                onChange={(e) => handleInputChange('merchantName', e.target.value)}
-                placeholder="e.g., ABC Company"
-                maxLength={25}
-                className="form-input"
-              />
-              <span className="field-hint">Business or merchant name</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="merchantCity">Merchant City</label>
-              <input
-                id="merchantCity"
-                type="text"
-                value={formData.merchantCity}
-                onChange={(e) => handleInputChange('merchantCity', e.target.value)}
-                placeholder="e.g., Bangkok"
-                maxLength={15}
-                className="form-input"
-              />
-              <span className="field-hint">City where merchant is located</span>
-            </div>
-          </div>
+          )}
 
           {errors.length > 0 && (
             <div className="error-messages">

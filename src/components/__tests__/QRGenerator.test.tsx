@@ -443,19 +443,14 @@ describe('QRGenerator Component', () => {
       expect(aidSelect.innerHTML).toContain('Customer-Presented QR');
     });
 
-    test('shows reference fields in optional section for credit transfer', () => {
+    test('hides optional information section for credit transfer', () => {
       render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
 
       // Switch to credit transfer
       const creditTransferButton = screen.getByText('Credit Transfer').closest('button');
       fireEvent.click(creditTransferButton!);
 
-      // References should be in optional section for credit transfer
-      const optionalSection = screen.getByText('Optional Information').parentElement;
-      const references = screen.getAllByLabelText(/Reference/i);
-
-      // At least one reference field should be in the optional section
-      expect(references.length).toBeGreaterThan(0);
+      expect(screen.queryByText('Optional Information')).not.toBeInTheDocument();
     });
   });
 });
