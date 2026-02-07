@@ -1,23 +1,64 @@
 :root {
   --font-sans: 'Inter', 'SF Pro Text', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
-  --color-background: #f3f5f9;
+  
+  /* ========================================
+     CLEAN FINTECH BLUE COLOR PALETTE
+     ======================================== */
+  
+  /* Primary Blues */
+  --color-primary: #0ea5e9;
+  --color-primary-strong: #0284c7;
+  --color-primary-soft: #38bdf8;
+  --color-primary-light: #e0f2fe;
+  --color-primary-muted: #f0f9ff;
+  
+  /* Background - Soft Blue Tint */
+  --color-background: #f8fafc;
+  --color-background-alt: #f1f5f9;
+  
+  /* Surface Colors */
   --color-surface: #ffffff;
   --color-surface-alt: #f8fafc;
-  --color-surface-muted: #eef2f7;
-  --color-primary: #2563eb;
-  --color-primary-strong: #1d4ed8;
-  --color-accent: #7c3aed;
-  --color-success: #0f9d58;
+  --color-surface-muted: #f1f5f9;
+  --color-surface-elevated: #ffffff;
+  
+  /* Accent - Blue-Violet Range */
+  --color-accent: #6366f1;
+  --color-accent-soft: #818cf8;
+  --color-accent-light: #e0e7ff;
+  
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-success-soft: #34d399;
+  --color-success-light: #d1fae5;
   --color-danger: #ef4444;
-  --color-border: #d6deeb;
-  --color-border-strong: #c0c9d6;
+  --color-danger-soft: #f87171;
+  --color-danger-light: #fee2e2;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fbbf24;
+  --color-warning-light: #fef3c7;
+  
+  /* Border Colors - Blue Tinted */
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-border-soft: #f1f5f9;
+  
+  /* Text Colors - Blue-Gray Tones */
   --text-strong: #0f172a;
   --text-default: #1e293b;
   --text-muted: #64748b;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.12);
-  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
+  --text-placeholder: #94a3b8;
+  
+  /* Shadows - Blue Tinted */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 20px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.12);
+  --shadow-xl: 0 24px 60px rgba(15, 23, 42, 0.16);
+  --shadow-glow: 0 0 40px rgba(14, 165, 233, 0.15);
+  --shadow-glow-strong: 0 0 60px rgba(14, 165, 233, 0.25);
+  
+  /* Typography Scale */
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;
   --fs-md: 0.875rem;
@@ -25,26 +66,27 @@
   --fs-lg: 1rem;
   --fs-xl: 1.125rem;
   --fs-2xl: 1.25rem;
-  color-scheme: light;
   
-  /* New design system additions */
+  /* Border Radius */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
   --radius-2xl: 28px;
   
-  /* Tag colors */
+  /* Tag Colors - Fintech Blue Theme */
   --tag-payment: #10b981;
-  --tag-payment-bg: rgba(16, 185, 129, 0.12);
+  --tag-payment-bg: rgba(16, 185, 129, 0.1);
   --tag-metadata: #f59e0b;
-  --tag-metadata-bg: rgba(245, 158, 11, 0.12);
+  --tag-metadata-bg: rgba(245, 158, 11, 0.1);
   --tag-crc: #ef4444;
-  --tag-crc-bg: rgba(239, 68, 68, 0.12);
+  --tag-crc-bg: rgba(239, 68, 68, 0.1);
   
   /* Drawer */
   --drawer-width: 420px;
   --drawer-width-mobile: 100%;
+  
+  color-scheme: light;
 }
 
 * {
@@ -59,7 +101,8 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--fs-base);
-  background: var(--color-background);
+  background: linear-gradient(180deg, var(--color-background) 0%, var(--color-background-alt) 100%);
+  background-attachment: fixed;
   color: var(--text-default);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -72,4 +115,36 @@ body {
 
 code {
   font-family: var(--font-mono);
+}
+
+/* Selection Styling */
+::selection {
+  background: rgba(14, 165, 233, 0.2);
+  color: var(--color-primary-strong);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-soft);
+}
+
+/* Focus Styling */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
