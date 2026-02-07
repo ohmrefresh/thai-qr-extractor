@@ -49,7 +49,7 @@ describe('App Component', () => {
         fireEvent.click(generateButton);
         // Wait for view transition to complete and QRScanner to unmount
         await waitFor(() => {
-          expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+          expect(screen.queryByText(/QR Code Scanner/i)).not.toBeInTheDocument();
         });
       }
     },
@@ -60,7 +60,7 @@ describe('App Component', () => {
         fireEvent.click(scanButton);
         // Wait for view transition to complete and QRScanner to mount
         await waitFor(() => {
-          expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+          expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
         });
       }
     },
@@ -119,19 +119,27 @@ describe('App Component', () => {
     render(<App />);
     // Verify the scan view is displayed (which contains the QRScanner)
     await waitFor(() => {
-      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
     });
     // The QRScanner component is lazy-loaded and tested in detail in QRScanner.test.tsx
   });
 
   test('renders file upload component', async () => {
     render(<App />);
+    // Click on the Upload tab first
+    const uploadTab = await screen.findByText(/Upload/i);
+    fireEvent.click(uploadTab);
+    
     const uploadButton = await screen.findByText(/Browse image/i);
     expect(uploadButton).toBeInTheDocument();
   });
 
   test('renders text input component', async () => {
     render(<App />);
+    // Click on the Paste Text tab first
+    const pasteTab = await screen.findByText(/Paste Text/i);
+    fireEvent.click(pasteTab);
+    
     const textInput = await screen.findByPlaceholderText(/Paste raw QR code data here/i);
     expect(textInput).toBeInTheDocument();
   });
@@ -158,7 +166,7 @@ describe('App Component', () => {
     render(<App />);
 
     // Initially in scan view
-    expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+    expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
 
     // Switch to generate view (helper now includes waitFor)
     await helpers.switchToGenerateView();
@@ -190,7 +198,7 @@ describe('App Component', () => {
     // This would typically be done through component interaction
     // For now, we verify the component structure exists
     await waitFor(() => {
-      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
     });
   });
 
@@ -232,7 +240,7 @@ describe('App Component', () => {
 
     // Scan view should be visible by default
     await waitFor(() => {
-      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
     });
 
     // Find scan button from view toggle
@@ -274,6 +282,10 @@ describe('App Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
+    
+    // Click on the Upload tab first
+    const uploadTab = await screen.findByText(/Upload/i);
+    fireEvent.click(uploadTab);
 
     await waitFor(() => {
       expect(screen.getByText(/Browse image/i)).toBeInTheDocument();
@@ -285,6 +297,10 @@ describe('App Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
+    
+    // Click on the Paste Text tab first
+    const pasteTab = await screen.findByText(/Paste Text/i);
+    fireEvent.click(pasteTab);
 
     await helpers.parseTextInput('00020101');
 
@@ -736,7 +752,7 @@ describe('App Component', () => {
       await helpers.switchToGenerateView();
 
       // Simulate QR generation would trigger callback here
-      expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/QR Code Scanner/i)).not.toBeInTheDocument();
     });
 
     test('adds generated QR to history', async () => {
@@ -772,12 +788,12 @@ describe('App Component', () => {
 
       render(<App />);
 
-      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
 
       await helpers.parseTextInput('00020101');
 
       await waitFor(() => {
-        expect(screen.queryByText(/Scan or import Thai QR codes/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/QR Code Scanner/i)).not.toBeInTheDocument();
       });
     });
 
@@ -856,7 +872,7 @@ describe('App Component', () => {
       await helpers.switchToScanView();
 
       // Should end up in scan view
-      expect(screen.getByText(/Scan or import Thai QR codes/i)).toBeInTheDocument();
+      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
     });
 
     test('handles multiple scans in succession', async () => {
