@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { QRGenerationResult } from '../../utils/thaiQRGenerator';
 import { MiniQRResult } from '../../utils/miniQRGenerator';
 import { QRCodeIcon } from '../icons';
+import { toast } from 'sonner';
 
 interface QRPreviewProps {
   result: QRGenerationResult | MiniQRResult | null;
@@ -16,9 +17,6 @@ interface QRPreviewProps {
     paymentType: 'credit-transfer' | 'bill-payment';
     amount?: number;
   };
-  onDownload?: () => void;
-  onCopy?: () => void;
-  canExport?: boolean;
 }
 
 const QRPreview: React.FC<QRPreviewProps> = ({
@@ -27,17 +25,86 @@ const QRPreview: React.FC<QRPreviewProps> = ({
   isGenerating = false,
   isMiniQR = false,
   miniQRData,
-  standardQRData,
-  onDownload,
-  onCopy,
-  canExport = true
+  standardQRData
 }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+
+  // Handle download QR code image - works in both preview and generated mode
+  const handleDownload = useCallback(async () => {
+    if (!result?.qrCodeDataURL) {
+      toast.error('No QR code available to download');
+      return;
+    }
+
+    setIsDownloading(true);
+    
+    try {
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = result.qrCodeDataURL;
+      link.download = `${getFileName()}-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('QR code downloaded successfully');
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download QR code');
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [result]);
+
+  // Handle copy QR string
+  const handleCopy = useCallback(async () => {
+    if (!result?.qrString) {
+      toast.error('No QR string available to copy');
+      return;
+    }
+
+    setIsCopying(true);
+    
+    try {
+      await navigator.clipboard.writeText(result.qrString);
+      toast.success('QR string copied to clipboard');
+    } catch (error) {
+      console.error('Copy failed:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = result.qrString;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        toast.success('QR string copied to clipboard');
+      } catch (err) {
+        toast.error('Failed to copy QR string');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    } finally {
+      setIsCopying(false);
+    }
+  }, [result]);
+
+  // Get filename based on QR type
+  const getFileName = () => {
+    if (isMiniQR) return 'mini-qr-code';
+    if (standardQRData?.paymentType === 'credit-transfer') return 'credit-transfer-qr';
+    return 'bill-payment-qr';
+  };
+
   return (
     <div className="generator-preview-modern">
       <div className="preview-header">
         <h3>QR Code Preview</h3>
         {isPreview && (
-          <span className="preview-badge-modern">Live</span>
+          <span className="preview-badge-modern">Live Preview</span>
         )}
       </div>
 
@@ -92,38 +159,53 @@ const QRPreview: React.FC<QRPreviewProps> = ({
               <code>{result.qrString}</code>
             </div>
 
-            {(onDownload || onCopy) && (
-              <div className="preview-actions">
-                {onDownload && (
-                  <button
-                    onClick={onDownload}
-                    className="btn-action"
-                    disabled={!canExport}
-                  >
+            {/* Enhanced Action Buttons */}
+            <div className="preview-actions">
+              <button
+                onClick={handleDownload}
+                className="btn-action btn-action-primary"
+                disabled={isDownloading}
+                title="Download QR code as PNG"
+              >
+                {isDownloading ? (
+                  <>
+                    <div className="spinner-small" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></div>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7,10 12,15 17,10"></polyline>
                       <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Download
-                  </button>
+                    Download PNG
+                  </>
                 )}
+              </button>
 
-                {onCopy && (
-                  <button
-                    onClick={onCopy}
-                    className="btn-action"
-                    disabled={!canExport}
-                  >
+              <button
+                onClick={handleCopy}
+                className="btn-action btn-action-secondary"
+                disabled={isCopying}
+                title="Copy QR string to clipboard"
+              >
+                {isCopying ? (
+                  <>
+                    <div className="spinner-small" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></div>
+                    Copying...
+                  </>
+                ) : (
+                  <>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                     </svg>
-                    Copy
-                  </button>
+                    Copy String
+                  </>
                 )}
-              </div>
-            )}
+              </button>
+            </div>
 
             {isPreview && (
               <p className="preview-notice">
@@ -132,7 +214,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({
                   <path d="M12 16v-4"></path>
                   <path d="M12 8h.01"></path>
                 </svg>
-                This is a live preview. Click "Generate" to finalize.
+                This is a live preview. Both download and copy are available.
               </p>
             )}
           </>

@@ -99,7 +99,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
   // Use preview result if no finalized result yet
   const qrResult = generatedMiniQR || previewResult;
   const isPreview = !generatedMiniQR && !!previewResult;
-  const canExport = !!generatedMiniQR;
+  // canExport is no longer needed - download works in preview mode
 
   const handleLoadSample = () => {
     setMiniQRData({
@@ -119,24 +119,6 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
     });
     setGeneratedMiniQR(null);
     setErrors([]);
-  };
-
-  const handleDownload = () => {
-    if (!qrResult) return;
-    const link = document.createElement('a');
-    link.download = 'mini-qr-code.png';
-    link.href = qrResult.qrCodeDataURL;
-    link.click();
-  };
-
-  const handleCopyQRString = async () => {
-    if (!qrResult) return;
-    try {
-      await navigator.clipboard.writeText(qrResult.qrString);
-      toast.success('QR string copied to clipboard');
-    } catch (error) {
-      console.error('Failed to copy QR string:', error);
-    }
   };
 
   return (
@@ -248,9 +230,6 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
           bankCode: miniQRData.bankCode,
           transactionId: miniQRData.transactionId
         }}
-        onDownload={handleDownload}
-        onCopy={handleCopyQRString}
-        canExport={canExport}
       />
     </div>
   );

@@ -185,29 +185,9 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
     setErrors([]);
   };
 
-  const handleDownload = () => {
-    const qrResult = result || previewResult;
-    if (!qrResult) return;
-    const link = document.createElement('a');
-    link.download = 'thai-qr-code.png';
-    link.href = qrResult.qrCodeDataURL;
-    link.click();
-  };
-
-  const handleCopyQRString = async () => {
-    const qrResult = result || previewResult;
-    if (!qrResult) return;
-    try {
-      await navigator.clipboard.writeText(qrResult.qrString);
-      toast.success('QR string copied to clipboard');
-    } catch (error) {
-      console.error('Failed to copy QR string:', error);
-    }
-  };
-
   const qrResult = result || previewResult;
   const isPreview = !result && !!previewResult;
-  const canExport = !!result;
+  // canExport is no longer needed - download works in preview mode
 
   return (
     <div className="generator-main">
@@ -334,9 +314,6 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
           paymentType: formData.paymentType,
           amount: formData.amount
         }}
-        onDownload={handleDownload}
-        onCopy={handleCopyQRString}
-        canExport={canExport}
       />
     </div>
   );

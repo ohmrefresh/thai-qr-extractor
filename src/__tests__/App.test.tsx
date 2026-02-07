@@ -109,9 +109,9 @@ describe('App Component', () => {
     });
   });
 
-  test('renders Thai QR Tools', () => {
+  test('renders PromptPay QR', () => {
     render(<App />);
-    const headingElement = screen.getByText(/Thai QR Tools/i);
+    const headingElement = screen.getByText(/PromptPay QR/i);
     expect(headingElement).toBeInTheDocument();
   });
 

@@ -21,7 +21,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <div className="brand-icon">
             <QRCodeIcon width={28} height={28} />
           </div>
-          <h1>Thai QR Tools</h1>
+          <h1>PromptPay QR</h1>
         </div>
 
         <nav className="main-nav">
