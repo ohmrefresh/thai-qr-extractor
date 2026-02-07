@@ -327,4 +327,100 @@ describe('History Component', () => {
     expect(screen.getByText(/Merchant 2/i)).toBeInTheDocument();
     expect(screen.getByText(/Merchant 3/i)).toBeInTheDocument();
   });
+
+  test('calls onRenameItem when edit name is saved', () => {
+    const historyItems = [createMockHistoryItem()];
+    const onRenameItem = vi.fn();
+
+    render(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        onRenameItem={onRenameItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText(/Edit name/i));
+    fireEvent.change(screen.getByLabelText(/Edit history item name/i), {
+      target: { value: 'My Custom Name' }
+    });
+    fireEvent.click(screen.getByLabelText(/Save name/i));
+
+    expect(onRenameItem).toHaveBeenCalledWith('1', 'My Custom Name');
+  });
+
+  test('filters history items by search term', () => {
+    const historyItems = [
+      createMockHistoryItem({
+        id: '1',
+        data: { rawData: '001', version: '01', type: '12', parsedFields: [], merchantName: 'Coffee Shop' }
+      }),
+      createMockHistoryItem({
+        id: '2',
+        data: { rawData: '002', version: '01', type: '12', parsedFields: [], merchantName: 'Noodle House' }
+      })
+    ];
+
+    render(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Search history/i), { target: { value: 'Noodle' } });
+
+    expect(screen.queryByText(/Coffee Shop/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Noodle House/i)).toBeInTheDocument();
+  });
+
+  test('clears search input when modal is closed and reopened', () => {
+    const historyItems = [createMockHistoryItem()];
+
+    const { rerender } = render(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Search history/i), { target: { value: 'Test' } });
+    expect(screen.getByPlaceholderText(/Search history/i)).toHaveValue('Test');
+
+    rerender(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={false}
+        onClose={mockOnClose}
+      />
+    );
+
+    rerender(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    expect(screen.getByPlaceholderText(/Search history/i)).toHaveValue('');
+  });
 });

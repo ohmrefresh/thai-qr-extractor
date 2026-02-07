@@ -6,6 +6,7 @@ export interface HistoryItem {
   data: ThaiQRData;
   timestamp: Date;
   source: 'camera' | 'file' | 'text';
+  customName?: string;
 }
 
 interface HistoryProps {
@@ -13,6 +14,7 @@ interface HistoryProps {
   onSelectItem: (data: ThaiQRData) => void;
   onClearHistory: () => void;
   onDeleteItem: (id: string) => void;
+  onRenameItem?: (id: string, customName: string) => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -22,9 +24,22 @@ const History: React.FC<HistoryProps> = ({
   onSelectItem,
   onClearHistory,
   onDeleteItem,
+  onRenameItem,
   isOpen,
   onClose
 }) => {
+  const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
+  const [editingName, setEditingName] = React.useState('');
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setSearchTerm('');
+      setEditingItemId(null);
+      setEditingName('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const formatTimestamp = (timestamp: Date) => {
@@ -61,6 +76,10 @@ const History: React.FC<HistoryProps> = ({
   };
 
   const getDisplayTitle = (item: HistoryItem) => {
+    if (item.customName?.trim()) {
+      return item.customName;
+    }
+
     if (item.data.merchantName) {
       return `${item.data.merchantName}${item.data.amount ? ` - ฿${item.data.amount}` : ''}`;
     }
@@ -70,31 +89,63 @@ const History: React.FC<HistoryProps> = ({
     return `QR Code (${item.data.version})`;
   };
 
+  const handleStartRename = (item: HistoryItem) => {
+    setEditingItemId(item.id);
+    setEditingName(getDisplayTitle(item));
+  };
+
+  const handleSaveRename = (itemId: string) => {
+    const trimmedName = editingName.trim();
+    if (!trimmedName) return;
+
+    onRenameItem?.(itemId, trimmedName);
+    setEditingItemId(null);
+    setEditingName('');
+  };
+
+  const handleCancelRename = () => {
+    setEditingItemId(null);
+    setEditingName('');
+  };
+
+  const filteredHistoryItems = historyItems.filter((item) => {
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    const displayTitle = getDisplayTitle(item).toLowerCase();
+    const reference = item.data.reference?.toLowerCase() || '';
+    const rawData = item.data.rawData?.toLowerCase() || '';
+
+    return displayTitle.includes(query) || reference.includes(query) || rawData.includes(query);
+  });
+
   return (
-    <div className="history-overlay">
-      <div className="history-menu">
-        <div className="history-header">
-          <div className="history-heading">
-            <div className="card-icon accent-history">
-              <svg className="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-              </svg>
-            </div>
-            <div>
-              <h2>Scan history</h2>
-              <p>Recent QR payloads captured across all methods.</p>
-            </div>
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`drawer-backdrop ${isOpen ? 'is-open' : ''}`}
+        onClick={onClose}
+      />
+      
+      {/* Drawer */}
+      <div className={`history-drawer ${isOpen ? 'is-open' : ''}`}>
+        <div className="history-drawer-header">
+          <div className="history-drawer-title">
+            <h2>History</h2>
+            <span className="history-count-badge-drawer">{historyItems.length}</span>
           </div>
-          <button className="close-button" onClick={onClose} aria-label="Close history">
-            <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button className="drawer-close-btn" onClick={onClose} aria-label="Close history">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
 
-        <div className="history-content">
+        <div className="history-drawer-content">
           {historyItems.length === 0 ? (
             <div className="empty-history">
               <svg className="icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
@@ -108,6 +159,16 @@ const History: React.FC<HistoryProps> = ({
             </div>
           ) : (
             <>
+              <div className="history-search">
+                <input
+                  className="history-search-input"
+                  type="text"
+                  placeholder="Search history"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
               <div className="history-actions">
                 <button 
                   className="clear-history-button"
@@ -120,11 +181,17 @@ const History: React.FC<HistoryProps> = ({
                   </svg>
                   Clear All
                 </button>
-                <span className="history-count">{historyItems.length} item{historyItems.length !== 1 ? 's' : ''}</span>
+                <span className="history-count">
+                  {filteredHistoryItems.length} / {historyItems.length} item{historyItems.length !== 1 ? 's' : ''}
+                </span>
               </div>
 
               <div className="history-list">
-                {historyItems.map((item) => (
+                {filteredHistoryItems.length === 0 && (
+                  <div className="empty-history-search">No matching history items</div>
+                )}
+
+                {filteredHistoryItems.map((item) => (
                   <div key={item.id} className="history-item">
                     <div className="history-item-content" onClick={() => onSelectItem(item.data)}>
                       <div className="history-item-header">
@@ -132,8 +199,55 @@ const History: React.FC<HistoryProps> = ({
                           {getSourceIcon(item.source)}
                         </div>
                         <div className="history-item-title">
-                          {getDisplayTitle(item)}
+                          {editingItemId === item.id ? (
+                            <div className="history-item-rename" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                className="history-item-rename-input"
+                                aria-label="Edit history item name"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleSaveRename(item.id);
+                                  }
+
+                                  if (e.key === 'Escape') {
+                                    handleCancelRename();
+                                  }
+                                }}
+                                autoFocus
+                              />
+                              <button
+                                className="history-item-action-button"
+                                aria-label="Save name"
+                                onClick={() => handleSaveRename(item.id)}
+                              >
+                                Save
+                              </button>
+                              <button
+                                className="history-item-action-button"
+                                aria-label="Cancel edit name"
+                                onClick={handleCancelRename}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            getDisplayTitle(item)
+                          )}
                         </div>
+                        {editingItemId !== item.id && (
+                          <button
+                            className="history-item-action-button"
+                            aria-label="Edit name"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartRename(item);
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
                         <button 
                           className="delete-item-button"
                           onClick={(e) => {
@@ -161,7 +275,7 @@ const History: React.FC<HistoryProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -35,20 +35,33 @@ The app has **two main modes** accessible via view toggle:
 1. **Scan Mode** - Parse/decode existing QR codes
 2. **Generate Mode** - Create new Thai payment QR codes
 
+### Component Organization
+
+**Component structure follows feature-based organization:**
+- `components/` - Main feature components
+- `components/generator/` - QR generation form components
+- `components/shared/` - Reusable UI components (FormField, Card, ErrorMessage, LoadingSpinner)
+- `components/icons/` - SVG icon components
+- `hooks/` - Custom React hooks
+
 ### Core Components
 
-**App.tsx** - Root component managing view state (scan/generate), QR data state, error handling, and history. Coordinates between input components (scanner/uploader/text input/generator) and display components.
+**App.tsx** - Root component managing view state (scan/generate), QR data state, error handling, and history. Uses AppHeader for navigation and coordinates between input/display components.
 
-**QRScanner.tsx** - Camera-based scanning using `html5-qrcode`. Manages camera enumeration, permissions, and real-time decoding.
+**AppHeader.tsx** - Application header with brand logo, navigation tabs (Scan/Generate), and history button with badge.
+
+**QRScanner.tsx** - Camera-based scanning using `html5-qrcode`. Uses `useCamera` hook for camera management. Handles QR detection and decoding from camera stream.
 
 **FileUpload.tsx** - Image file upload using `jsQR`. Processes images via canvas API for QR detection.
 
 **TextInput.tsx** - Manual QR string input with validation and keyboard shortcuts (Ctrl/Cmd+Enter to parse).
 
-**QRGenerator.tsx** - QR code generation form with dual payment type support:
-- **Tag 29 (Credit Transfer)**: PromptPay ID-based payments with recipient types (mobile, national ID, e-wallet, bank account)
-- **Tag 30 (Bill Payment)**: Biller-based payments with references
-- Includes live preview, validation, and export (PNG download, string copy)
+**QRGenerator.tsx** - Container component (~70 lines) that delegates to specialized generators:
+- **StandardQRGenerator.tsx** - Handles Tag 29 (Credit Transfer) and Tag 30 (Bill Payment) with live preview and validation
+- **MiniQRGenerator.tsx** - Simplified generator for basic QR codes
+- **Payment-specific fields**: CreditTransferFields, BillPaymentFields, CommonFields components
+- **PaymentTypeSelector.tsx** - Tab-based payment type selection UI
+- **QRPreview.tsx** - Live QR code preview with export options (PNG download, string copy)
 
 **QRDataDisplay.tsx** - Formatted display of parsed QR data with expandable sections for summary, raw data, and field-by-field breakdown including nested sub-tags.
 
@@ -74,6 +87,16 @@ The app has **two main modes** accessible via view toggle:
 **currencyMapper.ts** - Maps ISO 4217 currency codes to symbols and names.
 
 **historyStorage.ts** - LocalStorage wrapper for QR history with 50-item limit and date tracking.
+
+### Custom Hooks
+
+**useCamera.ts** - Manages camera lifecycle, enumeration, permissions, and device selection. Extracted from QRScanner for reusability.
+
+**useQRData.ts** - Manages QR data state and parsing logic.
+
+**useHistory.ts** - Manages history state and localStorage persistence.
+
+**useClipboard.ts** - Handles clipboard operations for copying QR strings.
 
 ### Key Data Structures
 
@@ -170,6 +193,9 @@ Uses **Vitest** with React Testing Library (migrated from Jest).
 - Use `parseThaiQR()` to verify round-trip generation → parsing
 - Verify sub-tag placement: check `field.subTags?.find(st => st.tag === 'XX')`
 - Component tests use `fireEvent` and `waitFor` from RTL
+- Lazy-loaded components mocked in setupTests.ts for synchronous resolution
+
+**Current test count:** 270 tests across 11 test files
 
 ## Build System
 
@@ -203,3 +229,6 @@ Uses **Vitest** with React Testing Library (migrated from Jest).
 - **Conditional validation**: OTA required only when AID = A000000677010114
 - **History limit**: Maximum 50 items stored in localStorage
 - **Live preview**: QRGenerator debounces preview generation (500ms delay)
+- **Component architecture**: QRGenerator is a container (~70 lines) that delegates to StandardQRGenerator, MiniQRGenerator, and shared form components
+- **Test mocking**: Lazy-loaded components are mocked in setupTests.ts to resolve synchronously in test environment
+- **Icon components**: All SVG icons extracted to `components/icons/` for reusability

@@ -26,16 +26,18 @@ A React TypeScript application for extracting and parsing Thai QR code payment d
 - **html5-qrcode** for camera scanning
 - **jsQR** for image-based QR decoding
 - **qrcode** for QR generation
-- **React Testing Library** for testing
+- **Vitest** for unit testing
+- **React Testing Library** for component testing
 - **GitHub Actions** for CI/CD
 
 ## Code Quality
 
 - ✅ **Test Coverage**: 84.77%
-- ✅ **187 Unit Tests** passing
+- ✅ **525+ Unit Tests** passing across 23 test files
 - ✅ **TypeScript** for type safety
 - ✅ **Custom Hooks** for clean architecture
-- ✅ **Comprehensive Testing** with React Testing Library
+- ✅ **Component-based Design** with feature-focused organization
+- ✅ **Comprehensive Testing** with React Testing Library and Vitest
 
 ## Available Scripts
 
@@ -104,11 +106,27 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 ## 🧪 Testing
 
 The project includes comprehensive tests:
-- Unit tests for utilities and components
+- **525+ Unit Tests** across 23 test files
+- Component tests for UI components (Card, FormField, LoadingSpinner, etc.)
+- Icon component tests (AlertIcon, CameraIcon, UploadIcon, etc.)
+- Hook tests (useQRData, useClipboard, useHistory)
+- Utility tests (Thai QR Parser, QR Generator, History Storage)
 - Integration tests for QR parsing and generation
 - Test coverage reporting
 
 Run tests with: `npm test`
+
+### Test Structure
+```
+src/
+├── components/
+│   ├── __tests__/          # Component tests
+│   ├── generator/__tests__/ # Generator component tests
+│   ├── icons/__tests__/     # Icon component tests
+│   └── shared/__tests__/    # Shared component tests
+├── hooks/__tests__/         # Custom hook tests
+└── utils/__tests__/         # Utility function tests
+```
 
 ## 📝 Architecture
 

@@ -3,8 +3,7 @@ import {
   CURRENCY_CODE_THB,
   COUNTRY_CODE_THAILAND,
   PAYLOAD_FORMAT_VERSION,
-  POINT_OF_INITIATION_STATIC,
-  DEFAULT_MERCHANT_CATEGORY
+  POINT_OF_INITIATION_STATIC
 } from '../constants/qrFields';
 
 export type PaymentType = 'credit-transfer' | 'bill-payment';
@@ -165,6 +164,32 @@ const getRecipientSubTagId = (recipientType: RecipientType): string => {
   }
 };
 
+const normalizeMobileRecipientId = (recipientId: string): string => {
+  const digitsOnly = recipientId.replace(/\D/g, '');
+
+  if (!digitsOnly) {
+    return recipientId;
+  }
+
+  if (digitsOnly.startsWith('0066')) {
+    return digitsOnly;
+  }
+
+  if (digitsOnly.length === 11 && digitsOnly.startsWith('66')) {
+    return `00${digitsOnly}`;
+  }
+
+  if (digitsOnly.length === 10 && digitsOnly.startsWith('0')) {
+    return `0066${digitsOnly.slice(1)}`;
+  }
+
+  if (digitsOnly.length === 9) {
+    return `0066${digitsOnly}`;
+  }
+
+  return recipientId;
+};
+
 /**
  * Generate sub-tags for Tag 29 (PromptPay: Credit Transfer)
  */
@@ -179,7 +204,11 @@ const generateTag29SubTags = (input: ThaiQRGeneratorInput): string => {
   // Recipient Identifier (one is mandatory)
   if (input.recipientId && input.recipientType) {
     const recipientSubTagId = getRecipientSubTagId(input.recipientType);
-    subTags += formatTLV(recipientSubTagId, input.recipientId);
+    const recipientValue = input.recipientType === 'mobile'
+      ? normalizeMobileRecipientId(input.recipientId)
+      : input.recipientId;
+
+    subTags += formatTLV(recipientSubTagId, recipientValue);
   }
 
   // OTA (ID "05") - Mandatory if AID = A000000677010114
@@ -269,7 +298,6 @@ export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGen
       }
     }
 
-    qrString += formatTLV('52', DEFAULT_MERCHANT_CATEGORY);
     qrString += formatTLV('53', CURRENCY_CODE_THB);
 
     if (input.amount && input.amount > 0) {
@@ -291,9 +319,10 @@ export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGen
       qrString += formatTLV('62', tag62SubTags);
     }
 
-    // Calculate and append CRC
+    // Calculate CRC - append tag 63 with length 04 before calculating checksum
     const qrWithoutCRC = qrString + '6304';
     const crc = calculateCRC16(qrWithoutCRC);
+    // Append CRC to final string (tag 63, length 04, CRC value)
     qrString += formatTLV('63', crc);
 
     // Generate QR Code image

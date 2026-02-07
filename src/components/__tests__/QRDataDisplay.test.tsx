@@ -70,13 +70,13 @@ describe('QRDataDisplay Component', () => {
 
   test('renders clear button', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
-    const clearButton = screen.getByText(/Clear data/i);
+    const clearButton = screen.getByText(/Clear/i);
     expect(clearButton).toBeInTheDocument();
   });
 
   test('calls onClear when clear button is clicked', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
-    const clearButton = screen.getByText(/Clear data/i);
+    const clearButton = screen.getByText(/Clear/i);
     fireEvent.click(clearButton);
     expect(onClear).toHaveBeenCalled();
   });
@@ -106,10 +106,12 @@ describe('QRDataDisplay Component', () => {
     expect(screen.getByText('PromptPay ID')).toBeInTheDocument();
   });
 
-  test('shows sub-tag count for fields with sub-tags', () => {
+  test('shows field copy buttons for each field', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
 
-    expect(screen.getByText(/\(2 sub-tags\)/i)).toBeInTheDocument();
+    // Should have copy buttons for each field
+    const copyButtons = screen.getAllByTitle('Copy value');
+    expect(copyButtons.length).toBe(mockData.parsedFields.length);
   });
 
   test('toggles field expansion when toggle button is clicked', () => {

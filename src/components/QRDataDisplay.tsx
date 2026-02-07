@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { ThaiQRData, QRSubTag, QRField } from '../utils/thaiQRParser';
 import { formatCurrencyDisplay } from '../utils/currencyMapping';
+import { useClipboard } from '../hooks/useClipboard';
 
 interface QRDataDisplayProps {
   data: ThaiQRData;
@@ -8,6 +10,8 @@ interface QRDataDisplayProps {
 }
 
 const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
+  const [qrImageUrl, setQrImageUrl] = useState<string>('');
+  
   // Auto-expand all fields that have sub-tags by default
   const getInitialExpandedFields = () => {
     const expanded = new Set<number>();
@@ -20,6 +24,27 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
   };
 
   const [expandedFields, setExpandedFields] = useState<Set<number>>(getInitialExpandedFields());
+  const { copy } = useClipboard();
+
+  // Generate QR code image from raw data
+  useEffect(() => {
+    const generateQR = async () => {
+      try {
+        const url = await QRCode.toDataURL(data.rawData, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#0f172a',
+            light: '#ffffff'
+          }
+        });
+        setQrImageUrl(url);
+      } catch (err) {
+        console.error('Failed to generate QR code:', err);
+      }
+    };
+    generateQR();
+  }, [data.rawData]);
 
   const toggleFieldExpansion = (index: number) => {
     const newExpanded = new Set(expandedFields);
@@ -32,21 +57,30 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
   };
 
   const formatFieldValue = (field: QRField): string => {
-    // Format Transaction Currency (tag 53) with flag and country
     if (field.tag === '53') {
       return formatCurrencyDisplay(field.value);
     }
-
     return field.value;
   };
 
   const formatSubTagValue = (subTag: QRSubTag): string => {
-    // Format Transaction Currency sub-tag (tag 04 with "Currency" in description)
     if (subTag.tag === '04' && subTag.description.toLowerCase().includes('currency')) {
       return formatCurrencyDisplay(subTag.value);
     }
-
     return subTag.value;
+  };
+
+  const getTagColorClass = (tag: string): string => {
+    if (['29', '30', '54', '55', '56'].includes(tag)) {
+      return 'tag--payment';
+    }
+    if (['00', '01', '52', '53', '58', '59', '60', '61'].includes(tag)) {
+      return 'tag--metadata';
+    }
+    if (tag === '63') {
+      return 'tag--crc';
+    }
+    return '';
   };
 
   const renderSubTags = (subTags: QRSubTag[]) => (
@@ -71,30 +105,65 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
   return (
     <div className="qr-data-display">
       <div className="data-header">
-        <div className="data-heading">
-          <div className="card-icon accent-result">
-            <svg className="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 12l2 2 4-4"></path>
-              <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1h-6c-.552 0-1 .448-1 1s.448 1 1 1h5v5c0 .552.448 1 1 1z"></path>
-              <path d="M3 12c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h6c.552 0 1-.448 1-1s-.448-1-1-1H4v-5c0-.552-.448-1-1-1z"></path>
-              <path d="M12 3c0-.552-.448-1-1-1H5c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1s1-.448 1-1V4h5c.552 0 1-.448 1-1z"></path>
-              <path d="M12 21c0 .552.448 1 1 1h6c.552 0 1-.448 1-1v-6c0-.552-.448-1-1-1s-1 .448-1 1v5h-5c-.552 0-1 .448-1 1z"></path>
-            </svg>
-          </div>
-          
+        <div className="summary-panel">
+          {data.merchantName && (
+            <div className="summary-item summary-item--primary">
+              <span className="summary-label">Merchant</span>
+              <span className="summary-value">{data.merchantName}</span>
+            </div>
+          )}
+          {data.amount !== undefined && (
+            <div className="summary-item summary-item--highlight">
+              <span className="summary-label">Amount</span>
+              <span className="summary-value summary-value--amount">
+                ฿{data.amount.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {data.merchantId && (
+            <div className="summary-item">
+              <span className="summary-label">ID</span>
+              <span className="summary-value summary-value--mono">{data.merchantId}</span>
+              <button 
+                className="copy-btn"
+                onClick={() => copy(data.merchantId || '', 'Merchant ID copied')}
+                title="Copy ID"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+          )}
+          {data.reference && (
+            <div className="summary-item">
+              <span className="summary-label">Reference</span>
+              <span className="summary-value summary-value--mono">{data.reference}</span>
+              <button 
+                className="copy-btn"
+                onClick={() => copy(data.reference || '', 'Reference copied')}
+                title="Copy reference"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
+        
         <button onClick={onClear} className="clear-button">
-          <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="3,6 5,6 21,6"></polyline>
             <path d="m19,6v14a2,2 0 0 1 -2,2H7a2,2 0 0 1 -2,-2V6m3,0V4a2,2 0 0 1 2,-2h4a2,2 0 0 1 2,2v2"></path>
-            <line x1="10" y1="11" x2="10" y2="17"></line>
-            <line x1="14" y1="11" x2="14" y2="17"></line>
           </svg>
-          Clear data
+          Clear
         </button>
       </div>
 
-  
+     
 
       <div className="raw-data-section">
         <h3 className="section-title">
@@ -128,7 +197,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
           {data.parsedFields.map((field, index) => (
             <div key={index} className={`field-group ${expandedFields.has(index) ? 'is-expanded' : ''}`}>
               <div className="table-row">
-                <span className="tag">
+                <span className={`tag ${getTagColorClass(field.tag)}`}>
                   {field.subTags && field.subTags.length > 0 && (
                     <button
                       type="button"
@@ -143,13 +212,20 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
                   <span className="tag-value">{field.tag}</span>
                 </span>
                 <span className="length">{field.length}</span>
-                <span className="value">{formatFieldValue(field)}</span>
-                <span className="description">
-                  {field.description}
-                  {field.subTags && field.subTags.length > 0 && (
-                    <span className="subtag-count">({field.subTags.length} sub-tags)</span>
-                  )}
+                <span className="value value--with-copy">
+                  {formatFieldValue(field)}
+                  <button 
+                    className="field-copy-btn"
+                    onClick={() => copy(field.value, `Tag ${field.tag} copied`)}
+                    title="Copy value"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
                 </span>
+                <span className="description">{field.description}</span>
               </div>
               {field.subTags && field.subTags.length > 0 && expandedFields.has(index) && (
                 renderSubTags(field.subTags)
@@ -158,6 +234,14 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
           ))}
         </div>
       </div>
+       {/* QR Code Image Section */}
+      {qrImageUrl && (
+        <div className="qr-image-section">
+          <div className="qr-image-container">
+            <img src={qrImageUrl} alt="QR Code" className="qr-code-image" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

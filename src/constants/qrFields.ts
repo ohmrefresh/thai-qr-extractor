@@ -22,7 +22,8 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   '15': 'Merchant Account Information (PromptPay)',
   '29': 'Merchant Account Information (PromptPay)',
   '30': 'Merchant Account Information',
-  '52': 'Merchant Category Code',
+  '51': 'Country Code',
+  '52': 'Merchant Category Code / Transaction ID ',
   '53': 'Transaction Currency',
   '54': 'Transaction Amount',
   '55': 'Tip or Convenience Indicator',
@@ -43,7 +44,15 @@ for (let i = 80; i <= 99; i++) {
   FIELD_DESCRIPTIONS[i.toString()] = 'Unreserved Templates';
 }
 
+// Override tag 91 with specific description (Mini QR CRC)
+FIELD_DESCRIPTIONS['91'] = 'CRC Checksum';
+
 export const SUB_TAG_DESCRIPTIONS: Record<string, Record<string, string>> = {
+  '00': {
+    '00': 'Payload Format Indicator',
+    '01': 'Bank Code',
+    '02': 'Transaction ID'
+  },
   '02': {
     '00': 'Globally Unique Identifier',
     '01': 'Payment Network Specific',
