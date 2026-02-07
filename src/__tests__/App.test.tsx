@@ -589,6 +589,37 @@ describe('App Component', () => {
         expect(screen.getByText(/Historic Store/i)).toBeInTheDocument();
       });
     });
+
+    test('switches to scan tab and shows extracted details after selecting history item', async () => {
+      const mockQRData = createMockQRData({ merchantName: 'Historic Store' });
+      const mockHistory = [
+        {
+          id: '1',
+          data: mockQRData,
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      await helpers.switchToGenerateView();
+      helpers.toggleHistory();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Historic Store/i)).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText(/Historic Store/i));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
+        expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+    });
   });
 
   describe('View Management', () => {

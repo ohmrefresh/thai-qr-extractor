@@ -42,6 +42,7 @@ function App() {
 
   const handleHistorySelect = (data: any) => {
     handleScanSuccess(data, lastScanSource);
+    setCurrentView('scan');
     closeHistory();
   };
 
