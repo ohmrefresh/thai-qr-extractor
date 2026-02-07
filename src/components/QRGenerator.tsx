@@ -9,6 +9,12 @@ import {
   PaymentType,
   RecipientType
 } from '../utils/thaiQRGenerator';
+import {
+  generateMiniQR,
+  validateMiniQRInput,
+  MiniQRInput,
+  MiniQRResult
+} from '../utils/miniQRGenerator';
 import { toast } from 'sonner';
 
 interface QRGeneratorProps {
@@ -31,12 +37,21 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     merchantCity: ''
   });
 
+  const [miniQRData, setMiniQRData] = useState<MiniQRInput>({
+    bankCode: '',
+    transactionId: '',
+    countryCode: 'TH'
+  });
+
   const [result, setResult] = useState<QRGenerationResult | null>(null);
   const [previewResult, setPreviewResult] = useState<QRGenerationResult | null>(null);
+  const [miniQRResult, setMiniQRResult] = useState<MiniQRResult | null>(null);
+  const [miniQRPreview, setMiniQRPreview] = useState<MiniQRResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [activeSection, setActiveSection] = useState<'required' | 'optional'>('required');
+  const [isGeneratingMiniQR, setIsGeneratingMiniQR] = useState(false);
+  const [isGeneratingMiniQRPreview, setIsGeneratingMiniQRPreview] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (field: keyof ThaiQRGeneratorInput, value: string | number | undefined) => {
@@ -50,24 +65,42 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     }
   };
 
-  const handlePaymentTypeChange = (type: PaymentType) => {
-    setFormData(prev => ({
+  const handleMiniQRInputChange = (field: keyof MiniQRInput, value: string) => {
+    setMiniQRData(prev => ({
       ...prev,
-      paymentType: type,
-      aid: '',
-      recipientId: '',
-      ota: '',
-      billerId: '',
-      reference1: '',
-      reference2: ''
+      [field]: value
     }));
+    if (errors.length > 0) {
+      setErrors([]);
+    }
+  };
+
+  const handlePaymentTypeChange = (type: PaymentType | 'mini-qr') => {
+    if (type === 'mini-qr') {
+      setFormData(prev => ({ ...prev, paymentType: 'mini-qr' as PaymentType }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        paymentType: type,
+        aid: '',
+        recipientId: '',
+        ota: '',
+        billerId: '',
+        reference1: '',
+        reference2: ''
+      }));
+    }
     setResult(null);
     setPreviewResult(null);
+    setMiniQRResult(null);
+    setMiniQRPreview(null);
     setErrors([]);
   };
 
-  // Live preview generation with debouncing
+  // Live preview generation for Standard QR
   useEffect(() => {
+    if ((formData.paymentType as string) === 'mini-qr') return;
+    
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -104,9 +137,69 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     };
   }, [formData]);
 
-  const handleGenerate = async () => {
-    const validationErrors = validateQRInput(formData);
+  // Live preview generation for Mini QR
+  useEffect(() => {
+    if ((formData.paymentType as string) !== 'mini-qr') return;
     
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    const hasRequiredFields = !!(miniQRData.bankCode && miniQRData.transactionId);
+
+    if (!hasRequiredFields) {
+      setMiniQRPreview(null);
+      return;
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      setIsGeneratingMiniQRPreview(true);
+
+      try {
+        const qrResult = await generateMiniQR(miniQRData);
+        setMiniQRPreview(qrResult);
+      } catch (error) {
+        setMiniQRPreview(null);
+      } finally {
+        setIsGeneratingMiniQRPreview(false);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [miniQRData]);
+
+  const handleGenerate = async () => {
+    // Handle Mini QR generation
+    if (formData.paymentType === 'mini-qr' as PaymentType) {
+      const validationErrors = validateMiniQRInput(miniQRData);
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+
+      try {
+        setIsGeneratingMiniQR(true);
+        setErrors([]);
+        const qrResult = await generateMiniQR(miniQRData);
+        setMiniQRResult(qrResult);
+        toast.success('Mini QR code generated');
+        if (onQRGenerated) {
+          onQRGenerated(qrResult.qrString);
+        }
+      } catch (error) {
+        setErrors([error instanceof Error ? error.message : 'Failed to generate Mini QR code']);
+      } finally {
+        setIsGeneratingMiniQR(false);
+      }
+      return;
+    }
+
+    // Handle Standard QR generation
+    const validationErrors = validateQRInput(formData);
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       return;
@@ -132,6 +225,18 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
   };
 
   const handleLoadSample = () => {
+    if ((formData.paymentType as string) === 'mini-qr') {
+      setMiniQRData({
+        bankCode: '014',
+        transactionId: '202602078Buvov9xGKBPqxhso',
+        countryCode: 'TH'
+      });
+      setMiniQRResult(null);
+      setMiniQRPreview(null);
+      setErrors([]);
+      return;
+    }
+
     if (formData.paymentType === 'credit-transfer') {
       const sample = generateSampleCreditTransferQR();
       setFormData(prev => ({
@@ -160,6 +265,18 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
   };
 
   const handleClear = () => {
+    if ((formData.paymentType as string) === 'mini-qr') {
+      setMiniQRData({
+        bankCode: '',
+        transactionId: '',
+        countryCode: 'TH'
+      });
+      setMiniQRResult(null);
+      setMiniQRPreview(null);
+      setErrors([]);
+      return;
+    }
+
     setFormData({
       paymentType: formData.paymentType,
       aid: '',
@@ -179,29 +296,49 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
   };
 
   const handleDownload = () => {
-    const qrResult = result || previewResult;
-    if (!qrResult) return;
-
-    const link = document.createElement('a');
-    link.download = 'thai-qr-code.png';
-    link.href = qrResult.qrCodeDataURL;
-    link.click();
+    if ((formData.paymentType as string) === 'mini-qr') {
+      const qrResult = miniQRResult || miniQRPreview;
+      if (!qrResult) return;
+      const link = document.createElement('a');
+      link.download = 'mini-qr-code.png';
+      link.href = qrResult.qrCodeDataURL;
+      link.click();
+    } else {
+      const qrResult = result || previewResult;
+      if (!qrResult) return;
+      const link = document.createElement('a');
+      link.download = 'thai-qr-code.png';
+      link.href = qrResult.qrCodeDataURL;
+      link.click();
+    }
   };
 
   const handleCopyQRString = async () => {
-    const qrResult = result || previewResult;
-    if (!qrResult) return;
-
-    try {
-      await navigator.clipboard.writeText(qrResult.qrString);
-      toast.success('QR string copied to clipboard');
-    } catch (error) {
-      console.error('Failed to copy QR string:', error);
+    if ((formData.paymentType as string) === 'mini-qr') {
+      const qrResult = miniQRResult || miniQRPreview;
+      if (!qrResult) return;
+      try {
+        await navigator.clipboard.writeText(qrResult.qrString);
+        toast.success('QR string copied to clipboard');
+      } catch (error) {
+        console.error('Failed to copy QR string:', error);
+      }
+    } else {
+      const qrResult = result || previewResult;
+      if (!qrResult) return;
+      try {
+        await navigator.clipboard.writeText(qrResult.qrString);
+        toast.success('QR string copied to clipboard');
+      } catch (error) {
+        console.error('Failed to copy QR string:', error);
+      }
     }
   };
 
   const hasRequiredFields = () => {
-    if (formData.paymentType === 'credit-transfer') {
+    if ((formData.paymentType as string) === 'mini-qr') {
+      return !!(miniQRData.bankCode && miniQRData.transactionId);
+    } else if (formData.paymentType === 'credit-transfer') {
       return !!(formData.aid && formData.recipientId && formData.recipientType);
     } else if (formData.paymentType === 'bill-payment') {
       return !!(formData.aid && formData.billerId && formData.reference1);
@@ -209,9 +346,12 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
     return false;
   };
 
-  const canExport = (result || previewResult) && hasRequiredFields();
-  const qrResult = result || previewResult;
-  const isPreview = !result && previewResult;
+  const isMiniQR = (formData.paymentType as string) === 'mini-qr';
+  const canExport = isMiniQR 
+    ? (miniQRResult || miniQRPreview) && hasRequiredFields()
+    : (result || previewResult) && hasRequiredFields();
+  const qrResult = isMiniQR ? (miniQRResult || miniQRPreview) : (result || previewResult);
+  const isPreview = isMiniQR ? (!miniQRResult && miniQRPreview) : (!result && previewResult);
 
   return (
     <div className="qr-generator-modern">
@@ -243,7 +383,12 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
 
       {/* Payment Type Info */}
       <div className="payment-type-info" style={{ marginBottom: '1.5rem' }}>
-        {formData.paymentType === 'credit-transfer' ? (
+        {(formData.paymentType as string) === 'mini-qr' ? (
+          <div className="info-box">
+            <strong>Mini QR - Bank Transaction</strong>
+            <p>Compact QR format for bank transactions with bank code and transaction ID.</p>
+          </div>
+        ) : formData.paymentType === 'credit-transfer' ? (
           <div className="info-box">
             <strong>Tag 29 - PromptPay Credit Transfer</strong>
             <p>Used for credit transfer transactions with PromptPay ID (mobile number, national ID, e-wallet ID, or bank account).</p>
@@ -293,6 +438,24 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
             <span>Tag 30 - Biller & References</span>
           </div>
         </button>
+        <button
+          type="button"
+          className={`payment-tab ${(formData.paymentType as string) === 'mini-qr' ? 'active' : ''}`}
+          onClick={() => handlePaymentTypeChange('mini-qr')}
+        >
+          <div className="tab-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </div>
+          <div className="tab-content">
+            <strong>Mini QR</strong>
+            <span>Bank Transaction QR</span>
+          </div>
+        </button>
       </div>
 
       {/* Main Content */}
@@ -303,37 +466,39 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
           <div className="form-content">
             <h3 style={{ marginBottom: '1rem', color: 'var(--text-strong)' }}>Required Information</h3>
             <div className="form-sections">
-              {/* AID Selection */}
-              <div className="form-field">
-                  <label htmlFor="aid">
-                    <span className="field-label">AID (Application Identifier)</span>
-                    <span className="field-required">*</span>
-                  </label>
-                  <select
-                    id="aid"
-                    value={formData.aid}
-                    onChange={(e) => handleInputChange('aid', e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="">Select AID Type</option>
-                    {formData.paymentType === 'credit-transfer' ? (
-                      <>
-                        <option value="A000000677010111">A000000677010111 - Merchant-Presented QR</option>
-                        <option value="A000000677010114">A000000677010114 - Customer-Presented QR</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="A000000677010112">A000000677010112 - Domestic Merchant</option>
-                        <option value="A000000677012006">A000000677012006 - Cross-Border Merchant</option>
-                      </>
-                    )}
-                  </select>
-                  <span className="field-hint">
-                    {formData.paymentType === 'credit-transfer'
-                      ? 'Merchant-presented or customer-presented QR type'
-                      : 'Domestic or cross-border merchant type'}
-                  </span>
-                </div>
+              {/* AID Selection - Only for Standard QR */}
+              {(formData.paymentType as string) !== 'mini-qr' && (
+                <div className="form-field">
+                    <label htmlFor="aid">
+                      <span className="field-label">AID (Application Identifier)</span>
+                      <span className="field-required">*</span>
+                    </label>
+                    <select
+                      id="aid"
+                      value={formData.aid}
+                      onChange={(e) => handleInputChange('aid', e.target.value)}
+                      className="form-select"
+                    >
+                      <option value="">Select AID Type</option>
+                      {formData.paymentType === 'credit-transfer' ? (
+                        <>
+                          <option value="A000000677010111">A000000677010111 - Merchant-Presented QR</option>
+                          <option value="A000000677010114">A000000677010114 - Customer-Presented QR</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="A000000677010112">A000000677010112 - Domestic Merchant</option>
+                          <option value="A000000677012006">A000000677012006 - Cross-Border Merchant</option>
+                        </>
+                      )}
+                    </select>
+                    <span className="field-hint">
+                      {formData.paymentType === 'credit-transfer'
+                        ? 'Merchant-presented or customer-presented QR type'
+                        : 'Domestic or cross-border merchant type'}
+                    </span>
+                  </div>
+                )}
 
                 {/* Dynamic Fields based on Payment Type */}
                 {formData.paymentType === 'credit-transfer' ? (
@@ -404,7 +569,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                       </div>
                     )}
                   </div>
-                ) : (
+                ) : formData.paymentType === 'bill-payment' ? (
                   <div className="dynamic-fields">
                     <div className="form-field">
                       <label htmlFor="billerId">
@@ -459,7 +624,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                       </div>
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {/* Optional Fields for Bill Payment */}
                 {formData.paymentType === 'bill-payment' && (
@@ -518,6 +683,59 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     </div>
                   </div>
                 )}
+
+                {/* Mini QR Fields */}
+                {(formData.paymentType as string) === 'mini-qr' && (
+                  <div className="dynamic-fields">
+                    <div className="form-field">
+                      <label htmlFor="bankCode">
+                        <span className="field-label">Bank Code</span>
+                        <span className="field-required">*</span>
+                      </label>
+                      <input
+                        id="bankCode"
+                        type="text"
+                        value={miniQRData.bankCode}
+                        onChange={(e) => handleMiniQRInputChange('bankCode', e.target.value)}
+                        placeholder="014"
+                        maxLength={3}
+                        className="form-input"
+                      />
+                      <span className="field-hint">3-digit bank code (e.g., 014 for SCB)</span>
+                    </div>
+
+                    <div className="form-field">
+                      <label htmlFor="transactionId">
+                        <span className="field-label">Transaction ID</span>
+                        <span className="field-required">*</span>
+                      </label>
+                      <input
+                        id="transactionId"
+                        type="text"
+                        value={miniQRData.transactionId}
+                        onChange={(e) => handleMiniQRInputChange('transactionId', e.target.value)}
+                        placeholder="202602078Buvov9xGKBPqxhso"
+                        maxLength={50}
+                        className="form-input"
+                      />
+                      <span className="field-hint">Unique transaction identifier (max 50 characters)</span>
+                    </div>
+
+                    <div className="form-field">
+                      <label htmlFor="countryCode">Country Code</label>
+                      <input
+                        id="countryCode"
+                        type="text"
+                        value={miniQRData.countryCode}
+                        onChange={(e) => handleMiniQRInputChange('countryCode', e.target.value)}
+                        placeholder="TH"
+                        maxLength={2}
+                        className="form-input"
+                      />
+                      <span className="field-hint">Country code (default: TH)</span>
+                    </div>
+                  </div>
+                )}
               </div>
             
             {/* Error Messages */}
@@ -557,7 +775,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                     <rect x="14" y="14" width="7" height="7"></rect>
                     <rect x="3" y="14" width="7" height="7"></rect>
                   </svg>
-                  Generate QR Code
+                  {isMiniQR ? 'Generate Mini QR' : 'Generate QR Code'}
                 </>
               )}
             </button>
@@ -602,17 +820,36 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
                 </div>
 
                 <div className="qr-details">
-                  <div className="detail-row">
-                    <span className="detail-label">Type:</span>
-                    <span className="detail-value">
-                      {formData.paymentType === 'credit-transfer' ? 'Credit Transfer (Tag 29)' : 'Bill Payment (Tag 30)'}
-                    </span>
-                  </div>
-                  {formData.amount && (
-                    <div className="detail-row">
-                      <span className="detail-label">Amount:</span>
-                      <span className="detail-value highlight">฿{formData.amount.toFixed(2)}</span>
-                    </div>
+                  {isMiniQR ? (
+                    <>
+                      <div className="detail-row">
+                        <span className="detail-label">Type:</span>
+                        <span className="detail-value">Mini QR - Bank Transaction</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">Bank Code:</span>
+                        <span className="detail-value">{miniQRData.bankCode}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">Transaction ID:</span>
+                        <span className="detail-value">{miniQRData.transactionId}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="detail-row">
+                        <span className="detail-label">Type:</span>
+                        <span className="detail-value">
+                          {formData.paymentType === 'credit-transfer' ? 'Credit Transfer (Tag 29)' : 'Bill Payment (Tag 30)'}
+                        </span>
+                      </div>
+                      {formData.amount && (
+                        <div className="detail-row">
+                          <span className="detail-label">Amount:</span>
+                          <span className="detail-value highlight">฿{formData.amount.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
