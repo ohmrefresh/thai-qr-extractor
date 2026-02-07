@@ -42,7 +42,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
         if (code) {
           try {
             const parsedData = parseThaiQR(code.data);
-            toast.success('File uploaded and QR code detected');
             onScanSuccess(parsedData);
           } catch (error) {
             onScanError(`Failed to parse QR code: ${error}`);

@@ -54,7 +54,6 @@ function App() {
       const parsedData = parseAndSetQRData(qrString);
       addToHistory(parsedData, 'text');
       setCurrentView('scan');
-      toast.success('QR code generated successfully');
     } catch (err) {
       // Error is already handled in parseAndSetQRData
       toast.error('Failed to parse generated QR code');

@@ -9,8 +9,9 @@ const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   return (
     <>
       {children}
-      <Toaster 
+      <Toaster
         position="top-right"
+        visibleToasts={3}
         toastOptions={{
           style: {
             background: 'var(--color-surface)',
