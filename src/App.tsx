@@ -30,6 +30,7 @@ function App() {
     isHistoryOpen,
     addToHistory,
     removeFromHistory,
+    renameHistoryItem,
     clearHistory,
     toggleHistory,
     closeHistory
@@ -181,6 +182,7 @@ function App() {
           onSelectItem={handleHistorySelect}
           onClearHistory={clearHistory}
           onDeleteItem={removeFromHistory}
+          onRenameItem={renameHistoryItem}
           isOpen={isHistoryOpen}
           onClose={closeHistory}
         />

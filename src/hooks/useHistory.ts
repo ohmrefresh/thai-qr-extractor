@@ -5,6 +5,7 @@ import {
   loadHistoryFromStorage,
   addToHistory as addToHistoryStorage,
   removeFromHistory as removeFromHistoryStorage,
+  updateHistoryItemName as updateHistoryItemNameStorage,
   clearHistory as clearHistoryStorage
 } from '../utils/historyStorage';
 
@@ -29,6 +30,11 @@ export const useHistory = () => {
     setHistory(updatedHistory);
   }, [history]);
 
+  const renameHistoryItem = useCallback((id: string, customName: string) => {
+    const updatedHistory = updateHistoryItemNameStorage(history, id, customName);
+    setHistory(updatedHistory);
+  }, [history]);
+
   const clearHistory = useCallback(() => {
     const emptyHistory = clearHistoryStorage();
     setHistory(emptyHistory);
@@ -47,6 +53,7 @@ export const useHistory = () => {
     isHistoryOpen,
     addToHistory,
     removeFromHistory,
+    renameHistoryItem,
     clearHistory,
     toggleHistory,
     closeHistory

@@ -327,4 +327,29 @@ describe('History Component', () => {
     expect(screen.getByText(/Merchant 2/i)).toBeInTheDocument();
     expect(screen.getByText(/Merchant 3/i)).toBeInTheDocument();
   });
+
+  test('calls onRenameItem when edit name is saved', () => {
+    const historyItems = [createMockHistoryItem()];
+    const onRenameItem = vi.fn();
+
+    render(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        onRenameItem={onRenameItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText(/Edit name/i));
+    fireEvent.change(screen.getByLabelText(/Edit history item name/i), {
+      target: { value: 'My Custom Name' }
+    });
+    fireEvent.click(screen.getByLabelText(/Save name/i));
+
+    expect(onRenameItem).toHaveBeenCalledWith('1', 'My Custom Name');
+  });
 });

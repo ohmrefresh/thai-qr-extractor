@@ -3,6 +3,7 @@ import {
   loadHistoryFromStorage,
   addToHistory,
   removeFromHistory,
+  updateHistoryItemName,
   clearHistory,
 } from '../historyStorage';
 import { HistoryItem } from '../../components/History';
@@ -492,6 +493,50 @@ describe('historyStorage', () => {
 
       consoleWarnSpy.mockRestore();
       removeItemSpy.mockRestore();
+    });
+  });
+
+  describe('updateHistoryItemName', () => {
+    test('updates custom name for matching history item', () => {
+      const currentHistory: HistoryItem[] = [
+        {
+          id: '1',
+          data: {
+            rawData: 'data-1',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
+          timestamp: new Date(),
+          source: 'text',
+        },
+      ];
+
+      const updatedHistory = updateHistoryItemName(currentHistory, '1', 'My Favorite QR');
+
+      expect(updatedHistory[0].customName).toBe('My Favorite QR');
+    });
+
+    test('saves updated name to localStorage', () => {
+      const currentHistory: HistoryItem[] = [
+        {
+          id: '1',
+          data: {
+            rawData: 'data-1',
+            version: '01',
+            type: '12',
+            parsedFields: [],
+          },
+          timestamp: new Date(),
+          source: 'text',
+        },
+      ];
+
+      updateHistoryItemName(currentHistory, '1', 'Renamed QR');
+
+      const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+      const parsed = JSON.parse(stored!);
+      expect(parsed[0].customName).toBe('Renamed QR');
     });
   });
 });

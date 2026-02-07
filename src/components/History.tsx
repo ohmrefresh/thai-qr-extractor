@@ -6,6 +6,7 @@ export interface HistoryItem {
   data: ThaiQRData;
   timestamp: Date;
   source: 'camera' | 'file' | 'text';
+  customName?: string;
 }
 
 interface HistoryProps {
@@ -13,6 +14,7 @@ interface HistoryProps {
   onSelectItem: (data: ThaiQRData) => void;
   onClearHistory: () => void;
   onDeleteItem: (id: string) => void;
+  onRenameItem?: (id: string, customName: string) => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -22,9 +24,13 @@ const History: React.FC<HistoryProps> = ({
   onSelectItem,
   onClearHistory,
   onDeleteItem,
+  onRenameItem,
   isOpen,
   onClose
 }) => {
+  const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
+  const [editingName, setEditingName] = React.useState('');
+
   if (!isOpen) return null;
 
   const formatTimestamp = (timestamp: Date) => {
@@ -61,6 +67,10 @@ const History: React.FC<HistoryProps> = ({
   };
 
   const getDisplayTitle = (item: HistoryItem) => {
+    if (item.customName?.trim()) {
+      return item.customName;
+    }
+
     if (item.data.merchantName) {
       return `${item.data.merchantName}${item.data.amount ? ` - ฿${item.data.amount}` : ''}`;
     }
@@ -68,6 +78,25 @@ const History: React.FC<HistoryProps> = ({
       return `ID: ${item.data.merchantId}${item.data.amount ? ` - ฿${item.data.amount}` : ''}`;
     }
     return `QR Code (${item.data.version})`;
+  };
+
+  const handleStartRename = (item: HistoryItem) => {
+    setEditingItemId(item.id);
+    setEditingName(getDisplayTitle(item));
+  };
+
+  const handleSaveRename = (itemId: string) => {
+    const trimmedName = editingName.trim();
+    if (!trimmedName) return;
+
+    onRenameItem?.(itemId, trimmedName);
+    setEditingItemId(null);
+    setEditingName('');
+  };
+
+  const handleCancelRename = () => {
+    setEditingItemId(null);
+    setEditingName('');
   };
 
   return (
@@ -132,8 +161,55 @@ const History: React.FC<HistoryProps> = ({
                           {getSourceIcon(item.source)}
                         </div>
                         <div className="history-item-title">
-                          {getDisplayTitle(item)}
+                          {editingItemId === item.id ? (
+                            <div className="history-item-rename" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                className="history-item-rename-input"
+                                aria-label="Edit history item name"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleSaveRename(item.id);
+                                  }
+
+                                  if (e.key === 'Escape') {
+                                    handleCancelRename();
+                                  }
+                                }}
+                                autoFocus
+                              />
+                              <button
+                                className="history-item-action-button"
+                                aria-label="Save name"
+                                onClick={() => handleSaveRename(item.id)}
+                              >
+                                Save
+                              </button>
+                              <button
+                                className="history-item-action-button"
+                                aria-label="Cancel edit name"
+                                onClick={handleCancelRename}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            getDisplayTitle(item)
+                          )}
                         </div>
+                        {editingItemId !== item.id && (
+                          <button
+                            className="history-item-action-button"
+                            aria-label="Edit name"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartRename(item);
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
                         <button 
                           className="delete-item-button"
                           onClick={(e) => {

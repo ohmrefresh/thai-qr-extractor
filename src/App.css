@@ -1495,6 +1495,37 @@ button:disabled:hover {
   color: var(--text-strong);
 }
 
+.history-item-rename {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.history-item-rename-input {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.3rem 0.55rem;
+  font-size: var(--fs-sm);
+  min-width: 180px;
+}
+
+.history-item-action-button {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 0.25rem 0.55rem;
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.history-item-action-button:hover {
+  color: var(--text-default);
+  border-color: var(--color-border-strong);
+}
+
 .history-item-details {
   display: flex;
   flex-wrap: wrap;

@@ -57,6 +57,21 @@ export const removeFromHistory = (
   return updatedHistory;
 };
 
+export const updateHistoryItemName = (
+  currentHistory: HistoryItem[],
+  itemId: string,
+  customName: string
+): HistoryItem[] => {
+  const updatedHistory = currentHistory.map(item =>
+    item.id === itemId
+      ? { ...item, customName }
+      : item
+  );
+
+  saveHistoryToStorage(updatedHistory);
+  return updatedHistory;
+};
+
 export const clearHistory = (): HistoryItem[] => {
   try {
     localStorage.removeItem(HISTORY_STORAGE_KEY);

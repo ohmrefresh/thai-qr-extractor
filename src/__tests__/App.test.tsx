@@ -77,6 +77,9 @@ describe('App Component', () => {
     vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue([]);
     vi.mocked(historyStorage.addToHistory).mockImplementation((history: any[], item: any) => [...history, { ...item, id: '1', timestamp: new Date() }]);
     vi.mocked(historyStorage.removeFromHistory).mockImplementation((history: any[], id: string) => history.filter((h: any) => h.id !== id));
+    vi.mocked(historyStorage.updateHistoryItemName).mockImplementation((history: any[], id: string, customName: string) =>
+      history.map((item: any) => (item.id === id ? { ...item, customName } : item))
+    );
     vi.mocked(historyStorage.clearHistory).mockReturnValue([]);
 
     // Mock Html5Qrcode for QRScanner component
@@ -618,6 +621,39 @@ describe('App Component', () => {
       await waitFor(() => {
         expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
         expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
+      });
+    });
+
+    test('updates history item title when renamed', async () => {
+      const mockQRData = createMockQRData({ merchantName: 'Historic Store' });
+      const mockHistory = [
+        {
+          id: '1',
+          data: mockQRData,
+          timestamp: new Date(),
+          source: 'camera' as const
+        }
+      ];
+
+      vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue(mockHistory);
+      vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
+
+      render(<App />);
+
+      helpers.toggleHistory();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Historic Store/i)).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText(/Edit name/i));
+      fireEvent.change(screen.getByLabelText(/Edit history item name/i), {
+        target: { value: 'Saved Favorite' }
+      });
+      fireEvent.click(screen.getByLabelText(/Save name/i));
+
+      await waitFor(() => {
+        expect(screen.getByText('Saved Favorite')).toBeInTheDocument();
       });
     });
   });
