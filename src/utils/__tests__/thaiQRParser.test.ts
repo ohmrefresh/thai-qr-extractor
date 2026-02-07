@@ -121,7 +121,7 @@ describe('Thai QR Parser', () => {
     const result = parseThaiQR(qrData);
 
     const mccField = result.parsedFields.find(f => f.tag === '52');
-    expect(mccField?.description).toBe('Merchant Category Code');
+    expect(mccField?.description).toBe('Merchant Category Code / Transaction ID (Mini QR)');
 
     const countryField = result.parsedFields.find(f => f.tag === '58');
     expect(countryField?.description).toBe('Country Code');
@@ -313,7 +313,7 @@ describe('Thai QR Parser', () => {
     const result = parseThaiQR(qrData);
 
     const descriptions = result.parsedFields.map(f => f.description);
-    expect(descriptions).toContain('Merchant Category Code');
+    expect(descriptions).toContain('Merchant Category Code / Transaction ID (Mini QR)');
     expect(descriptions).toContain('Transaction Currency');
     expect(descriptions).toContain('Transaction Amount');
     expect(descriptions).toContain('Country Code');

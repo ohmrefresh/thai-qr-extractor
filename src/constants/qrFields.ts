@@ -22,7 +22,8 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   '15': 'Merchant Account Information (PromptPay)',
   '29': 'Merchant Account Information (PromptPay)',
   '30': 'Merchant Account Information',
-  '52': 'Merchant Category Code',
+  '51': 'Country Code (Mini QR)',
+  '52': 'Merchant Category Code / Transaction ID (Mini QR)',
   '53': 'Transaction Currency',
   '54': 'Transaction Amount',
   '55': 'Tip or Convenience Indicator',
@@ -35,6 +36,7 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   '62': 'Additional Data Field Template',
   '63': 'CRC',
   '64': 'Merchant Information - Language Template',
+  '91': 'CRC (Mini QR)',
   '65': 'RFU for EMVCo',
 };
 
@@ -44,6 +46,11 @@ for (let i = 80; i <= 99; i++) {
 }
 
 export const SUB_TAG_DESCRIPTIONS: Record<string, Record<string, string>> = {
+  '00': {
+    '00': 'Payload Format Indicator',
+    '01': 'Bank Code',
+    '02': 'Transaction ID'
+  },
   '02': {
     '00': 'Globally Unique Identifier',
     '01': 'Payment Network Specific',
