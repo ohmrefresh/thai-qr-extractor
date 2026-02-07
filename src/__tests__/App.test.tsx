@@ -109,9 +109,9 @@ describe('App Component', () => {
     });
   });
 
-  test('renders Thai QR Code Tools', () => {
+  test('renders Thai QR Tools', () => {
     render(<App />);
-    const headingElement = screen.getByText(/Thai QR Code Tools/i);
+    const headingElement = screen.getByText(/Thai QR Tools/i);
     expect(headingElement).toBeInTheDocument();
   });
 
@@ -208,12 +208,12 @@ describe('App Component', () => {
     });
 
     // Click clear button
-    const clearButton = screen.getByText(/Clear data/i);
+    const clearButton = screen.getByText(/Clear/i);
     fireEvent.click(clearButton);
 
     // Data display should be removed
     await waitFor(() => {
-      expect(screen.queryByText(/Clear data/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Clear/i)).not.toBeInTheDocument();
     });
   });
 
@@ -618,10 +618,14 @@ describe('App Component', () => {
 
       fireEvent.click(screen.getByText(/Historic Store/i));
 
+      // After selecting history, it shows the extracted QR data, not the scanner
       await waitFor(() => {
-        expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
         expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
       });
+      
+      // Verify scan view is active (by checking scan tab has active class)
+      const scanTab = screen.getByRole('button', { name: /^Scan$/i });
+      expect(scanTab.classList.contains('active')).toBe(true);
     });
 
     test('updates history item title when renamed', async () => {
@@ -678,16 +682,24 @@ describe('App Component', () => {
       expect(screen.queryByText(/Raw QR Data/i)).not.toBeInTheDocument();
     });
 
-    test('shows different header text for each view', async () => {
+    test('shows correct tab labels for each view', async () => {
       render(<App />);
 
-      expect(screen.getByText(/Scan, upload, or paste Thai QR code data/i)).toBeInTheDocument();
+      // Check nav tabs exist using queryAllBy and finding the one in main-nav
+      const navElement = document.querySelector('.main-nav');
+      expect(navElement).toBeInTheDocument();
+
+      const scanTab = navElement?.querySelector('.nav-tab.active');
+      expect(scanTab).toBeInTheDocument();
+      expect(scanTab?.textContent).toMatch(/Scan/i);
 
       // Switch view (helper waits for transition)
       await helpers.switchToGenerateView();
 
-      // Check generate view header text
-      expect(screen.getByText(/Generate Thai QR codes with custom merchant/i)).toBeInTheDocument();
+      // Check generate tab exists
+      const generateTab = navElement?.querySelector('.nav-tab.active');
+      expect(generateTab).toBeInTheDocument();
+      expect(generateTab?.textContent).toMatch(/Generate/i);
     });
 
     test('maintains history across view switches', async () => {
@@ -750,7 +762,7 @@ describe('App Component', () => {
       await helpers.parseTextInput('00020101');
 
       await waitFor(() => {
-        expect(screen.getByText(/Clear data/i)).toBeInTheDocument();
+        expect(screen.getByText(/Clear/i)).toBeInTheDocument();
       });
     });
 
@@ -864,7 +876,7 @@ describe('App Component', () => {
       });
 
       // Clear and scan again
-      const clearButton = screen.getByText(/Clear data/i);
+      const clearButton = screen.getByText(/Clear/i);
       fireEvent.click(clearButton);
 
       await helpers.parseTextInput('00020102');

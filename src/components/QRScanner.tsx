@@ -6,6 +6,7 @@ import {
   type Html5QrcodeResult,
 } from 'html5-qrcode';
 import { parseThaiQR } from '../utils/thaiQRParser';
+import { toast } from 'sonner';
 
 interface QRScannerProps {
   onScanSuccess: (data: any) => void;
@@ -152,6 +153,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
           async (decodedText: string, _decodedResult: Html5QrcodeResult) => {
             try {
               const parsedData = parseThaiQR(decodedText);
+              toast.success('QR code detected!', { duration: 2000 });
               onScanSuccess(parsedData);
               if (isMountedRef.current) {
                 setScanStatus('QR code captured successfully.');

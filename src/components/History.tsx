@@ -123,30 +123,29 @@ const History: React.FC<HistoryProps> = ({
   });
 
   return (
-    <div className="history-overlay">
-      <div className="history-menu">
-        <div className="history-header">
-          <div className="history-heading">
-            <div className="card-icon accent-history">
-              <svg className="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-              </svg>
-            </div>
-            <div>
-              <h2>Scan history</h2>
-              <p>Recent QR payloads captured across all methods.</p>
-            </div>
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`drawer-backdrop ${isOpen ? 'is-open' : ''}`}
+        onClick={onClose}
+      />
+      
+      {/* Drawer */}
+      <div className={`history-drawer ${isOpen ? 'is-open' : ''}`}>
+        <div className="history-drawer-header">
+          <div className="history-drawer-title">
+            <h2>History</h2>
+            <span className="history-count-badge-drawer">{historyItems.length}</span>
           </div>
-          <button className="close-button" onClick={onClose} aria-label="Close history">
-            <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button className="drawer-close-btn" onClick={onClose} aria-label="Close history">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
 
-        <div className="history-content">
+        <div className="history-drawer-content">
           {historyItems.length === 0 ? (
             <div className="empty-history">
               <svg className="icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
@@ -276,7 +275,7 @@ const History: React.FC<HistoryProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

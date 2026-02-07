@@ -9,6 +9,7 @@ import {
   PaymentType,
   RecipientType
 } from '../utils/thaiQRGenerator';
+import { toast } from 'sonner';
 
 interface QRGeneratorProps {
   onQRGenerated?: (qrData: string) => void;
@@ -107,6 +108,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
       const qrResult = await generateThaiQR(formData);
       setResult(qrResult);
       
+      toast.success('QR code generated');
       if (onQRGenerated) {
         onQRGenerated(qrResult.qrString);
       }

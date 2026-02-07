@@ -26,6 +26,25 @@
   --fs-xl: 1.125rem;
   --fs-2xl: 1.25rem;
   color-scheme: light;
+  
+  /* New design system additions */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  
+  /* Tag colors */
+  --tag-payment: #10b981;
+  --tag-payment-bg: rgba(16, 185, 129, 0.12);
+  --tag-metadata: #f59e0b;
+  --tag-metadata-bg: rgba(245, 158, 11, 0.12);
+  --tag-crc: #ef4444;
+  --tag-crc-bg: rgba(239, 68, 68, 0.12);
+  
+  /* Drawer */
+  --drawer-width: 420px;
+  --drawer-width-mobile: 100%;
 }
 
 * {
@@ -33,7 +52,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 body {

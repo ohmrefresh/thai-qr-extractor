@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import jsQR from 'jsqr';
 import { parseThaiQR } from '../utils/thaiQRParser';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
   onScanSuccess: (data: any) => void;
@@ -41,11 +42,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
         if (code) {
           try {
             const parsedData = parseThaiQR(code.data);
+            toast.success('File uploaded and QR code detected');
             onScanSuccess(parsedData);
           } catch (error) {
             onScanError(`Failed to parse QR code: ${error}`);
           }
         } else {
+          toast.error('No QR code found in image');
           onScanError('No QR code found in the image');
         }
       };
