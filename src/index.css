@@ -18,6 +18,13 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.12);
   --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.875rem;
+  --fs-base: 0.9375rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.125rem;
+  --fs-2xl: 1.25rem;
   color-scheme: light;
 }
 
@@ -25,9 +32,14 @@
   box-sizing: border-box;
 }
 
+html {
+  font-size: 16px;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-size: var(--fs-base);
   background: var(--color-background);
   color: var(--text-default);
   -webkit-font-smoothing: antialiased;
