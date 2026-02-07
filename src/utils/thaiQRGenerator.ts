@@ -164,6 +164,32 @@ const getRecipientSubTagId = (recipientType: RecipientType): string => {
   }
 };
 
+const normalizeMobileRecipientId = (recipientId: string): string => {
+  const digitsOnly = recipientId.replace(/\D/g, '');
+
+  if (!digitsOnly) {
+    return recipientId;
+  }
+
+  if (digitsOnly.startsWith('0066')) {
+    return digitsOnly;
+  }
+
+  if (digitsOnly.length === 11 && digitsOnly.startsWith('66')) {
+    return `00${digitsOnly}`;
+  }
+
+  if (digitsOnly.length === 10 && digitsOnly.startsWith('0')) {
+    return `0066${digitsOnly.slice(1)}`;
+  }
+
+  if (digitsOnly.length === 9) {
+    return `0066${digitsOnly}`;
+  }
+
+  return recipientId;
+};
+
 /**
  * Generate sub-tags for Tag 29 (PromptPay: Credit Transfer)
  */
@@ -178,7 +204,11 @@ const generateTag29SubTags = (input: ThaiQRGeneratorInput): string => {
   // Recipient Identifier (one is mandatory)
   if (input.recipientId && input.recipientType) {
     const recipientSubTagId = getRecipientSubTagId(input.recipientType);
-    subTags += formatTLV(recipientSubTagId, input.recipientId);
+    const recipientValue = input.recipientType === 'mobile'
+      ? normalizeMobileRecipientId(input.recipientId)
+      : input.recipientId;
+
+    subTags += formatTLV(recipientSubTagId, recipientValue);
   }
 
   // OTA (ID "05") - Mandatory if AID = A000000677010114

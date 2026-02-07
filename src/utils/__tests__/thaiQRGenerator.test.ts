@@ -376,6 +376,23 @@ describe('Thai QR Generator', () => {
       expect(mobileSubTag?.value).toBe('0066812345678');
     });
 
+    test('removes leading 0 and adds 0066 prefix for local mobile input', async () => {
+      const input = {
+        paymentType: 'credit-transfer' as const,
+        aid: 'A000000677010111',
+        recipientType: 'mobile' as const,
+        recipientId: '0873835732'
+      };
+
+      const result = await generateThaiQR(input);
+      const parsedData = parseThaiQR(result.qrString);
+
+      const tag29Field = parsedData.parsedFields.find(field => field.tag === '29');
+      const mobileSubTag = tag29Field?.subTags?.find(st => st.tag === '01');
+
+      expect(mobileSubTag?.value).toBe('0066873835732');
+    });
+
     test('generates QR with national ID recipient', async () => {
       const input = {
         paymentType: 'credit-transfer' as const,
