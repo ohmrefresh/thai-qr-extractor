@@ -246,9 +246,6 @@
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
 }
-  align-items: flex-start;
-  gap: 1rem;
-}
 
 .scanner-meta {
   display: flex;
