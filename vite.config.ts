@@ -32,6 +32,10 @@ export default defineConfig({
       '@/': new URL('./src/', import.meta.url).pathname,
     },
     include: ['src/**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: 'test-report.junit.xml',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'lcov', 'json-summary', 'html', 'cobertura'],
