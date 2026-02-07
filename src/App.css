@@ -3632,7 +3632,7 @@ button:disabled:hover {
 }
 
 .input-hint svg {
-  color: var(--color-success);
+  color: var(--color-accent);
   flex-shrink: 0;
 }
 
@@ -3725,12 +3725,12 @@ button:disabled:hover {
   height: 200%;
   background: radial-gradient(
     circle at 30% 20%,
-    rgba(245, 158, 11, 0.04) 0%,
+    rgba(14, 165, 233, 0.04) 0%,
     transparent 50%
   ),
   radial-gradient(
     circle at 70% 80%,
-    rgba(217, 119, 6, 0.03) 0%,
+    rgba(99, 102, 241, 0.03) 0%,
     transparent 50%
   );
   animation: gradientShift 15s ease-in-out infinite;
@@ -5897,21 +5897,21 @@ button:disabled:hover {
   width: 52px;
   height: 52px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12);
   transition: all 0.3s ease;
 }
 
 .file-upload:hover .card-icon.accent-upload {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.18);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.18);
 }
 
 .file-upload .card-icon.accent-upload svg {
   width: 26px;
   height: 26px;
-  color: #d97706;
+  color: var(--color-primary);
 }
 
 .file-upload .card-title {
@@ -5935,8 +5935,8 @@ button:disabled:hover {
   gap: 0.875rem;
   padding: 2.5rem 1.5rem;
   border-radius: var(--radius-xl);
-  border: 2px dashed rgba(14, 165, 233, 0.35);
-  background: linear-gradient(145deg, rgba(14, 165, 233, 0.04) 0%, rgba(99, 102, 241, 0.02) 100%);
+  border: 2px dashed rgba(14, 165, 233, 0.4);
+  background: linear-gradient(145deg, rgba(14, 165, 233, 0.06) 0%, rgba(99, 102, 241, 0.03) 100%);
   color: var(--text-default);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -5946,9 +5946,9 @@ button:disabled:hover {
 
 .upload-dropzone:hover:not(:disabled) {
   transform: translateY(-3px);
-  border-color: rgba(14, 165, 233, 0.6);
-  background: linear-gradient(145deg, rgba(14, 165, 233, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
-  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.7);
+  background: linear-gradient(145deg, rgba(14, 165, 233, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.15);
 }
 
 .upload-dropzone:disabled {
@@ -5960,8 +5960,8 @@ button:disabled:hover {
   width: 72px;
   height: 72px;
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(99, 102, 241, 0.06) 100%);
-  border: 1px solid rgba(14, 165, 233, 0.15);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.2);
   display: grid;
   place-items: center;
   transition: all 0.3s ease;
@@ -5969,7 +5969,7 @@ button:disabled:hover {
 
 .upload-dropzone:hover:not(:disabled) .upload-dropzone-icon {
   transform: scale(1.08);
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.2);
 }
 
 .upload-dropzone-icon svg {
@@ -6001,12 +6001,12 @@ button:disabled:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  background: rgba(14, 165, 233, 0.08);
-  border: 1px solid rgba(14, 165, 233, 0.15);
+  padding: 0.4rem 0.85rem;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.2);
   border-radius: 999px;
   font-size: 0.75rem;
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   font-weight: 600;
   margin-top: 0.35rem;
 }
@@ -6051,12 +6051,12 @@ button:disabled:hover {
   height: 200%;
   background: radial-gradient(
     circle at 30% 20%,
-    rgba(16, 185, 129, 0.04) 0%,
+    rgba(99, 102, 241, 0.04) 0%,
     transparent 50%
   ),
   radial-gradient(
     circle at 70% 80%,
-    rgba(5, 150, 105, 0.03) 0%,
+    rgba(14, 165, 233, 0.03) 0%,
     transparent 50%
   );
   animation: gradientShift 15s ease-in-out infinite;
@@ -6075,21 +6075,21 @@ button:disabled:hover {
   width: 52px;
   height: 52px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(14, 165, 233, 0.1) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
   transition: all 0.3s ease;
 }
 
 .text-input:hover .card-icon.accent-text {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.18);
 }
 
 .text-input .card-icon.accent-text svg {
   width: 26px;
   height: 26px;
-  color: var(--color-success);
+  color: var(--color-accent);
 }
 
 .text-input .card-title {
@@ -6132,8 +6132,8 @@ button:disabled:hover {
 
 .qr-textarea:focus {
   outline: none;
-  border-color: var(--color-success);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .qr-textarea::placeholder {
@@ -6176,13 +6176,13 @@ button:disabled:hover {
   padding: 0.85rem 1.75rem;
   border-radius: var(--radius-lg);
   border: none;
-  background: linear-gradient(135deg, var(--color-success) 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
   color: #fff;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
   position: relative;
   overflow: hidden;
 }
@@ -6205,7 +6205,7 @@ button:disabled:hover {
 
 .parse-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
 }
 
 .parse-button:hover:not(:disabled)::before {

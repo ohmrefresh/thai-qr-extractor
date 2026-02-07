@@ -30,14 +30,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             onClick={() => onViewChange('scan')}
           >
             <ScanIcon width={18} height={18} />
-            Scan
+            Scan QR Code
           </button>
           <button
             className={`nav-tab ${currentView === 'generate' ? 'active' : ''}`}
             onClick={() => onViewChange('generate')}
           >
             <GenerateIcon width={18} height={18} />
-            Generate
+            Generate QR Code
           </button>
         </nav>
 
