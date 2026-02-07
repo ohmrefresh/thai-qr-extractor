@@ -81,17 +81,15 @@ export const generateMiniQR = async (input: MiniQRInput): Promise<MiniQRResult> 
   // Tag 51 - Country Code (default TH)
   const tag51 = encodeTLV('51', countryCode);
 
-  // Combine tags for CRC calculation
-  const dataWithoutCRC = `${tag00}${tag51}9104`;
+  // Build QR string without CRC
+  let qrString = `${tag00}${tag51}`;
 
-  // Calculate CRC
+  // Calculate CRC - append tag 91 with length 04 before calculating checksum
+  const dataWithoutCRC = qrString + '9104';
   const crcValue = calculateCRC16XModem(dataWithoutCRC);
 
-  // Tag 91 - CRC
-  const tag91 = encodeTLV('91', crcValue);
-
-  // Final QR string
-  const qrString = `${dataWithoutCRC}${tag91}`;
+  // Append CRC to final string (tag 91, length 04, CRC value)
+  qrString += encodeTLV('91', crcValue);
 
   // Generate QR code image
   const qrCodeDataURL = await QRCode.toDataURL(qrString, {

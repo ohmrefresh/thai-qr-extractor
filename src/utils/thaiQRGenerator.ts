@@ -319,9 +319,10 @@ export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGen
       qrString += formatTLV('62', tag62SubTags);
     }
 
-    // Calculate and append CRC
+    // Calculate CRC - append tag 63 with length 04 before calculating checksum
     const qrWithoutCRC = qrString + '6304';
     const crc = calculateCRC16(qrWithoutCRC);
+    // Append CRC to final string (tag 63, length 04, CRC value)
     qrString += formatTLV('63', crc);
 
     // Generate QR Code image
