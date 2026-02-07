@@ -80,41 +80,33 @@ const ScanMethodsTabs: React.FC<ScanMethodsTabsProps> = ({
         ))}
       </div>
 
-      {/* Active Method Content - Fixed Height Container */}
+      {/* Active Method Content */}
       <div className="scan-method-content">
-        <div className="tab-panel-container">
-          <Suspense fallback={
-            <div className="tab-loading">
-              <div className="spinner-small"></div>
-              <span>Loading...</span>
-            </div>
-          }>
-            {activeMethod === 'camera' && (
-              <div className="tab-panel tab-panel-active">
-                <QRScanner
-                  onScanSuccess={onCameraScan}
-                  onScanError={onError}
-                />
-              </div>
-            )}
-            {activeMethod === 'file' && (
-              <div className="tab-panel tab-panel-active">
-                <FileUpload
-                  onScanSuccess={onFileScan}
-                  onScanError={onError}
-                />
-              </div>
-            )}
-            {activeMethod === 'text' && (
-              <div className="tab-panel tab-panel-active">
-                <TextInput
-                  onScanSuccess={onTextScan}
-                  onScanError={onError}
-                />
-              </div>
-            )}
-          </Suspense>
-        </div>
+        <Suspense fallback={
+          <div className="scan-loading">
+            <div className="spinner-small"></div>
+            <span>Loading...</span>
+          </div>
+        }>
+          {activeMethod === 'camera' && (
+            <QRScanner
+              onScanSuccess={onCameraScan}
+              onScanError={onError}
+            />
+          )}
+          {activeMethod === 'file' && (
+            <FileUpload
+              onScanSuccess={onFileScan}
+              onScanError={onError}
+            />
+          )}
+          {activeMethod === 'text' && (
+            <TextInput
+              onScanSuccess={onTextScan}
+              onScanError={onError}
+            />
+          )}
+        </Suspense>
       </div>
     </div>
   );
