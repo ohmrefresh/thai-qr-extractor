@@ -104,7 +104,7 @@ describe('QRScanner Component', () => {
       expect(screen.getByText('Front Camera')).toBeInTheDocument();
     });
 
-    const startButton = screen.getByText(/Start camera scanner/i);
+    const startButton = screen.getByText(/Start Scanner/i);
     fireEvent.click(startButton);
 
     await waitFor(() => {
@@ -120,7 +120,7 @@ describe('QRScanner Component', () => {
     });
 
     // Start scanning
-    const startButton = screen.getByText(/Start camera scanner/i);
+    const startButton = screen.getByText(/Start Scanner/i);
     fireEvent.click(startButton);
 
     await waitFor(() => {
@@ -186,7 +186,7 @@ describe('QRScanner Component', () => {
       expect(screen.getByText('Front Camera')).toBeInTheDocument();
     });
 
-    const startButton = screen.getByText(/Start camera scanner/i);
+    const startButton = screen.getByText(/Start Scanner/i);
     fireEvent.click(startButton);
 
     await waitFor(() => {
@@ -200,7 +200,7 @@ describe('QRScanner Component', () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
     await waitFor(() => {
-      const startButton = screen.getByText(/Start camera scanner/i);
+      const startButton = screen.getByText(/Start Scanner/i);
       expect(startButton).toBeDisabled();
     });
   });

@@ -73,14 +73,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
     <div className="qr-scanner">
       <div className="card-header">
         <div className="card-icon accent-camera">
-          <svg className="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
             <circle cx="12" cy="13" r="4"></circle>
           </svg>
         </div>
         <div>
-          <h3 className="card-title">Camera scanner</h3>
-          <p className="card-subtitle">Use your device camera to decode Thai QR codes instantly.</p>
+          <h3 className="card-title">Camera Scanner</h3>
+          <p className="card-subtitle">Use your device camera to decode Thai QR codes instantly</p>
         </div>
       </div>
 
@@ -108,14 +108,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
             onClick={handleRefreshCameras}
             disabled={isLoadingCameras || isStarting}
             title="Refresh camera devices"
+            aria-label="Refresh camera devices"
           >
-            <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
               <path d="M20.49 15A9 9 0 0 1 5.64 18.36L1 14"></path>
             </svg>
-            Refresh
           </button>
 
           <span className={statusPillClass}>{statusLabel}</span>
@@ -124,10 +124,10 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
 
       {cameraError && (
         <div className="inline-error" role="alert">
-          <svg className="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="13"></line>
-            <line x1="12" y1="16" x2="12" y2="16"></line>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
           <span>{cameraError}</span>
         </div>
@@ -140,27 +140,78 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
             className="scan-button"
             disabled={isStarting || availableCameras.length === 0}
           >
-            <svg className="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 12l2 2 4-4"></path>
-              <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1h-6c-.552 0-1 .448-1 1s.448 1 1 1h5v5c0 .552.448 1 1 1z"></path>
-              <path d="M3 12c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h6c.552 0 1-.448 1-1s-.448-1-1-1H4v-5c0-.552-.448-1-1-1z"></path>
-              <path d="M12 3c0-.552-.448-1-1-1H5c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1s1-.448 1-1V4h5c.552 0 1-.448 1-1z"></path>
-              <path d="M12 21c0 .552.448 1 1 1h6c.552 0 1-.448 1-1v-6c0-.552-.448-1-1-1s-1 .448-1 1v5h-5c-.552 0-1 .448-1 1z"></path>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
             </svg>
-            {isStarting ? 'Starting...' : 'Start camera scanner'}
+            {isStarting ? 'Starting...' : 'Start Scanner'}
           </button>
         ) : (
           <button onClick={() => stopScanning()} className="stop-button" disabled={isStopping}>
-            <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="6" y="6" width="12" height="12"></rect>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
             </svg>
-            {isStopping ? 'Stopping...' : 'Stop scanner'}
+            {isStopping ? 'Stopping...' : 'Stop Scanner'}
           </button>
         )}
       </div>
 
       <div className={`qr-reader-frame ${isScanning ? 'qr-reader-frame--active' : ''}`}>
         <div id={containerIdRef.current} className="qr-reader"></div>
+        
+        {/* Scanning Animation Overlay */}
+        {isScanning && (
+          <div className="scanner-scanning-overlay" aria-hidden="true">
+            {/* Corner markers */}
+            <div className="corner-tl" style={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              width: 40,
+              height: 40,
+              borderTop: '4px solid var(--color-primary)',
+              borderLeft: '4px solid var(--color-primary)',
+              borderTopLeftRadius: 12,
+              pointerEvents: 'none'
+            }} />
+            <div className="corner-tr" style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              width: 40,
+              height: 40,
+              borderTop: '4px solid var(--color-primary)',
+              borderRight: '4px solid var(--color-primary)',
+              borderTopRightRadius: 12,
+              pointerEvents: 'none'
+            }} />
+            <div className="corner-bl" style={{
+              position: 'absolute',
+              bottom: 12,
+              left: 12,
+              width: 40,
+              height: 40,
+              borderBottom: '4px solid var(--color-primary)',
+              borderLeft: '4px solid var(--color-primary)',
+              borderBottomLeftRadius: 12,
+              pointerEvents: 'none'
+            }} />
+            <div className="corner-br" style={{
+              position: 'absolute',
+              bottom: 12,
+              right: 12,
+              width: 40,
+              height: 40,
+              borderBottom: '4px solid var(--color-primary)',
+              borderRight: '4px solid var(--color-primary)',
+              borderBottomRightRadius: 12,
+              pointerEvents: 'none'
+            }} />
+          </div>
+        )}
+        
         {!isScanning && (
           <div className="scanner-placeholder">
             {isStarting ? (
@@ -170,14 +221,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
               </>
             ) : (
               <>
-                <svg className="icon icon-lg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 12l2 2 4-4"></path>
-                  <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1h-6c-.552 0-1 .448-1 1s.448 1 1 1h5v5c0 .552.448 1 1 1z"></path>
-                  <path d="M3 12c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h6c.552 0 1-.448 1-1s-.448-1-1-1H4v-5c0-.552-.448-1-1-1z"></path>
-                  <path d="M12 3c0-.552-.448-1-1-1H5c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1s1-.448 1-1V4h5c.552 0 1-.448 1-1z"></path>
-                  <path d="M12 21c0 .552.448 1 1 1h6c.552 0 1-.448 1-1v-6c0-.552-.448-1-1-1s-1 .448-1 1v5h-5c-.552 0-1 .448-1 1z"></path>
-                </svg>
+                <div className="scanner-placeholder-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7"></path>
+                    <path d="M3 7l9-4 9 4"></path>
+                  </svg>
+                </div>
                 <p>Start the scanner to stream and decode QR codes in real time.</p>
+                <div className="scan-line"></div>
               </>
             )}
           </div>
