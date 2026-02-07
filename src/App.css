@@ -3467,11 +3467,15 @@ button:disabled:hover {
 .qr-textarea-wrapper {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
 }
 
 .qr-textarea {
   width: 100%;
-  min-height: 140px;
+  min-height: 200px;
   padding: 1rem 1.25rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
@@ -3482,6 +3486,7 @@ button:disabled:hover {
   resize: vertical;
   transition: all 0.2s ease;
   color: var(--text-default);
+  flex: 1;
 }
 
 .qr-textarea:hover {
@@ -4373,7 +4378,7 @@ button:disabled:hover {
 /* Scan Container */
 .scan-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
 }
 
 .scan-header {
@@ -5862,6 +5867,7 @@ button:disabled:hover {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  min-height: 480px;
 }
 
 .file-upload::before {
@@ -5932,8 +5938,9 @@ button:disabled:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.875rem;
-  padding: 2.5rem 1.5rem;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1.5rem;
   border-radius: var(--radius-xl);
   border: 2px dashed rgba(14, 165, 233, 0.4);
   background: linear-gradient(145deg, rgba(14, 165, 233, 0.06) 0%, rgba(99, 102, 241, 0.03) 100%);
@@ -5942,6 +5949,8 @@ button:disabled:hover {
   transition: all 0.3s ease;
   position: relative;
   z-index: 1;
+  flex: 1;
+  min-height: 320px;
 }
 
 .upload-dropzone:hover:not(:disabled) {
@@ -6040,6 +6049,7 @@ button:disabled:hover {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  min-height: 480px;
 }
 
 .text-input::before {
@@ -6323,5 +6333,688 @@ button:disabled:hover {
   .clear-input-button {
     width: 100%;
     padding: 1rem 1.5rem;
+  }
+}
+
+/* ========================================
+   SCAN METHODS TABS - LAYOUT FIX
+   ======================================== */
+
+/* Scan Methods Container */
+.scan-methods-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Scan Method Tabs */
+.scan-method-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.scan-method-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.scan-method-tab:hover {
+  background: var(--color-surface-muted);
+  color: var(--text-default);
+}
+
+.scan-method-tab.active {
+  background: linear-gradient(135deg, var(--color-primary-muted) 0%, rgba(99, 102, 241, 0.05) 100%);
+  border-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.scan-method-tab .tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.scan-method-tab.active .tab-icon {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.scan-method-tab .tab-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.scan-method-tab .tab-content strong {
+  display: block;
+  color: var(--text-strong);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scan-method-tab .tab-content span {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scan-method-tab.active .tab-content strong {
+  color: var(--color-primary);
+}
+
+/* Scan Method Content - FIXED HEIGHT */
+.scan-method-content {
+  padding: 1.5rem;
+  min-height: 520px;
+  position: relative;
+}
+
+/* Ensure all tab contents have same height */
+.scan-method-content > * {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading State */
+.scan-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 400px;
+  color: var(--text-muted);
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(14, 165, 233, 0.2);
+  border-top-color: var(--color-primary);
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Tabs */
+@media (max-width: 640px) {
+  .scan-method-tabs {
+    flex-direction: column;
+  }
+  
+  .scan-method-tab {
+    padding: 0.75rem;
+  }
+  
+  .scan-method-tab .tab-content span {
+    display: none;
+  }
+  
+  .scan-method-content {
+    min-height: 480px;
+    padding: 1rem;
+  }
+}
+
+/* ========================================
+   FINTECH BLUE - QR SCANNER (FIXED HEIGHT)
+   ======================================== */
+
+.qr-scanner {
+  background: linear-gradient(145deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  min-height: 480px;
+}
+
+.qr-scanner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(14, 165, 233, 0.04) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    circle at 70% 80%,
+    rgba(99, 102, 241, 0.03) 0%,
+    transparent 50%
+  );
+  animation: gradientShift 15s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(2%, 2%) rotate(5deg);
+  }
+  66% {
+    transform: translate(-2%, 1%) rotate(-5deg);
+  }
+}
+
+.qr-scanner .card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.qr-scanner .card-icon.accent-camera {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.qr-scanner:hover .card-icon.accent-camera {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+}
+
+.qr-scanner .card-icon.accent-camera svg {
+  width: 26px;
+  height: 26px;
+  color: var(--color-primary);
+}
+
+.qr-scanner .card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.qr-scanner .card-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Scanner Meta */
+.scanner-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.camera-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 200px;
+  flex: 1;
+}
+
+.camera-select span {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.camera-select select {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-default);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.camera-select select:hover {
+  border-color: var(--color-border-strong);
+}
+
+.camera-select select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+}
+
+.camera-select select:disabled {
+  background: var(--color-surface-muted);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.scanner-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Refresh Button */
+.camera-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.camera-refresh-button:hover:not(:disabled) {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: rotate(180deg);
+}
+
+.camera-refresh-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.status-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: all 0.3s ease;
+}
+
+.status-pill--live {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--color-success);
+  animation: pulseLive 2s ease-in-out infinite;
+}
+
+@keyframes pulseLive {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
+
+.status-pill--attention {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+.status-pill--starting {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: var(--color-primary);
+}
+
+.status-pill--starting::before {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+/* Inline Error */
+.inline-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+  font-weight: 500;
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+/* Scanner Controls */
+.scanner-controls {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+/* Scan Button */
+.scan-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--radius-lg);
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.scan-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.45);
+}
+
+.scan-button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.scan-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Stop Button */
+.stop-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stop-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* QR Reader Frame */
+.qr-reader-frame {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.qr-reader-frame--active {
+  border-style: solid;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1), var(--shadow-glow);
+}
+
+.qr-reader-frame--active::before,
+.qr-reader-frame--active::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-color: var(--color-primary);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.qr-reader-frame--active::before {
+  top: 12px;
+  left: 12px;
+  border-width: 4px 0 0 4px;
+  border-radius: 12px 0 0 0;
+}
+
+.qr-reader-frame--active::after {
+  bottom: 12px;
+  right: 12px;
+  border-width: 0 4px 4px 0;
+  border-radius: 0 0 12px 0;
+}
+
+.qr-reader {
+  width: 100%;
+  height: 100%;
+}
+
+/* Scanner Placeholder */
+.scanner-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+  background: linear-gradient(145deg, var(--color-surface-alt) 0%, var(--color-surface) 100%);
+}
+
+.scanner-placeholder-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  display: grid;
+  place-items: center;
+}
+
+.scanner-placeholder-icon svg {
+  width: 36px;
+  height: 36px;
+  color: var(--color-primary);
+  opacity: 0.6;
+}
+
+.scanner-placeholder p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+.scanner-placeholder .scan-line {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  animation: scanLine 2s ease-in-out infinite;
+  margin-top: 0.5rem;
+}
+
+@keyframes scanLine {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.2);
+  }
+}
+
+/* Scan Status */
+.scan-status {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  padding: 0.75rem;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* Scanning Animation Overlay */
+.scanner-scanning-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+.scanner-scanning-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  animation: scanningLine 2s linear infinite;
+  box-shadow: 0 0 10px var(--color-primary);
+}
+
+@keyframes scanningLine {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
   }
 }
