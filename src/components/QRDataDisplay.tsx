@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { ThaiQRData, QRSubTag, QRField } from '../utils/thaiQRParser';
 import { formatCurrencyDisplay } from '../utils/currencyMapping';
 import { useClipboard } from '../hooks/useClipboard';
@@ -9,6 +10,8 @@ interface QRDataDisplayProps {
 }
 
 const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
+  const [qrImageUrl, setQrImageUrl] = useState<string>('');
+  
   // Auto-expand all fields that have sub-tags by default
   const getInitialExpandedFields = () => {
     const expanded = new Set<number>();
@@ -23,6 +26,26 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
   const [expandedFields, setExpandedFields] = useState<Set<number>>(getInitialExpandedFields());
   const { copy } = useClipboard();
 
+  // Generate QR code image from raw data
+  useEffect(() => {
+    const generateQR = async () => {
+      try {
+        const url = await QRCode.toDataURL(data.rawData, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#0f172a',
+            light: '#ffffff'
+          }
+        });
+        setQrImageUrl(url);
+      } catch (err) {
+        console.error('Failed to generate QR code:', err);
+      }
+    };
+    generateQR();
+  }, [data.rawData]);
+
   const toggleFieldExpansion = (index: number) => {
     const newExpanded = new Set(expandedFields);
     if (newExpanded.has(index)) {
@@ -34,33 +57,26 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
   };
 
   const formatFieldValue = (field: QRField): string => {
-    // Format Transaction Currency (tag 53) with flag and country
     if (field.tag === '53') {
       return formatCurrencyDisplay(field.value);
     }
-
     return field.value;
   };
 
   const formatSubTagValue = (subTag: QRSubTag): string => {
-    // Format Transaction Currency sub-tag (tag 04 with "Currency" in description)
     if (subTag.tag === '04' && subTag.description.toLowerCase().includes('currency')) {
       return formatCurrencyDisplay(subTag.value);
     }
-
     return subTag.value;
   };
 
   const getTagColorClass = (tag: string): string => {
-    // Payment-related tags
     if (['29', '30', '54', '55', '56'].includes(tag)) {
       return 'tag--payment';
     }
-    // Metadata tags
     if (['00', '01', '52', '53', '58', '59', '60', '61'].includes(tag)) {
       return 'tag--metadata';
     }
-    // CRC/Security
     if (tag === '63') {
       return 'tag--crc';
     }
@@ -147,7 +163,7 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
         </button>
       </div>
 
-  
+     
 
       <div className="raw-data-section">
         <h3 className="section-title">
@@ -218,6 +234,14 @@ const QRDataDisplay: React.FC<QRDataDisplayProps> = ({ data, onClear }) => {
           ))}
         </div>
       </div>
+       {/* QR Code Image Section */}
+      {qrImageUrl && (
+        <div className="qr-image-section">
+          <div className="qr-image-container">
+            <img src={qrImageUrl} alt="QR Code" className="qr-code-image" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

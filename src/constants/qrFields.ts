@@ -22,8 +22,8 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   '15': 'Merchant Account Information (PromptPay)',
   '29': 'Merchant Account Information (PromptPay)',
   '30': 'Merchant Account Information',
-  '51': 'Country Code (Mini QR)',
-  '52': 'Merchant Category Code / Transaction ID (Mini QR)',
+  '51': 'Country Code',
+  '52': 'Merchant Category Code / Transaction ID ',
   '53': 'Transaction Currency',
   '54': 'Transaction Amount',
   '55': 'Tip or Convenience Indicator',
@@ -36,7 +36,6 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   '62': 'Additional Data Field Template',
   '63': 'CRC',
   '64': 'Merchant Information - Language Template',
-  '91': 'CRC (Mini QR)',
   '65': 'RFU for EMVCo',
 };
 
@@ -44,6 +43,9 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
 for (let i = 80; i <= 99; i++) {
   FIELD_DESCRIPTIONS[i.toString()] = 'Unreserved Templates';
 }
+
+// Override tag 91 with specific description (Mini QR CRC)
+FIELD_DESCRIPTIONS['91'] = 'CRC Checksum';
 
 export const SUB_TAG_DESCRIPTIONS: Record<string, Record<string, string>> = {
   '00': {

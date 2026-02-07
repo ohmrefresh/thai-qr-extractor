@@ -7267,3 +7267,450 @@ button:disabled:hover {
     max-width: 160px;
   }
 }
+
+/* ========================================
+   QR DATA DISPLAY - QR CODE IMAGE
+   ======================================== */
+
+.qr-image-section {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--color-surface-alt) 0%, var(--color-primary-muted) 100%);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  margin-bottom: 1.5rem;
+}
+
+.qr-image-container {
+  background: white;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.qr-code-image {
+  width: 160px;
+  height: 160px;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .qr-image-section {
+    padding: 1rem;
+  }
+  
+  .qr-code-image {
+    width: 140px;
+    height: 140px;
+  }
+}
+
+/* ========================================
+   PARSED FIELDS - MODERN FINTECH REDESIGN
+   ======================================== */
+
+.parsed-fields-section {
+  background: linear-gradient(145deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.parsed-fields-section .section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.parsed-fields-section .section-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+}
+
+.fields-info {
+  margin: 0 0 1.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0.875rem;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+/* Modern Fields Table */
+.fields-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* Table Header */
+.table-header {
+  display: grid;
+  grid-template-columns: 70px 60px 1fr 1.2fr;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: linear-gradient(135deg, var(--color-surface-alt) 0%, var(--color-surface-muted) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Field Group (Row + Subtags) */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.field-group:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.field-group.is-expanded {
+  border-color: var(--color-primary-soft);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.08);
+}
+
+/* Table Row */
+.table-row {
+  display: grid;
+  grid-template-columns: 70px 60px 1fr 1.2fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  min-height: 52px;
+}
+
+/* Tag Styling */
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.tag-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--text-default);
+}
+
+/* Tag Color Variants */
+.tag--payment .tag-value {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--color-success);
+}
+
+.tag--metadata .tag-value {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+.tag--crc .tag-value {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.06) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+/* Subtag Toggle Button */
+.subtag-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.subtag-toggle:hover {
+  background: var(--color-primary-muted);
+  border-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* Length */
+.length {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Value with Copy Button */
+.value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-default);
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.value--with-copy {
+  position: relative;
+  padding-right: 28px;
+}
+
+.field-copy-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.table-row:hover .field-copy-btn {
+  opacity: 1;
+}
+
+.field-copy-btn:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+  color: var(--color-primary);
+}
+
+/* Description */
+.description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Subtag Table */
+.subtag-table {
+  background: var(--color-surface-alt);
+  border-top: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subtag-header {
+  display: grid;
+  grid-template-columns: 60px 50px 1fr 1.2fr;
+  gap: 0.625rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-sm);
+}
+
+.subtag-row {
+  display: grid;
+  grid-template-columns: 60px 50px 1fr 1.2fr;
+  gap: 0.625rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 0.8rem;
+}
+
+.subtag-cell {
+  font-family: var(--font-mono);
+}
+
+.subtag-cell--tag {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-align: center;
+}
+
+.subtag-cell--length {
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.subtag-cell--value {
+  color: var(--text-default);
+  word-break: break-word;
+}
+
+.subtag-cell--description {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .parsed-fields-section {
+    padding: 1.25rem;
+  }
+  
+  .table-header {
+    display: none;
+  }
+  
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .table-row > * {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .table-row > *::before {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    min-width: 80px;
+  }
+  
+  .tag::before { content: 'Tag'; }
+  .length::before { content: 'Length'; }
+  .value::before { content: 'Value'; }
+  .description::before { content: 'Description'; }
+  
+  .subtag-header {
+    display: none;
+  }
+  
+  .subtag-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    padding: 0.75rem;
+  }
+  
+  .subtag-row > * {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .subtag-row > *::before {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    min-width: 80px;
+  }
+  
+  .subtag-cell--tag::before { content: 'Sub-tag'; }
+  .subtag-cell--length::before { content: 'Length'; }
+  .subtag-cell--value::before { content: 'Value'; }
+  .subtag-cell--description::before { content: 'Desc'; }
+  
+  .field-copy-btn {
+    opacity: 1;
+    position: static;
+    transform: none;
+  }
+}
+
+/* ========================================
+   RAW QR DATA - MODERN FINTECH REDESIGN
+   ======================================== */
+
+.raw-data-section {
+  background: linear-gradient(145deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.raw-data-section .section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.raw-data-section .section-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+}
+
+.raw-data {
+  background: #0f172a;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  border: 1px solid #1e293b;
+  overflow-x: auto;
+}
+
+.raw-data code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .raw-data-section {
+    padding: 1.25rem;
+  }
+  
+  .raw-data {
+    padding: 1rem;
+  }
+  
+  .raw-data code {
+    font-size: 0.8rem;
+  }
+}
