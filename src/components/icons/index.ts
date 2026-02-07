@@ -1,0 +1,9 @@
+export { default as QRCodeIcon } from './QRCodeIcon';
+export { default as ScanIcon } from './ScanIcon';
+export { default as GenerateIcon } from './GenerateIcon';
+export { default as HistoryIcon } from './HistoryIcon';
+export { default as AlertIcon } from './AlertIcon';
+export { default as CreditTransferIcon } from './CreditTransferIcon';
+export { default as DocumentIcon } from './DocumentIcon';
+export { default as CameraIcon } from './CameraIcon';
+export { default as UploadIcon } from './UploadIcon';

@@ -1,12 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Html5Qrcode,
-  Html5QrcodeSupportedFormats,
-  type CameraDevice,
-  type Html5QrcodeResult,
-} from 'html5-qrcode';
+import React, { useState, useRef } from 'react';
 import { parseThaiQR } from '../utils/thaiQRParser';
-import { toast } from 'sonner';
+import { useCamera } from '../hooks/useCamera';
 
 interface QRScannerProps {
   onScanSuccess: (data: any) => void;
@@ -14,211 +8,50 @@ interface QRScannerProps {
 }
 
 const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => {
-  const [availableCameras, setAvailableCameras] = useState<CameraDevice[]>([]);
-  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [isLoadingCameras, setIsLoadingCameras] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
-  const [isStopping, setIsStopping] = useState(false);
   const [scanStatus, setScanStatus] = useState('Camera idle. Start scanning to decode a QR code.');
-
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const isMountedRef = useRef(true);
-  const selectedCameraRef = useRef<string>('');
   const containerIdRef = useRef<string>(`qr-reader-${Math.random().toString(36).slice(2, 10)}`);
 
-  const updateSelectedCamera = useCallback((cameraId: string) => {
-    selectedCameraRef.current = cameraId;
-    setSelectedCameraId(cameraId);
-  }, []);
-
-  const stopScanning = useCallback(async (showLoading = true) => {
-    const scanner = scannerRef.current;
-    if (!scanner) {
-      return;
-    }
-
-    if (showLoading && isMountedRef.current) {
-      setIsStopping(true);
-    }
-
+  const handleScanSuccess = (decodedText: string) => {
     try {
-      await scanner.stop();
+      const parsedData = parseThaiQR(decodedText);
+      onScanSuccess(parsedData);
+      setScanStatus('QR code captured successfully.');
     } catch (error) {
-      console.warn('Failed to stop QR scanner', error);
+      onScanError(`Failed to parse QR code: ${error}`);
+      setScanStatus('Detected data could not be parsed. Keep the QR code steady and try again.');
     }
+  };
 
-    try {
-      await scanner.clear();
-    } catch (error) {
-      console.warn('Failed to clear QR scanner', error);
-    }
+  const {
+    availableCameras,
+    selectedCameraId,
+    cameraError,
+    isLoadingCameras,
+    isStarting,
+    isScanning,
+    isStopping,
+    startScanning,
+    stopScanning,
+    handleCameraChange,
+    handleRefreshCameras,
+  } = useCamera({
+    containerId: containerIdRef.current,
+    onScanSuccess: handleScanSuccess,
+    onScanError,
+  });
 
-    if (scannerRef.current === scanner) {
-      scannerRef.current = null;
-    }
-
-    if (isMountedRef.current) {
-      setIsScanning(false);
-      setScanStatus('Camera idle. Start scanning to decode a QR code.');
-      if (showLoading) {
-        setIsStopping(false);
-      }
-    }
-  }, []);
-
-  const loadCameras = useCallback(async () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-      setCameraError('Camera access is not supported on this browser.');
-      return;
-    }
-
-    setIsLoadingCameras(true);
-    setCameraError(null);
-
-    try {
-      const devices = await Html5Qrcode.getCameras();
-
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      setAvailableCameras(devices);
-
-      if (devices.length === 0) {
-        updateSelectedCamera('');
-        setCameraError('No camera devices found. Connect a camera or allow access and try again.');
-        return;
-      }
-
-      const currentSelection = selectedCameraRef.current;
-      const fallbackCameraId = devices.some((device) => device.id === currentSelection)
-        ? currentSelection
-        : devices[0].id;
-
-      updateSelectedCamera(fallbackCameraId);
-    } catch (error) {
-      console.error('Failed to load cameras', error);
-      if (isMountedRef.current) {
-        setCameraError('Unable to access camera devices. Check browser permissions and reload.');
-        setAvailableCameras([]);
-        updateSelectedCamera('');
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoadingCameras(false);
-      }
-    }
-  }, [updateSelectedCamera]);
-
-  const startScanning = useCallback(
-    async (cameraIdOverride?: string) => {
-      if (isScanning || isStarting || isStopping) {
-        return;
-      }
-
-      const cameraId = cameraIdOverride || selectedCameraRef.current || availableCameras[0]?.id;
-
-      if (!cameraId) {
-        setCameraError('Select a camera before starting the scanner.');
-        return;
-      }
-
-      setCameraError(null);
-      setIsStarting(true);
+  // Update scan status based on camera state
+  React.useEffect(() => {
+    if (cameraError) {
+      setScanStatus('Camera error. Check permissions and try again.');
+    } else if (isScanning) {
+      setScanStatus('Camera active. Align the QR code within the frame.');
+    } else if (isStarting) {
       setScanStatus('Starting camera...');
-      updateSelectedCamera(cameraId);
-
-      const html5QrCode = new Html5Qrcode(containerIdRef.current);
-      scannerRef.current = html5QrCode;
-
-      const config = {
-        fps: 12,
-        qrbox: { width: 260, height: 260 },
-        aspectRatio: 1.0,
-        disableFlip: false,
-        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-      };
-
-      try {
-        await html5QrCode.start(
-          cameraId,
-          config,
-          async (decodedText: string, _decodedResult: Html5QrcodeResult) => {
-            try {
-              const parsedData = parseThaiQR(decodedText);
-              onScanSuccess(parsedData);
-              if (isMountedRef.current) {
-                setScanStatus('QR code captured successfully.');
-              }
-              await stopScanning(false);
-            } catch (error) {
-              onScanError(`Failed to parse QR code: ${error}`);
-              if (isMountedRef.current) {
-                setScanStatus('Detected data could not be parsed. Keep the QR code steady and try again.');
-              }
-            }
-          },
-          () => {
-            // Ignore frame-level decode errors; the scanner keeps running.
-          }
-        );
-
-        if (isMountedRef.current) {
-          setIsScanning(true);
-          setScanStatus('Camera active. Align the QR code within the frame.');
-        }
-      } catch (error) {
-        console.error('Unable to start QR scanner', error);
-        if (isMountedRef.current) {
-          setCameraError('Unable to start the camera. Confirm permissions and try again.');
-          setScanStatus('Camera idle. Start scanning to decode a QR code.');
-        }
-        scannerRef.current = null;
-      } finally {
-        if (isMountedRef.current) {
-          setIsStarting(false);
-        }
-      }
-    },
-    [availableCameras, isScanning, isStarting, isStopping, onScanError, onScanSuccess, stopScanning, updateSelectedCamera]
-  );
-
-  const handleCameraChange = useCallback(
-    async (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const newCameraId = event.target.value;
-      updateSelectedCamera(newCameraId);
-
-      if (isScanning) {
-        await stopScanning(false);
-        await startScanning(newCameraId);
-      }
-    },
-    [isScanning, startScanning, stopScanning, updateSelectedCamera]
-  );
-
-  const handleRefreshCameras = useCallback(async () => {
-    if (isScanning) {
-      await stopScanning(false);
+    } else {
+      setScanStatus('Camera idle. Start scanning to decode a QR code.');
     }
-    await loadCameras();
-  }, [isScanning, loadCameras, stopScanning]);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    loadCameras();
-
-    return () => {
-      isMountedRef.current = false;
-      stopScanning(false);
-    };
-  }, [loadCameras, stopScanning]);
+  }, [cameraError, isScanning, isStarting]);
 
   const statusPillClass = cameraError
     ? 'status-pill status-pill--attention'

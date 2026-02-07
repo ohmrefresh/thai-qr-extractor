@@ -139,28 +139,12 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
 
   return (
     <div className="mini-qr-generator">
-      <div className="generator-header">
-        <div className="card-icon accent-generate">
-          <svg className="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-        </div>
-        <div>
-          <h2>Mini QR Generator</h2>
-          <p>Generate compact Mini QR codes for Thai bank transactions</p>
-        </div>
-      </div>
+      
 
       <div className="generator-content">
         <div className="generator-form">
           <div className="form-section">
-            <div className="info-box" style={{ marginBottom: '1rem' }}>
-              <strong>Mini QR Format</strong>
-              <p>Compact QR format for bank transactions with bank code and transaction ID.</p>
-            </div>
+            
 
             <div className="form-group">
               <label htmlFor="bankCode">Bank Code (3 digits) *</label>
