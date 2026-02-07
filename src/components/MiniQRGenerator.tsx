@@ -6,6 +6,9 @@ import {
   MiniQRResult 
 } from '../utils/miniQRGenerator';
 import { toast } from 'sonner';
+import QRPreview from './generator/QRPreview';
+import { ErrorMessages } from './shared';
+import { DocumentIcon, QRCodeIcon } from './icons';
 
 interface MiniQRGeneratorProps {
   onQRGenerated?: (qrData: string) => void;
@@ -82,7 +85,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
       const result = await generateMiniQR(miniQRData);
       setGeneratedMiniQR(result);
 
-      toast.success('Mini QR code generated');
+      toast.success('Mini QR code generated successfully');
       if (onQRGenerated) {
         onQRGenerated(result.qrString);
       }
@@ -95,7 +98,8 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
 
   // Use preview result if no finalized result yet
   const qrResult = generatedMiniQR || previewResult;
-  const hasRequiredFields = !!(miniQRData.bankCode && miniQRData.transactionId);
+  const isPreview = !generatedMiniQR && !!previewResult;
+  const canExport = !!generatedMiniQR;
 
   const handleLoadSample = () => {
     setMiniQRData({
@@ -118,19 +122,17 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
   };
 
   const handleDownload = () => {
-    if (!generatedMiniQR) return;
-
+    if (!qrResult) return;
     const link = document.createElement('a');
     link.download = 'mini-qr-code.png';
-    link.href = generatedMiniQR.qrCodeDataURL;
+    link.href = qrResult.qrCodeDataURL;
     link.click();
   };
 
   const handleCopyQRString = async () => {
-    if (!generatedMiniQR) return;
-
+    if (!qrResult) return;
     try {
-      await navigator.clipboard.writeText(generatedMiniQR.qrString);
+      await navigator.clipboard.writeText(qrResult.qrString);
       toast.success('QR string copied to clipboard');
     } catch (error) {
       console.error('Failed to copy QR string:', error);
@@ -138,16 +140,18 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
   };
 
   return (
-    <div className="mini-qr-generator">
-      
-
-      <div className="generator-content">
-        <div className="generator-form">
-          <div className="form-section">
-            
-
-            <div className="form-group">
-              <label htmlFor="bankCode">Bank Code (3 digits) *</label>
+    <div className="generator-main">
+      {/* Left Side - Form */}
+      <div className="generator-form-modern">
+        <div className="form-content">
+          <h3 style={{ marginBottom: '1rem', color: 'var(--text-strong)' }}>Required Information</h3>
+          
+          <div className="form-sections">
+            <div className="form-field">
+              <label htmlFor="bankCode">
+                <span className="field-label">Bank Code</span>
+                <span className="field-required">*</span>
+              </label>
               <input
                 id="bankCode"
                 type="text"
@@ -160,8 +164,11 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
               <span className="field-hint">3-digit bank code (e.g., 014 for SCB)</span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="transactionId">Transaction ID (max 50 chars) *</label>
+            <div className="form-field">
+              <label htmlFor="transactionId">
+                <span className="field-label">Transaction ID</span>
+                <span className="field-required">*</span>
+              </label>
               <input
                 id="transactionId"
                 type="text"
@@ -174,8 +181,11 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
               <span className="field-hint">Unique transaction identifier (max 50 characters)</span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="countryCode">Country Code</label>
+            <div className="form-field">
+              <label htmlFor="countryCode">
+                <span className="field-label">Country Code</span>
+                <span className="field-optional">(Optional)</span>
+              </label>
               <input
                 id="countryCode"
                 type="text"
@@ -187,147 +197,61 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
               />
               <span className="field-hint">Country code (default: TH)</span>
             </div>
+          </div>
 
-            {errors.length > 0 && (
-              <div className="error-messages">
-                {errors.map((error, index) => (
-                  <div key={index} className="error-message">
-                    {error}
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Error Messages */}
+          <ErrorMessages errors={errors} />
 
-            <div className="form-actions">
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="generate-button"
-              >
-                <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="14" width="7" height="7"></rect>
-                  <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-                {isGenerating ? 'Generating...' : 'Generate Mini QR'}
-              </button>
+          {/* Actions */}
+          <div className="form-actions-modern">
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="btn-primary"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="spinner"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <QRCodeIcon width={18} height={18} />
+                  Generate Mini QR
+                </>
+              )}
+            </button>
 
-              <button onClick={handleLoadSample} className="sample-button">
-                <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14,2 14,8 20,8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10,9 9,9 8,9"></polyline>
-                </svg>
+            <div className="action-secondary">
+              <button onClick={handleLoadSample} className="btn-secondary">
+                <DocumentIcon width={16} height={16} />
                 Load Sample
               </button>
-
-              <button onClick={handleClear} className="clear-button">
-                <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <button onClick={handleClear} className="btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,6 5,6 21,6"></polyline>
-                  <path d="M19,6V20a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
                 </svg>
-                Clear
+                Clear Form
               </button>
             </div>
           </div>
         </div>
-
-        <div className="qr-result">
-          <h3>QR Code Preview</h3>
-
-          {qrResult ? (
-            <>
-              <div className="qr-display">
-                <img
-                  src={qrResult.qrCodeDataURL}
-                  alt="Generated Mini QR Code"
-                  className="qr-image"
-                />
-
-                {!generatedMiniQR && previewResult && (
-                  <div className="preview-badge">
-                    <span>Live Preview</span>
-                  </div>
-                )}
-
-                <div className="qr-actions">
-                  <button onClick={handleDownload} className="download-button" disabled={!hasRequiredFields}>
-                    <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7,10 12,15 17,10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Download PNG
-                  </button>
-
-                  <button onClick={handleCopyQRString} className="copy-button" disabled={!hasRequiredFields}>
-                    <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    Copy QR String
-                  </button>
-                </div>
-              </div>
-
-              <div className="qr-string">
-                <h4>Mini QR Code String:</h4>
-                <div className="qr-string-display">
-                  <code>{qrResult.qrString}</code>
-                </div>
-              </div>
-
-              <div className="mini-qr-result">
-                <h4>Transaction Details:</h4>
-                <div className="mini-qr-details">
-                  <div className="mini-qr-detail-item">
-                    <label>Bank Code</label>
-                    <span>{qrResult.bankCode}</span>
-                  </div>
-                  <div className="mini-qr-detail-item">
-                    <label>Transaction ID</label>
-                    <span>{qrResult.transactionId}</span>
-                  </div>
-                  <div className="mini-qr-detail-item">
-                    <label>Checksum (CRC)</label>
-                    <span>{qrResult.checksum}</span>
-                  </div>
-                </div>
-              </div>
-
-              {!generatedMiniQR && previewResult && (
-                <p className="preview-hint">
-                  <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M9,9h0a3,3,0,0,1,6,0c0,2-3,3-3,3"></path>
-                    <path d="M12,17h.01"></path>
-                  </svg>
-                  This is a live preview. You can download or copy the QR code directly, or click "Generate Mini QR" to finalize
-                </p>
-              )}
-            </>
-          ) : (
-            <div className="qr-placeholder">
-              <svg className="icon" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-              </svg>
-              <p>Fill in the required fields to see a live preview</p>
-              {isGeneratingPreview && (
-                <div className="generating-spinner">
-                  <div className="spinner"></div>
-                  <span>Generating preview...</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Right Side - Preview */}
+      <QRPreview
+        result={qrResult}
+        isPreview={isPreview}
+        isGenerating={isGeneratingPreview}
+        isMiniQR={true}
+        miniQRData={{
+          bankCode: miniQRData.bankCode,
+          transactionId: miniQRData.transactionId
+        }}
+        onDownload={handleDownload}
+        onCopy={handleCopyQRString}
+        canExport={canExport}
+      />
     </div>
   );
 };
