@@ -30,6 +30,7 @@ const History: React.FC<HistoryProps> = ({
 }) => {
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [editingName, setEditingName] = React.useState('');
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   if (!isOpen) return null;
 
@@ -99,6 +100,20 @@ const History: React.FC<HistoryProps> = ({
     setEditingName('');
   };
 
+  const filteredHistoryItems = historyItems.filter((item) => {
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    const displayTitle = getDisplayTitle(item).toLowerCase();
+    const reference = item.data.reference?.toLowerCase() || '';
+    const rawData = item.data.rawData?.toLowerCase() || '';
+
+    return displayTitle.includes(query) || reference.includes(query) || rawData.includes(query);
+  });
+
   return (
     <div className="history-overlay">
       <div className="history-menu">
@@ -137,6 +152,16 @@ const History: React.FC<HistoryProps> = ({
             </div>
           ) : (
             <>
+              <div className="history-search">
+                <input
+                  className="history-search-input"
+                  type="text"
+                  placeholder="Search history"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
               <div className="history-actions">
                 <button 
                   className="clear-history-button"
@@ -149,11 +174,17 @@ const History: React.FC<HistoryProps> = ({
                   </svg>
                   Clear All
                 </button>
-                <span className="history-count">{historyItems.length} item{historyItems.length !== 1 ? 's' : ''}</span>
+                <span className="history-count">
+                  {filteredHistoryItems.length} / {historyItems.length} item{historyItems.length !== 1 ? 's' : ''}
+                </span>
               </div>
 
               <div className="history-list">
-                {historyItems.map((item) => (
+                {filteredHistoryItems.length === 0 && (
+                  <div className="empty-history-search">No matching history items</div>
+                )}
+
+                {filteredHistoryItems.map((item) => (
                   <div key={item.id} className="history-item">
                     <div className="history-item-content" onClick={() => onSelectItem(item.data)}>
                       <div className="history-item-header">

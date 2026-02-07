@@ -1438,6 +1438,29 @@ button:disabled:hover {
   flex-wrap: wrap;
 }
 
+.history-search {
+  margin-bottom: 0.8rem;
+}
+
+.history-search-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--text-default);
+  padding: 0.5rem 0.7rem;
+  font-size: var(--fs-base);
+}
+
+.empty-history-search {
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+  padding: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: var(--fs-base);
+}
+
 .history-count {
   font-size: 0.9rem;
   color: var(--text-muted);

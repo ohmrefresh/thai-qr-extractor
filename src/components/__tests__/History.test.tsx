@@ -352,4 +352,33 @@ describe('History Component', () => {
 
     expect(onRenameItem).toHaveBeenCalledWith('1', 'My Custom Name');
   });
+
+  test('filters history items by search term', () => {
+    const historyItems = [
+      createMockHistoryItem({
+        id: '1',
+        data: { rawData: '001', version: '01', type: '12', parsedFields: [], merchantName: 'Coffee Shop' }
+      }),
+      createMockHistoryItem({
+        id: '2',
+        data: { rawData: '002', version: '01', type: '12', parsedFields: [], merchantName: 'Noodle House' }
+      })
+    ];
+
+    render(
+      <History
+        historyItems={historyItems}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Search history/i), { target: { value: 'Noodle' } });
+
+    expect(screen.queryByText(/Coffee Shop/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Noodle House/i)).toBeInTheDocument();
+  });
 });
