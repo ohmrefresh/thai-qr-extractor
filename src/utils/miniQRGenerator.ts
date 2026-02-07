@@ -82,7 +82,7 @@ export const generateMiniQR = async (input: MiniQRInput): Promise<MiniQRResult> 
   const tag51 = encodeTLV('51', countryCode);
 
   // Combine tags for CRC calculation
-  const dataWithoutCRC = `${tag00}${tag51}`;
+  const dataWithoutCRC = `${tag00}${tag51}9104`;
 
   // Calculate CRC
   const crcValue = calculateCRC16XModem(dataWithoutCRC);
