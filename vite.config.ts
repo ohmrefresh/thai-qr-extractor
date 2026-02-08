@@ -27,9 +27,13 @@ export default defineConfig({
           if (id.includes('node_modules/qrcode')) {
             return 'qr-generator-lib';
           }
-          // QR Scanner libraries - very heavy, lazy loaded
-          if (id.includes('node_modules/html5-qrcode') || id.includes('node_modules/jsqr')) {
-            return 'qr-scanner-libs';
+          // Camera QR scanner - very heavy, only loaded when camera is used
+          if (id.includes('node_modules/html5-qrcode')) {
+            return 'qr-camera-lib';
+          }
+          // File upload QR scanner - lightweight, loaded with FileUpload
+          if (id.includes('node_modules/jsqr')) {
+            return 'qr-file-lib';
           }
           // Sonner toast library
           if (id.includes('node_modules/sonner')) {
