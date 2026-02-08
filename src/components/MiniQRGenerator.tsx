@@ -9,7 +9,7 @@ import { useDebouncedPreview } from '../hooks/useDebouncedPreview';
 import { useQRGeneratorState } from '../hooks/useQRGeneratorState';
 import QRPreview from './generator/QRPreview';
 import { ErrorMessages } from './shared';
-import { DocumentIcon, QRCodeIcon } from './icons';
+import { DocumentIcon, QRCodeIcon, TrashIcon } from './icons';
 
 interface MiniQRGeneratorProps {
   onQRGenerated?: (qrData: string) => void;
@@ -159,9 +159,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
                 Load Sample
               </button>
               <button onClick={handleClear} className="btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3,6 5,6 21,6"></polyline>
-                </svg>
+                <TrashIcon width={16} height={16} />
                 Clear Form
               </button>
             </div>

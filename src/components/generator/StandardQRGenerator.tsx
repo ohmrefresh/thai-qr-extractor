@@ -15,7 +15,7 @@ import BillPaymentFields from './BillPaymentFields';
 import CommonFields from './CommonFields';
 import QRPreview from './QRPreview';
 import { ErrorMessages } from '../shared';
-import { DocumentIcon, QRCodeIcon } from '../icons';
+import { DocumentIcon, QRCodeIcon, TrashIcon } from '../icons';
 
 interface StandardQRGeneratorProps {
   paymentType: PaymentType;
@@ -242,9 +242,7 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
                 Load Sample
               </button>
               <button onClick={handleClear} className="btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3,6 5,6 21,6"></polyline>
-                </svg>
+                <TrashIcon width={16} height={16} />
                 Clear Form
               </button>
             </div>
