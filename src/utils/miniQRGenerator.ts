@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { calculateCRC16, formatTLV } from './qrUtils';
 
 export interface MiniQRInput {
   bankCode: string;        // 3 digits
@@ -13,37 +14,6 @@ export interface MiniQRResult {
   transactionId: string;
   checksum: string;
 }
-
-/**
- * Calculate CRC16-XModem checksum
- * Matches Kotlin implementation: crc16XModem
- */
-const calculateCRC16XModem = (data: string): string => {
-  let crc = 0xFFFF;
-  const bytes = new TextEncoder().encode(data);
-  
-  for (let i = 0; i < bytes.length; i++) {
-    crc = crc ^ (bytes[i] << 8);
-    for (let j = 0; j < 8; j++) {
-      if (crc & 0x8000) {
-        crc = (crc << 1) ^ 0x1021;
-      } else {
-        crc <<= 1;
-      }
-    }
-    crc = crc & 0xFFFF;
-  }
-  
-  return crc.toString(16).toUpperCase().padStart(4, '0');
-};
-
-/**
- * Encode TLV (Tag-Length-Value) format
- */
-const encodeTLV = (tag: string, value: string): string => {
-  const length = value.length.toString().padStart(2, '0');
-  return `${tag}${length}${value}`;
-};
 
 /**
  * Generate Mini QR for bank transactions
@@ -68,28 +38,28 @@ export const generateMiniQR = async (input: MiniQRInput): Promise<MiniQRResult> 
 
   // Build sub-tags for Tag 00 (Payload)
   // Sub-tag 00: Payload Format Indicator (always 000001)
-  const subTag00 = encodeTLV('00', '000001');
+  const subTag00 = formatTLV('00', '000001');
   // Sub-tag 01: Bank Code
-  const subTag01 = encodeTLV('01', bankCode);
+  const subTag01 = formatTLV('01', bankCode);
   // Sub-tag 02: Transaction ID
-  const subTag02 = encodeTLV('02', transactionId);
+  const subTag02 = formatTLV('02', transactionId);
 
   // Combine sub-tags into Tag 00 value
   const tag00Value = `${subTag00}${subTag01}${subTag02}`;
-  const tag00 = encodeTLV('00', tag00Value);
+  const tag00 = formatTLV('00', tag00Value);
 
   // Tag 51 - Country Code (default TH)
-  const tag51 = encodeTLV('51', countryCode);
+  const tag51 = formatTLV('51', countryCode);
 
   // Build QR string without CRC
   let qrString = `${tag00}${tag51}`;
 
   // Calculate CRC - append tag 91 with length 04 before calculating checksum
   const dataWithoutCRC = qrString + '9104';
-  const crcValue = calculateCRC16XModem(dataWithoutCRC);
+  const crcValue = calculateCRC16(dataWithoutCRC);
 
   // Append CRC to final string (tag 91, length 04, CRC value)
-  qrString += encodeTLV('91', crcValue);
+  qrString += formatTLV('91', crcValue);
 
   // Generate QR code image
   const qrCodeDataURL = await QRCode.toDataURL(qrString, {

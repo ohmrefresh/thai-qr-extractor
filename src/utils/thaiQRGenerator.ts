@@ -5,6 +5,7 @@ import {
   PAYLOAD_FORMAT_VERSION,
   POINT_OF_INITIATION_STATIC
 } from '../constants/qrFields';
+import { calculateCRC16, formatTLV } from './qrUtils';
 
 export type PaymentType = 'credit-transfer' | 'bill-payment';
 export type RecipientType = 'mobile' | 'national-id' | 'ewallet' | 'bank-account';
@@ -115,36 +116,6 @@ const VALIDATION_RULES: ValidationRule[] = [
     }
   }
 ];
-
-/**
- * CRC16-CCITT calculation for QR code checksum
- */
-const calculateCRC16 = (data: string): string => {
-  let crc = 0xFFFF;
-  
-  for (let i = 0; i < data.length; i++) {
-    crc ^= data.charCodeAt(i) << 8;
-    
-    for (let j = 0; j < 8; j++) {
-      if (crc & 0x8000) {
-        crc = (crc << 1) ^ 0x1021;
-      } else {
-        crc <<= 1;
-      }
-      crc &= 0xFFFF;
-    }
-  }
-  
-  return crc.toString(16).toUpperCase().padStart(4, '0');
-};
-
-/**
- * Format TLV (Tag-Length-Value) structure
- */
-const formatTLV = (tag: string, value: string): string => {
-  const length = value.length.toString().padStart(2, '0');
-  return `${tag}${length}${value}`;
-};
 
 /**
  * Get recipient sub-tag ID based on recipient type for Tag 29
