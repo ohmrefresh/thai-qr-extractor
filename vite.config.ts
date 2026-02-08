@@ -18,15 +18,33 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Separate React and React DOM into their own chunk
-          'react-vendor': ['react', 'react-dom'],
-          // Group QR scanning libraries (loaded with QRScanner and FileUpload)
-          'qr-scanner-libs': ['html5-qrcode', 'jsqr'],
-          // QR generation library (loaded with QRGenerator)
-          'qr-generator-lib': ['qrcode'],
+        manualChunks: (id) => {
+          // React core - always needed
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react-vendor';
+          }
+          // QR Generation library - heavy, lazy loaded
+          if (id.includes('node_modules/qrcode')) {
+            return 'qr-generator-lib';
+          }
+          // Camera QR scanner - very heavy, only loaded when camera is used
+          if (id.includes('node_modules/html5-qrcode')) {
+            return 'qr-camera-lib';
+          }
+          // File upload QR scanner - lightweight, loaded with FileUpload
+          if (id.includes('node_modules/jsqr')) {
+            return 'qr-file-lib';
+          }
+          // Sonner toast library
+          if (id.includes('node_modules/sonner')) {
+            return 'ui-vendor';
+          }
         },
       },
+    },
+    // Minification options for smaller bundles
+    esbuild: {
+      drop: ['console', 'debugger'],
     },
   },
   server: {
@@ -60,6 +78,8 @@ export default defineConfig({
         'src/**/__tests__/**',
         'src/**/*.d.ts',
         'src/setupTests.ts',
+        'src/**/index.ts',
+        'src/App.css',
         'node_modules/**',
         'build/**',
       ],

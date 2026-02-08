@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   generateThaiQR,
   validateQRInput,
@@ -8,13 +8,14 @@ import {
   QRGenerationResult,
   PaymentType
 } from '../../utils/thaiQRGenerator';
-import { toast } from 'sonner';
+import { useDebouncedPreview } from '../../hooks/useDebouncedPreview';
+import { useQRGeneratorState } from '../../hooks/useQRGeneratorState';
 import CreditTransferFields from './CreditTransferFields';
 import BillPaymentFields from './BillPaymentFields';
 import CommonFields from './CommonFields';
 import QRPreview from './QRPreview';
 import { ErrorMessages } from '../shared';
-import { DocumentIcon, QRCodeIcon } from '../icons';
+import { DocumentIcon, QRCodeIcon, TrashIcon } from '../icons';
 
 interface StandardQRGeneratorProps {
   paymentType: PaymentType;
@@ -39,12 +40,25 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
     merchantCity: ''
   });
 
-  const [result, setResult] = useState<QRGenerationResult | null>(null);
-  const [previewResult, setPreviewResult] = useState<QRGenerationResult | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const state = useQRGeneratorState<QRGenerationResult>();
+
+  const generatePreview = useCallback(() => generateThaiQR(formData), [formData]);
+
+  let hasRequiredFields = false;
+  if (formData.paymentType === 'credit-transfer') {
+    hasRequiredFields = !!(formData.aid && formData.recipientId && formData.recipientType);
+  } else if (formData.paymentType === 'bill-payment') {
+    hasRequiredFields = !!(formData.aid && formData.billerId && formData.reference1);
+  }
+
+  const { previewResult, isGeneratingPreview } = useDebouncedPreview<QRGenerationResult>({
+    hasRequiredFields,
+    generateFn: generatePreview,
+  });
+
+  useEffect(() => {
+    state.setPreviewResult(previewResult);
+  }, [previewResult]);
 
   // Update form data when payment type changes
   useEffect(() => {
@@ -58,48 +72,8 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
       reference1: '',
       reference2: ''
     }));
-    setResult(null);
-    setPreviewResult(null);
-    setErrors([]);
+    state.clearResult();
   }, [paymentType]);
-
-  // Live preview generation
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    let hasRequiredFields = false;
-    if (formData.paymentType === 'credit-transfer') {
-      hasRequiredFields = !!(formData.aid && formData.recipientId && formData.recipientType);
-    } else if (formData.paymentType === 'bill-payment') {
-      hasRequiredFields = !!(formData.aid && formData.billerId && formData.reference1);
-    }
-
-    if (!hasRequiredFields) {
-      setPreviewResult(null);
-      return;
-    }
-
-    debounceTimerRef.current = setTimeout(async () => {
-      setIsGeneratingPreview(true);
-
-      try {
-        const qrResult = await generateThaiQR(formData);
-        setPreviewResult(qrResult);
-      } catch (error) {
-        setPreviewResult(null);
-      } finally {
-        setIsGeneratingPreview(false);
-      }
-    }, 500);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [formData]);
 
   const handleInputChange = (field: keyof ThaiQRGeneratorInput, value: string | number | undefined) => {
     setFormData(prev => ({
@@ -107,35 +81,17 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
       [field]: value
     }));
 
-    if (errors.length > 0) {
-      setErrors([]);
+    if (state.errors.length > 0) {
+      state.clearErrors();
     }
   };
 
-  const handleGenerate = async () => {
-    const validationErrors = validateQRInput(formData);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    try {
-      setIsGenerating(true);
-      setErrors([]);
-
-      const qrResult = await generateThaiQR(formData);
-      setResult(qrResult);
-
-      toast.success('QR code generated successfully');
-
-      if (onQRGenerated) {
-        onQRGenerated(qrResult.qrString);
-      }
-    } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to generate QR code']);
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleGenerate = () => {
+    state.handleGenerate(
+      () => validateQRInput(formData),
+      () => generateThaiQR(formData),
+      onQRGenerated ? (result) => onQRGenerated(result.qrString) : undefined
+    );
   };
 
   const handleLoadSample = () => {
@@ -161,9 +117,7 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
         merchantCity: sample.merchantCity || ''
       }));
     }
-    setResult(null);
-    setPreviewResult(null);
-    setErrors([]);
+    state.clearResult();
   };
 
   const handleClear = () => {
@@ -180,14 +134,8 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
       merchantName: '',
       merchantCity: ''
     });
-    setResult(null);
-    setPreviewResult(null);
-    setErrors([]);
+    state.clearResult();
   };
-
-  const qrResult = result || previewResult;
-  const isPreview = !result && !!previewResult;
-  // canExport is no longer needed - download works in preview mode
 
   return (
     <div className="generator-main">
@@ -266,16 +214,16 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
           </div>
 
           {/* Error Messages */}
-          <ErrorMessages errors={errors} />
+          <ErrorMessages errors={state.errors} />
 
           {/* Actions */}
           <div className="form-actions-modern">
             <button
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={state.isGenerating}
               className="btn-primary"
             >
-              {isGenerating ? (
+              {state.isGenerating ? (
                 <>
                   <div className="spinner"></div>
                   Generating...
@@ -294,9 +242,7 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
                 Load Sample
               </button>
               <button onClick={handleClear} className="btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3,6 5,6 21,6"></polyline>
-                </svg>
+                <TrashIcon width={16} height={16} />
                 Clear Form
               </button>
             </div>
@@ -306,8 +252,8 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
 
       {/* Right Side - Preview */}
       <QRPreview
-        result={qrResult}
-        isPreview={isPreview}
+        result={state.qrResult}
+        isPreview={state.isPreview}
         isGenerating={isGeneratingPreview}
         isMiniQR={false}
         standardQRData={{

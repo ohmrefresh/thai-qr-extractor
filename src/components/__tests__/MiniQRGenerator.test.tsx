@@ -1,8 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import MiniQRGenerator from '../MiniQRGenerator';
 import * as miniQRGenerator from '../../utils/miniQRGenerator';
+
+// Helper to flush pending promises with fake timers inside act()
+const flushPromises = async () => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+};
 
 // Mock the miniQRGenerator module
 vi.mock('../../utils/miniQRGenerator', () => ({
@@ -357,15 +364,16 @@ describe('MiniQRGenerator Component', () => {
       fireEvent.change(bankCodeInput, { target: { value: '014' } });
       fireEvent.change(transactionIdInput, { target: { value: '202602078Buvov9xGKBPqxhso' } });
 
-      // Advance timer by 500ms (debounce delay)
-      await vi.advanceTimersByTimeAsync(500);
+      // Advance timer by 500ms (debounce delay) and flush promises
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      await flushPromises();
 
-      await waitFor(() => {
-        expect(miniQRGenerator.generateMiniQR).toHaveBeenCalledWith({
-          bankCode: '014',
-          transactionId: '202602078Buvov9xGKBPqxhso',
-          countryCode: 'TH'
-        });
+      expect(miniQRGenerator.generateMiniQR).toHaveBeenCalledWith({
+        bankCode: '014',
+        transactionId: '202602078Buvov9xGKBPqxhso',
+        countryCode: 'TH'
       });
     });
 
@@ -384,21 +392,22 @@ describe('MiniQRGenerator Component', () => {
 
       // Type multiple times
       fireEvent.change(bankCodeInput, { target: { value: '0' } });
-      await vi.advanceTimersByTimeAsync(100);
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
       fireEvent.change(bankCodeInput, { target: { value: '01' } });
-      await vi.advanceTimersByTimeAsync(100);
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
       fireEvent.change(bankCodeInput, { target: { value: '014' } });
       fireEvent.change(transactionIdInput, { target: { value: '202602078Buvov9xGKBPqxhso' } });
 
       // Should not have called generate yet
       expect(miniQRGenerator.generateMiniQR).not.toHaveBeenCalled();
 
-      // Advance timer by 500ms
-      await vi.advanceTimersByTimeAsync(500);
-
-      await waitFor(() => {
-        expect(miniQRGenerator.generateMiniQR).toHaveBeenCalledTimes(1);
+      // Advance timer by 500ms and flush promises
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
       });
+      await flushPromises();
+
+      expect(miniQRGenerator.generateMiniQR).toHaveBeenCalledTimes(1);
     });
 
     test('does not generate preview when required fields are missing', async () => {
@@ -408,7 +417,10 @@ describe('MiniQRGenerator Component', () => {
 
       fireEvent.change(bankCodeInput, { target: { value: '014' } });
 
-      await vi.advanceTimersByTimeAsync(500);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      await flushPromises();
 
       expect(miniQRGenerator.generateMiniQR).not.toHaveBeenCalled();
     });
@@ -426,12 +438,14 @@ describe('MiniQRGenerator Component', () => {
       fireEvent.change(bankCodeInput, { target: { value: '014' } });
       fireEvent.change(transactionIdInput, { target: { value: '202602078Buvov9xGKBPqxhso' } });
 
-      await vi.advanceTimersByTimeAsync(500);
+      // Advance timer and flush promises
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      await flushPromises();
 
       // Should not display error message for preview failures
-      await waitFor(() => {
-        expect(screen.queryByText(/Preview generation failed/i)).not.toBeInTheDocument();
-      });
+      expect(screen.queryByText(/Preview generation failed/i)).not.toBeInTheDocument();
     });
 
     test('clears preview when required fields are removed', async () => {
@@ -451,14 +465,16 @@ describe('MiniQRGenerator Component', () => {
       fireEvent.change(bankCodeInput, { target: { value: '014' } });
       fireEvent.change(transactionIdInput, { target: { value: '202602078Buvov9xGKBPqxhso' } });
 
-      await vi.advanceTimersByTimeAsync(500);
-
-      await waitFor(() => {
-        expect(miniQRGenerator.generateMiniQR).toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
       });
+      await flushPromises();
+
+      expect(miniQRGenerator.generateMiniQR).toHaveBeenCalled();
 
       // Clear a required field
       fireEvent.change(bankCodeInput, { target: { value: '' } });
+      await flushPromises();
 
       // Preview should not be shown anymore
       expect(screen.queryByAltText(/Generated Thai QR Code/i)).not.toBeInTheDocument();
@@ -476,7 +492,10 @@ describe('MiniQRGenerator Component', () => {
       // Unmount before debounce completes
       unmount();
 
-      await vi.advanceTimersByTimeAsync(500);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      await flushPromises();
 
       // Should not have called generate after unmount
       expect(miniQRGenerator.generateMiniQR).not.toHaveBeenCalled();
@@ -495,7 +514,7 @@ describe('MiniQRGenerator Component', () => {
       expect(screen.getByLabelText(/Country Code/i)).toHaveValue('TH');
     });
 
-    test('clears generated QR when loading sample', () => {
+    test('clears generated QR when loading sample', async () => {
       const mockResult = {
         qrString: '00020101021153037645802TH6304ABCD',
         qrCodeDataURL: 'data:image/png;base64,mockdata'
@@ -514,6 +533,9 @@ describe('MiniQRGenerator Component', () => {
 
       const generateButton = screen.getByRole('button', { name: /Generate Mini QR/i });
       fireEvent.click(generateButton);
+
+      // Wait for generation to complete
+      await flushPromises();
 
       // Load sample
       const loadSampleButton = screen.getByRole('button', { name: /Load Sample/i });
@@ -661,12 +683,13 @@ describe('MiniQRGenerator Component', () => {
       fireEvent.change(bankCodeInput, { target: { value: '014' } });
       fireEvent.change(transactionIdInput, { target: { value: '202602078Buvov9xGKBPqxhso' } });
 
-      await vi.advanceTimersByTimeAsync(500);
-
-      await waitFor(() => {
-        // Check that live badge is shown (displays "Live" text)
-        expect(screen.getByText(/^Live$/i)).toBeInTheDocument();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
       });
+      await flushPromises();
+
+      // Check that live badge is shown (displays "Live" text)
+      expect(screen.getByText(/^Live$/i)).toBeInTheDocument();
     });
 
     test('passes correct props to QRPreview after generation', async () => {
