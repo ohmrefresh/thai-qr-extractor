@@ -168,26 +168,26 @@ describe('QRPreview Component', () => {
     });
   });
 
-  test('shows error toast when copying without QR string', async () => {
+  test('calls clipboard copy with empty string when QR string is empty', async () => {
     render(<QRPreview result={{ qrString: '', qrCodeDataURL: '' }} />);
-    
+
     const copyButton = screen.getByText(/Copy String/i);
     fireEvent.click(copyButton);
-    
+
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('No QR string available to copy');
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('');
     });
   });
 
   test('copies QR string to clipboard when copy button is clicked', async () => {
     render(<QRPreview result={mockResult} />);
-    
+
     const copyButton = screen.getByText(/Copy String/i);
     fireEvent.click(copyButton);
-    
+
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockResult.qrString);
-      expect(toast.success).toHaveBeenCalledWith('QR string copied to clipboard');
+      expect(toast.success).toHaveBeenCalledWith('QR string copied to clipboard', { duration: 2000 });
     });
   });
 
@@ -208,14 +208,15 @@ describe('QRPreview Component', () => {
     });
   });
 
-  test('disables copy button while copying', async () => {
+  test('copy button is always enabled (no inline loading state)', () => {
     render(<QRPreview result={mockResult} />);
-    
+
     const copyButton = screen.getByRole('button', { name: /Copy String/i });
-    fireEvent.click(copyButton);
-    
-    // Button should show loading state
-    expect(screen.getByText(/Copying.../i)).toBeInTheDocument();
+
+    // Button should always be enabled since useClipboard handles toast internally
+    expect(copyButton).toBeEnabled();
+    // No "Copying..." loading text should ever be present
+    expect(screen.queryByText(/Copying.../i)).not.toBeInTheDocument();
   });
 
   test('renders QR code frame elements', () => {

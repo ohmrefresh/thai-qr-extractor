@@ -3,6 +3,7 @@ import { QRGenerationResult } from '../../utils/thaiQRGenerator';
 import { MiniQRResult } from '../../utils/miniQRGenerator';
 import { QRCodeIcon } from '../icons';
 import { toast } from 'sonner';
+import { useClipboard } from '../../hooks/useClipboard';
 
 interface QRPreviewProps {
   result: QRGenerationResult | MiniQRResult | null;
@@ -27,8 +28,8 @@ const QRPreview: React.FC<QRPreviewProps> = ({
   miniQRData,
   standardQRData
 }) => {
+  const { copy } = useClipboard();
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
   const [showQRString, setShowQRString] = useState(false);
 
   // Handle download QR code image
@@ -54,40 +55,6 @@ const QRPreview: React.FC<QRPreviewProps> = ({
       toast.error('Failed to download QR code');
     } finally {
       setIsDownloading(false);
-    }
-  }, [result]);
-
-  // Handle copy QR string
-  const handleCopy = useCallback(async () => {
-    if (!result?.qrString) {
-      toast.error('No QR string available to copy');
-      return;
-    }
-
-    setIsCopying(true);
-    
-    try {
-      await navigator.clipboard.writeText(result.qrString);
-      toast.success('QR string copied to clipboard');
-    } catch (error) {
-      console.error('Copy failed:', error);
-      const textArea = document.createElement('textarea');
-      textArea.value = result.qrString;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      
-      try {
-        document.execCommand('copy');
-        toast.success('QR string copied to clipboard');
-      } catch (err) {
-        toast.error('Failed to copy QR string');
-      } finally {
-        document.body.removeChild(textArea);
-      }
-    } finally {
-      setIsCopying(false);
     }
   }, [result]);
 
@@ -245,24 +212,14 @@ const QRPreview: React.FC<QRPreviewProps> = ({
               </button>
 
               <button
-                onClick={handleCopy}
+                onClick={() => copy(result?.qrString || '', 'QR string copied to clipboard')}
                 className="qr-action-btn qr-action-btn-secondary"
-                disabled={isCopying}
               >
-                {isCopying ? (
-                  <>
-                    <div className="qr-btn-spinner" />
-                    <span>Copying...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                    <span>Copy String</span>
-                  </>
-                )}
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span>Copy String</span>
               </button>
             </div>
           </>
