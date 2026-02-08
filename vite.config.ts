@@ -78,6 +78,8 @@ export default defineConfig({
         'src/**/__tests__/**',
         'src/**/*.d.ts',
         'src/setupTests.ts',
+        'src/**/index.ts',
+        'src/App.css',
         'node_modules/**',
         'build/**',
       ],
