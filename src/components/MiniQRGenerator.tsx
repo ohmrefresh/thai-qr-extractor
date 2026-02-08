@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  generateMiniQR, 
-  validateMiniQRInput, 
-  MiniQRInput, 
-  MiniQRResult 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  generateMiniQR,
+  validateMiniQRInput,
+  MiniQRInput,
+  MiniQRResult
 } from '../utils/miniQRGenerator';
-import { toast } from 'sonner';
+import { useDebouncedPreview } from '../hooks/useDebouncedPreview';
+import { useQRGeneratorState } from '../hooks/useQRGeneratorState';
 import QRPreview from './generator/QRPreview';
 import { ErrorMessages } from './shared';
 import { DocumentIcon, QRCodeIcon } from './icons';
@@ -20,86 +21,36 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
     transactionId: '',
     countryCode: 'TH'
   });
-  const [generatedMiniQR, setGeneratedMiniQR] = useState<MiniQRResult | null>(null);
-  const [previewResult, setPreviewResult] = useState<MiniQRResult | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const state = useQRGeneratorState<MiniQRResult>();
+
+  const generatePreview = useCallback(() => generateMiniQR(miniQRData), [miniQRData]);
+
+  const hasRequiredFields = !!(miniQRData.bankCode && miniQRData.transactionId);
+
+  const { previewResult, isGeneratingPreview } = useDebouncedPreview<MiniQRResult>({
+    hasRequiredFields,
+    generateFn: generatePreview,
+  });
+
+  useEffect(() => {
+    state.setPreviewResult(previewResult);
+  }, [previewResult]);
 
   const handleInputChange = (field: keyof MiniQRInput, value: string) => {
     setMiniQRData(prev => ({ ...prev, [field]: value }));
-    if (errors.length > 0) {
-      setErrors([]);
+    if (state.errors.length > 0) {
+      state.clearErrors();
     }
   };
 
-  // Live preview generation with debouncing
-  useEffect(() => {
-    // Clear any existing timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    // Check if we have the minimum required fields for preview
-    const hasRequiredFields = !!(miniQRData.bankCode && miniQRData.transactionId);
-
-    if (!hasRequiredFields) {
-      setPreviewResult(null);
-      return;
-    }
-
-    // Debounce the preview generation
-    debounceTimerRef.current = setTimeout(async () => {
-      setIsGeneratingPreview(true);
-
-      try {
-        const qrResult = await generateMiniQR(miniQRData);
-        setPreviewResult(qrResult);
-      } catch (error) {
-        // Silently fail for preview - user can still click Generate for full validation
-        setPreviewResult(null);
-      } finally {
-        setIsGeneratingPreview(false);
-      }
-    }, 500); // 500ms debounce delay
-
-    // Cleanup function
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [miniQRData]);
-
-  const handleGenerate = async () => {
-    const validationErrors = validateMiniQRInput(miniQRData);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    try {
-      setIsGenerating(true);
-      setErrors([]);
-      const result = await generateMiniQR(miniQRData);
-      setGeneratedMiniQR(result);
-
-      toast.success('Mini QR code generated successfully');
-      if (onQRGenerated) {
-        onQRGenerated(result.qrString);
-      }
-    } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to generate QR code']);
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleGenerate = () => {
+    state.handleGenerate(
+      () => validateMiniQRInput(miniQRData),
+      () => generateMiniQR(miniQRData),
+      onQRGenerated ? (result) => onQRGenerated(result.qrString) : undefined
+    );
   };
-
-  // Use preview result if no finalized result yet
-  const qrResult = generatedMiniQR || previewResult;
-  const isPreview = !generatedMiniQR && !!previewResult;
-  // canExport is no longer needed - download works in preview mode
 
   const handleLoadSample = () => {
     setMiniQRData({
@@ -107,8 +58,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
       transactionId: '202602078Buvov9xGKBPqxhso',
       countryCode: 'TH'
     });
-    setGeneratedMiniQR(null);
-    setErrors([]);
+    state.clearResult();
   };
 
   const handleClear = () => {
@@ -117,8 +67,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
       transactionId: '',
       countryCode: 'TH'
     });
-    setGeneratedMiniQR(null);
-    setErrors([]);
+    state.clearResult();
   };
 
   return (
@@ -127,7 +76,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
       <div className="generator-form-modern">
         <div className="form-content">
           <h3 style={{ marginBottom: '1rem', color: 'var(--text-strong)' }}>Required Information</h3>
-          
+
           <div className="form-sections">
             <div className="form-field">
               <label htmlFor="bankCode">
@@ -182,16 +131,16 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
           </div>
 
           {/* Error Messages */}
-          <ErrorMessages errors={errors} />
+          <ErrorMessages errors={state.errors} />
 
           {/* Actions */}
           <div className="form-actions-modern">
             <button
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={state.isGenerating}
               className="btn-primary"
             >
-              {isGenerating ? (
+              {state.isGenerating ? (
                 <>
                   <div className="spinner"></div>
                   Generating...
@@ -222,8 +171,8 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
 
       {/* Right Side - Preview */}
       <QRPreview
-        result={qrResult}
-        isPreview={isPreview}
+        result={state.qrResult}
+        isPreview={state.isPreview}
         isGenerating={isGeneratingPreview}
         isMiniQR={true}
         miniQRData={{
