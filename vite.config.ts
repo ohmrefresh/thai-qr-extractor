@@ -9,8 +9,8 @@ export default defineConfig({
       enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
       bundleName: "thai-qr-extractor",
       uploadToken: process.env.CODECOV_TOKEN,
+      telemetry: false
     }),
-
   ],
   base: '/thai-qr-extractor/',
   build: {
