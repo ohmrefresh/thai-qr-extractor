@@ -1,4 +1,6 @@
-# Thai QR Code Tools
+# PromptPay QR Tools
+
+![A logo](docs/images/cover.png)
 
 [![CI - Test & Coverage](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/ci.yml/badge.svg)](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/ci.yml)
 [![Deploy to GitHub Pages](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/deploy.yml/badge.svg)](https://github.com/ohmrefresh/thai-qr-extractor/actions/workflows/deploy.yml)
@@ -8,6 +10,8 @@
 A React TypeScript application for extracting and parsing Thai QR code payment data. The app allows users to scan QR codes via camera, upload image files, or manually input QR data to decode Thai payment QR codes (PromptPay format).
 
 🌐 **Live Demo**: [https://ohmrefresh.github.io/thai-qr-extractor](https://ohmrefresh.github.io/thai-qr-extractor)
+
+
 
 ## Features
 

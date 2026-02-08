@@ -24,3 +24,5 @@ yarn-error.log*
 
 # worktrees
 /.worktrees
+
+test-report.junit.xml

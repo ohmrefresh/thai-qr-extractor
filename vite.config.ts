@@ -1,8 +1,17 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { codecovVitePlugin } from "@codecov/vite-plugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: "thai-qr-extractor",
+      uploadToken: process.env.CODECOV_TOKEN,
+      telemetry: false
+    }),
+  ],
   base: '/thai-qr-extractor/',
   build: {
     outDir: 'build',
@@ -32,6 +41,10 @@ export default defineConfig({
       '@/': new URL('./src/', import.meta.url).pathname,
     },
     include: ['src/**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: 'test-report.junit.xml',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'lcov', 'json-summary', 'html', 'cobertura'],
