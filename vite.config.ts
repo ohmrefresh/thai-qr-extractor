@@ -1,8 +1,17 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { codecovVitePlugin } from "@codecov/vite-plugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: "thai-qr-extractor",
+      uploadToken: process.env.CODECOV_TOKEN,
+    }),
+
+  ],
   base: '/thai-qr-extractor/',
   build: {
     outDir: 'build',
