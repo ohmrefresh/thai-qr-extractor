@@ -9,7 +9,7 @@ echo "🔄 Installing dependencies..."
 npm ci
 
 echo "🧪 Running tests..."
-npm test -- --watchAll=false
+npm test -- --run
 
 echo "🏗️ Building application..."
 npm run build

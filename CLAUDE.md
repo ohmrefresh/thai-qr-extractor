@@ -8,8 +8,10 @@ React TypeScript application for extracting, parsing, and generating Thai QR cod
 
 ## Development Commands
 
+Requires **Node 24** (pinned in `.nvmrc`; CI reads it via `node-version-file`).
+
 **Starting development:**
-- `npm start` - Start Vite dev server on localhost:5173
+- `npm start` - Start Vite dev server on localhost:3000
 - `npm run dev` - Alias for start
 
 **Testing:**
@@ -195,14 +197,14 @@ Uses **Vitest** with React Testing Library (migrated from Jest).
 - Component tests use `fireEvent` and `waitFor` from RTL
 - Lazy-loaded components mocked in setupTests.ts for synchronous resolution
 
-**Current test count:** 270 tests across 11 test files
+**Current test count:** 568 tests across 26 test files
 
 ## Build System
 
 - **Vite** for dev server and production builds
 - **TypeScript** compilation checked before Vite build
 - Production build outputs to `build/` directory
-- Code splitting and lazy loading for components
+- Code splitting and lazy loading for components; vendor chunks defined via Rolldown `build.rolldownOptions.output.codeSplitting.groups` (Vite 8)
 - GitHub Pages deployment via `gh-pages` package
 
 ## Data Flow
