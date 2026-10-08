@@ -1,17 +1,8 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import { codecovVitePlugin } from "@codecov/vite-plugin";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
-      bundleName: "thai-qr-extractor",
-      uploadToken: process.env.CODECOV_TOKEN,
-      telemetry: false
-    }),
-  ],
+  plugins: [react()],
   base: '/thai-qr-extractor/',
   build: {
     outDir: 'build',
@@ -42,10 +33,6 @@ export default defineConfig({
         },
       },
     },
-    // Minification options for smaller bundles
-    esbuild: {
-      drop: ['console', 'debugger'],
-    },
   },
   server: {
     port: 3000,
@@ -74,7 +61,6 @@ export default defineConfig({
       },
       exclude: [
         'src/index.tsx',
-        'src/reportWebVitals.ts',
         'src/**/__tests__/**',
         'src/**/*.d.ts',
         'src/setupTests.ts',
