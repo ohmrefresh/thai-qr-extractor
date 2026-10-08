@@ -23,6 +23,15 @@ export const calculateCRC16 = (data: string): string => {
 };
 
 /**
+ * User-facing message for a QR parse failure, without the "Error:" prefix
+ * that template-string coercion of an Error adds.
+ */
+export const formatParseError = (error: unknown): string => {
+  const reason = error instanceof Error ? error.message : String(error);
+  return `Couldn't decode this QR code. ${reason}`;
+};
+
+/**
  * Format TLV (Tag-Length-Value) structure.
  * Tag: 2-char string, Length: 2-char zero-padded, Value: string.
  */

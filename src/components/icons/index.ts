@@ -20,3 +20,4 @@ export { default as TextIcon } from './TextIcon';
 export { default as FileIcon } from './FileIcon';
 export { default as SmileyIcon } from './SmileyIcon';
 export { default as CurrencyIcon } from './CurrencyIcon';
+export { default as CheckCircleIcon } from './CheckCircleIcon';

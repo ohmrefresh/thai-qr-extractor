@@ -50,7 +50,7 @@ describe('App Component', () => {
         // Wait for view transition to complete and QRScanner to unmount
         await waitFor(() => {
           // After switching to generate view, the scanner section should not be visible
-          expect(screen.queryByRole('heading', { name: /QR Code Scanner/i })).not.toBeInTheDocument();
+          expect(screen.queryByRole('heading', { name: /Decode a QR code/i })).not.toBeInTheDocument();
         });
       }
     },
@@ -61,7 +61,7 @@ describe('App Component', () => {
         fireEvent.click(scanButton);
         // Wait for view transition to complete and QRScanner to mount
         await waitFor(() => {
-          expect(screen.getByRole('heading', { name: /QR Code Scanner/i })).toBeInTheDocument();
+          expect(screen.getByRole('heading', { name: /Decode a QR code/i })).toBeInTheDocument();
         });
       }
     },
@@ -75,6 +75,8 @@ describe('App Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // ScanMethodsTabs remembers the last method; start every test from the default
+    window.localStorage.removeItem('scanMethod');
     vi.mocked(historyStorage.loadHistoryFromStorage).mockReturnValue([]);
     vi.mocked(historyStorage.addToHistory).mockImplementation((history: any[], item: any) => [...history, { ...item, id: '1', timestamp: new Date() }]);
     vi.mocked(historyStorage.removeFromHistory).mockImplementation((history: any[], id: string) => history.filter((h: any) => h.id !== id));
@@ -120,7 +122,7 @@ describe('App Component', () => {
     render(<App />);
     // Verify the scan view is displayed (which contains the QRScanner)
     await waitFor(() => {
-      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Decode a QR code/i })).toBeInTheDocument();
     });
     // The QRScanner component is lazy-loaded and tested in detail in QRScanner.test.tsx
   });
@@ -159,7 +161,7 @@ describe('App Component', () => {
     render(<App />);
 
     // Initially in scan view
-    expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Decode a QR code/i })).toBeInTheDocument();
 
     // Switch to generate view (helper now includes waitFor)
     await helpers.switchToGenerateView();
@@ -173,7 +175,7 @@ describe('App Component', () => {
 
     // History component should be rendered (lazy loaded, so use waitFor)
     await waitFor(() => {
-      const historyElements = screen.queryAllByText(/Scan history/i);
+      const historyElements = screen.queryAllByText(/No history yet/i);
       expect(historyElements.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -191,7 +193,7 @@ describe('App Component', () => {
     // This would typically be done through component interaction
     // For now, we verify the component structure exists
     await waitFor(() => {
-      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Decode a QR code/i })).toBeInTheDocument();
     });
   });
 
@@ -212,7 +214,7 @@ describe('App Component', () => {
 
     // Scan view should be visible by default
     await waitFor(() => {
-      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Decode a QR code/i })).toBeInTheDocument();
     });
 
     // Find scan button from view toggle
@@ -240,6 +242,8 @@ describe('App Component', () => {
     vi.mocked(parseThaiQR).mockReturnValue(mockQRData);
 
     render(<App />);
+
+    fireEvent.click(await screen.findByText('Camera'));
 
     // Simulate camera scan by finding QRScanner and triggering its callback
     // Since we can't directly access the component's callback, we'll verify the structure exists
@@ -418,7 +422,7 @@ describe('App Component', () => {
       helpers.toggleHistory();
 
       await waitFor(() => {
-        const historyHeaders = screen.getAllByText(/Scan history/i);
+        const historyHeaders = screen.getAllByText(/No history yet/i);
         expect(historyHeaders.length).toBeGreaterThan(0);
       });
     });
@@ -575,7 +579,7 @@ describe('App Component', () => {
 
       // After switching to generate view, scanner heading should not be visible
       // Note: The view switch happens immediately, not after generation
-      expect(screen.queryByRole('heading', { name: /QR Code Scanner/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /Decode a QR code/i })).not.toBeInTheDocument();
     });
 
     test('adds generated QR to history', async () => {
@@ -608,7 +612,7 @@ describe('App Component', () => {
       await helpers.switchToScanView();
 
       // Should end up in scan view
-      expect(screen.getByText(/QR Code Scanner/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Decode a QR code/i })).toBeInTheDocument();
     });
 
 

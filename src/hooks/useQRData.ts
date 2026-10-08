@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { ThaiQRData, parseThaiQR } from '../utils/thaiQRParser';
 import { ScanSource } from './useHistory';
+import { formatParseError } from '../utils/qrUtils';
 
 export const useQRData = () => {
   const [qrData, setQrData] = useState<ThaiQRData | null>(null);
@@ -32,7 +33,7 @@ export const useQRData = () => {
       setError('');
       return parsedData;
     } catch (err) {
-      const errorMessage = `Failed to parse QR code: ${err}`;
+      const errorMessage = formatParseError(err);
       setError(errorMessage);
       throw new Error(errorMessage);
     }

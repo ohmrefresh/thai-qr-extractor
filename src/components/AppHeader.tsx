@@ -27,17 +27,19 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         <nav className="main-nav">
           <button
             className={`nav-tab ${currentView === 'scan' ? 'active' : ''}`}
+            aria-current={currentView === 'scan' ? 'page' : undefined}
             onClick={() => onViewChange('scan')}
           >
             <ScanIcon width={18} height={18} />
-            Scan QR Code
+            <span>Scan <span className="nav-tab__suffix">QR Code</span></span>
           </button>
           <button
             className={`nav-tab ${currentView === 'generate' ? 'active' : ''}`}
+            aria-current={currentView === 'generate' ? 'page' : undefined}
             onClick={() => onViewChange('generate')}
           >
             <GenerateIcon width={18} height={18} />
-            Generate QR Code
+            <span>Generate <span className="nav-tab__suffix">QR Code</span></span>
           </button>
         </nav>
 

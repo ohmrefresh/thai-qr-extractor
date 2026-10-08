@@ -154,7 +154,7 @@ describe('useClipboard Hook', () => {
       });
 
       expect(result.current.copied).toBe(false);
-      expect(toast.error).toHaveBeenCalledWith('Failed to copy');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't copy. Your browser blocked clipboard access; select the text and copy it manually.");
     });
 
     it('should not show success toast on failure', async () => {
@@ -180,7 +180,7 @@ describe('useClipboard Hook', () => {
       });
 
       expect(result.current.copied).toBe(false);
-      expect(toast.error).toHaveBeenCalledWith('Failed to copy');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't copy. Your browser blocked clipboard access; select the text and copy it manually.");
     });
 
     it('should remain false if copy fails', async () => {
@@ -433,7 +433,7 @@ describe('useClipboard Hook', () => {
         await result.current.copy('Test');
       });
 
-      expect(toast.error).toHaveBeenCalledWith('Failed to copy');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't copy. Your browser blocked clipboard access; select the text and copy it manually.");
       expect(toast.error).toHaveBeenCalledTimes(1);
     });
 
@@ -503,7 +503,7 @@ describe('useClipboard Hook', () => {
         }
       });
 
-      expect(toast.error).toHaveBeenCalledWith('Failed to copy');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't copy. Your browser blocked clipboard access; select the text and copy it manually.");
     });
 
     it('should handle undefined clipboard', async () => {
@@ -524,7 +524,7 @@ describe('useClipboard Hook', () => {
         }
       });
 
-      expect(toast.error).toHaveBeenCalledWith('Failed to copy');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't copy. Your browser blocked clipboard access; select the text and copy it manually.");
     });
 
     it('should handle synchronous clipboard writeText rejection', async () => {
@@ -537,7 +537,7 @@ describe('useClipboard Hook', () => {
       });
 
       expect(result.current.copied).toBe(false);
-      expect(toast.error).toHaveBeenCalledWith('Failed to copy');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't copy. Your browser blocked clipboard access; select the text and copy it manually.");
     });
   });
 

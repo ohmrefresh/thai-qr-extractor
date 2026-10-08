@@ -121,10 +121,9 @@ describe('QRPreview Component', () => {
       />
     );
     
-    expect(screen.getByText(/Payment Type/i)).toBeInTheDocument();
-    // Check the specific detail value
-    const detailValue = container.querySelector('.qr-detail-value');
-    expect(detailValue).toHaveTextContent('Bill Payment');
+    // The type is stated once, as the preview subtitle
+    expect(screen.getByText('Bill Payment')).toBeInTheDocument();
+    expect(container.querySelector('.qr-details-grid')).not.toBeInTheDocument();
   });
 
   test('displays amount for standard QR when provided', () => {
@@ -243,17 +242,19 @@ describe('QRPreview Component', () => {
     );
     
     const miniQRIcon = container.querySelector('.qr-preview-type-icon');
-    expect(miniQRIcon).toHaveStyle({ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' });
+    // Colours come from design tokens, not hard-coded hex
+    expect((miniQRIcon as HTMLElement).style.color).toBe('var(--color-accent)');
+    expect((miniQRIcon as HTMLElement).style.background).toBe('var(--color-accent-light)');
     
     rerender(<QRPreview result={mockResult} standardQRData={{ paymentType: 'credit-transfer' }} />);
     
     const creditTransferIcon = container.querySelector('.qr-preview-type-icon');
-    expect(creditTransferIcon).toHaveStyle({ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' });
+    expect((creditTransferIcon as HTMLElement).style.color).toBe('var(--tag-payment)');
     
     rerender(<QRPreview result={mockResult} standardQRData={{ paymentType: 'bill-payment' }} />);
     
     const billPaymentIcon = container.querySelector('.qr-preview-type-icon');
-    expect(billPaymentIcon).toHaveStyle({ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' });
+    expect((billPaymentIcon as HTMLElement).style.color).toBe('var(--tag-metadata)');
   });
 
   test('renders preview title and subtitle', () => {

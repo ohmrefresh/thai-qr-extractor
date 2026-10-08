@@ -313,7 +313,8 @@ export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGen
     };
 
   } catch (error) {
-    throw new Error(`Failed to generate Thai QR code: ${error}`);
+    // Validation errors are already user-facing; don't wrap them in another prefix
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };
 

@@ -48,7 +48,7 @@ describe('Thai QR Parser', () => {
     
     expect(() => {
       parseThaiQR(malformedQRData);
-    }).toThrow('No valid QR code fields found');
+    }).toThrow("This text isn't an EMV QR payload");
   });
 
   test('correctly describes sub-tags', () => {

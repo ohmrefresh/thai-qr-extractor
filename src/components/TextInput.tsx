@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { parseThaiQR } from '../utils/thaiQRParser';
-import { toast } from 'sonner';
+import { formatParseError } from '../utils/qrUtils';
 
 interface TextInputProps {
   onScanSuccess: (data: any) => void;
@@ -17,7 +17,7 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
 
   const handleSubmit = useCallback(() => {
     if (!inputText.trim()) {
-      onScanError('Please enter QR code data');
+      onScanError('Paste a QR payload first. It usually starts with 000201.');
       return;
     }
 
@@ -29,9 +29,8 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
         const parsedData = parseThaiQR(inputText.trim());
         onScanSuccess(parsedData);
         setInputText('');
-        toast.success('QR data parsed successfully');
       } catch (error) {
-        onScanError(`Failed to parse QR code: ${error}`);
+        onScanError(formatParseError(error));
       } finally {
         setIsProcessing(false);
       }
@@ -65,7 +64,7 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
         </div>
         <div>
           <h3 className="card-title">Paste QR Payload</h3>
-          <p className="card-subtitle">Paste raw EMVCo string to decode payment data</p>
+          <p className="card-subtitle">Paste the raw EMVCo string to see every tag, sub-tag and CRC check</p>
         </div>
       </div>
 
@@ -98,7 +97,7 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
         >
           {isProcessing ? (
             <>
-              <div className="spinner" style={{ width: '18px', height: '18px', borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }}></div>
+              <div className="spinner spinner--on-accent" aria-hidden="true"></div>
               Processing...
             </>
           ) : (

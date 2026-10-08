@@ -24,7 +24,7 @@ const CommonFields: React.FC<CommonFieldsProps> = ({
       {showOptionalHeading && (
         <>
           <div className="section-divider" />
-          <h4 className="optional-heading">Optional Information</h4>
+          <h3 className="optional-heading">Optional information</h3>
         </>
       )}
 

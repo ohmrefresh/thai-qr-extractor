@@ -56,7 +56,7 @@ describe('History Component', () => {
       />
     );
 
-    const headings = screen.getAllByText(/Scan history/i);
+    const headings = screen.getAllByText(/No history yet/i);
     expect(headings.length).toBeGreaterThan(0);
   });
 
@@ -74,7 +74,7 @@ describe('History Component', () => {
       />
     );
 
-    expect(screen.getByText(/Test Merchant - ฿100.5/i)).toBeInTheDocument();
+    expect(screen.getByText(/Test Merchant · ฿100.5/i)).toBeInTheDocument();
   });
 
   test('displays merchant ID when merchant name is not available', () => {
@@ -102,10 +102,10 @@ describe('History Component', () => {
       />
     );
 
-    expect(screen.getByText(/ID: 1234567890/i)).toBeInTheDocument();
+    expect(screen.getByText(/1234567890/i)).toBeInTheDocument();
   });
 
-  test('displays version when no merchant info available', () => {
+  test('falls back to the payload prefix when no merchant info available', () => {
     const historyItems = [
       createMockHistoryItem({
         data: {
@@ -128,7 +128,7 @@ describe('History Component', () => {
       />
     );
 
-    expect(screen.getByText(/QR Code \(01\)/i)).toBeInTheDocument();
+    expect(screen.getByText('00020101')).toBeInTheDocument();
   });
 
   test('formats timestamp correctly', () => {
@@ -219,7 +219,7 @@ describe('History Component', () => {
       />
     );
 
-    const item = screen.getByText(/Test Merchant - ฿100.5/i);
+    const item = screen.getByText(/Test Merchant · ฿100.5/i);
     fireEvent.click(item);
 
     expect(mockOnSelectItem).toHaveBeenCalledWith(historyItems[0].data);
@@ -302,7 +302,7 @@ describe('History Component', () => {
       />
     );
 
-    expect(screen.getByText(/No scan history yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/No history yet/i)).toBeInTheDocument();
   });
 
   test('displays multiple history items in order', () => {
@@ -423,4 +423,66 @@ describe('History Component', () => {
 
     expect(screen.getByPlaceholderText(/Search history/i)).toHaveValue('');
   });
+
+  describe('dialog behaviour', () => {
+    const renderOpen = () => render(
+      <History
+        historyItems={[createMockHistoryItem()]}
+        onSelectItem={mockOnSelectItem}
+        onClearHistory={mockOnClearHistory}
+        onDeleteItem={mockOnDeleteItem}
+        isOpen={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    test('is a labelled modal dialog that takes focus', () => {
+      renderOpen();
+
+      const dialog = screen.getByRole('dialog', { name: 'History' });
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      expect(screen.getByRole('button', { name: 'Close history' })).toHaveFocus();
+    });
+
+    test('closes on Escape', () => {
+      renderOpen();
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
+    test('items can be opened from the keyboard and deleted by name', () => {
+      renderOpen();
+
+      const open = screen.getByRole('button', { name: /^Test Merchant/ });
+      fireEvent.click(open);
+      expect(mockOnSelectItem).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByRole('button', { name: /Delete Test Merchant/ }));
+      expect(mockOnDeleteItem).toHaveBeenCalledWith('1');
+    });
+
+    test('returns focus to the opener when closed', () => {
+      const opener = document.createElement('button');
+      document.body.appendChild(opener);
+      opener.focus();
+
+      const { rerender } = renderOpen();
+      rerender(
+        <History
+          historyItems={[]}
+          onSelectItem={mockOnSelectItem}
+          onClearHistory={mockOnClearHistory}
+          onDeleteItem={mockOnDeleteItem}
+          isOpen={false}
+          onClose={mockOnClose}
+        />
+      );
+
+      expect(opener).toHaveFocus();
+      opener.remove();
+    });
+  });
 });
+

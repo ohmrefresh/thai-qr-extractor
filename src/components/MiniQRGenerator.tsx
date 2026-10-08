@@ -75,7 +75,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
       {/* Left Side - Form */}
       <div className="generator-form-modern">
         <div className="form-content">
-          <h3 style={{ marginBottom: '1rem', color: 'var(--text-strong)' }}>Required Information</h3>
+          <h2 className="form-heading">Required information</h2>
 
           <div className="form-sections">
             <div className="form-field">

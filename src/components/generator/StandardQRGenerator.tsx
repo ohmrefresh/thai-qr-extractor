@@ -143,7 +143,7 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
       <div className="generator-form-modern">
         {/* Form Content */}
         <div className="form-content">
-          <h3 style={{ marginBottom: '1rem', color: 'var(--text-strong)' }}>Required Information</h3>
+          <h2 className="form-heading">Required information</h2>
           <div className="form-sections">
             {/* AID Selection */}
             <div className="form-field">

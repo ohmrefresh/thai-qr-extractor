@@ -22,7 +22,7 @@ interface UseCameraReturn {
   isStopping: boolean;
   startScanning: (cameraIdOverride?: string) => Promise<void>;
   stopScanning: (showLoading?: boolean) => Promise<void>;
-  loadCameras: () => Promise<void>;
+  loadCameras: () => Promise<CameraDevice[]>;
   updateSelectedCamera: (cameraId: string) => void;
   handleCameraChange: (event: React.ChangeEvent<HTMLSelectElement>) => Promise<void>;
   handleRefreshCameras: () => Promise<void>;
@@ -84,14 +84,16 @@ export const useCamera = ({
     }
   }, []);
 
-  const loadCameras = useCallback(async () => {
+  // Listing cameras opens a permission prompt (html5-qrcode calls getUserMedia),
+  // so it only runs when the user asks to scan, never on mount.
+  const loadCameras = useCallback(async (): Promise<CameraDevice[]> => {
     if (typeof window === 'undefined') {
-      return;
+      return [];
     }
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
       setCameraError('Camera access is not supported on this browser.');
-      return;
+      return [];
     }
 
     setIsLoadingCameras(true);
@@ -101,7 +103,7 @@ export const useCamera = ({
       const devices = await Html5Qrcode.getCameras();
 
       if (!isMountedRef.current) {
-        return;
+        return devices;
       }
 
       setAvailableCameras(devices);
@@ -109,7 +111,7 @@ export const useCamera = ({
       if (devices.length === 0) {
         updateSelectedCamera('');
         setCameraError('No camera devices found. Connect a camera or allow access and try again.');
-        return;
+        return devices;
       }
 
       const currentSelection = selectedCameraRef.current;
@@ -118,6 +120,7 @@ export const useCamera = ({
         : devices[0].id;
 
       updateSelectedCamera(fallbackCameraId);
+      return devices;
     } catch (error) {
       console.error('Failed to load cameras', error);
       if (isMountedRef.current) {
@@ -125,6 +128,7 @@ export const useCamera = ({
         setAvailableCameras([]);
         updateSelectedCamera('');
       }
+      return [];
     } finally {
       if (isMountedRef.current) {
         setIsLoadingCameras(false);
@@ -138,15 +142,24 @@ export const useCamera = ({
         return;
       }
 
-      const cameraId = cameraIdOverride || selectedCameraRef.current || availableCameras[0]?.id;
-
-      if (!cameraId) {
-        setCameraError('Select a camera before starting the scanner.');
-        return;
-      }
-
       setCameraError(null);
       setIsStarting(true);
+
+      let cameraId = cameraIdOverride || selectedCameraRef.current || availableCameras[0]?.id;
+
+      if (!cameraId) {
+        // First start: ask for camera access now that the user has requested it
+        const devices = await loadCameras();
+        cameraId = selectedCameraRef.current || devices[0]?.id;
+        if (!cameraId) {
+          // loadCameras has already reported why
+          if (isMountedRef.current) {
+            setIsStarting(false);
+          }
+          return;
+        }
+      }
+
       updateSelectedCamera(cameraId);
 
       const html5QrCode = new Html5Qrcode(containerId);
@@ -174,9 +187,22 @@ export const useCamera = ({
           }
         );
 
-        if (isMountedRef.current) {
-          setIsScanning(true);
+        if (!isMountedRef.current) {
+          // Unmounted while the camera was starting: stop() would have thrown during
+          // cleanup because the scanner wasn't running yet, so release the stream now.
+          try {
+            await html5QrCode.stop();
+            await html5QrCode.clear();
+          } catch (error) {
+            console.warn('Failed to release camera after unmount', error);
+          }
+          if (scannerRef.current === html5QrCode) {
+            scannerRef.current = null;
+          }
+          return;
         }
+
+        setIsScanning(true);
       } catch (error) {
         console.error('Unable to start QR scanner', error);
         if (isMountedRef.current) {
@@ -192,7 +218,7 @@ export const useCamera = ({
         }
       }
     },
-    [availableCameras, containerId, isScanning, isStarting, isStopping, onScanError, onScanSuccess, stopScanning, updateSelectedCamera]
+    [availableCameras, containerId, isScanning, isStarting, isStopping, loadCameras, onScanError, onScanSuccess, stopScanning, updateSelectedCamera]
   );
 
   const handleCameraChange = useCallback(
@@ -217,13 +243,12 @@ export const useCamera = ({
 
   useEffect(() => {
     isMountedRef.current = true;
-    loadCameras();
 
     return () => {
       isMountedRef.current = false;
       stopScanning(false);
     };
-  }, [loadCameras, stopScanning]);
+  }, [stopScanning]);
 
   return {
     availableCameras,

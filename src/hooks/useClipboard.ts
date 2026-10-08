@@ -16,7 +16,7 @@ export const useClipboard = (): UseClipboardReturn => {
       toast.success(successMessage, { duration: 2000 });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast.error('Failed to copy');
+      toast.error('Couldn\'t copy. Your browser blocked clipboard access; select the text and copy it manually.');
     }
   }, []);
 

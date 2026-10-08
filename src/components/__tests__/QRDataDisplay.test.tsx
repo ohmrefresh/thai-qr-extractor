@@ -1,8 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import QRDataDisplay from '../QRDataDisplay';
-import { ThaiQRData } from '../../utils/thaiQRParser';
+import { ThaiQRData, parseThaiQR } from '../../utils/thaiQRParser';
+import { calculateCRC16 } from '../../utils/qrUtils';
 
 describe('QRDataDisplay Component', () => {
   const mockData: ThaiQRData = {
@@ -103,7 +104,7 @@ describe('QRDataDisplay Component', () => {
 
     // Field with sub-tags should be expanded
     expect(screen.getByText('Global Unique Identifier')).toBeInTheDocument();
-    expect(screen.getByText('PromptPay ID')).toBeInTheDocument();
+    expect(within(document.querySelector('.subtag-table') as HTMLElement).getByText('PromptPay ID')).toBeInTheDocument();
   });
 
   test('shows field copy buttons for each field', () => {
@@ -170,7 +171,7 @@ describe('QRDataDisplay Component', () => {
     const fieldWithSubTags = mockData.parsedFields.find(f => f.subTags);
     if (fieldWithSubTags?.subTags) {
       fieldWithSubTags.subTags.forEach(subTag => {
-        expect(screen.getByText(subTag.description)).toBeInTheDocument();
+        expect(within(document.querySelector('.subtag-table') as HTMLElement).getByText(subTag.description)).toBeInTheDocument();
         // Some values might appear multiple times in the UI, so use getAllByText
         const values = screen.getAllByText(subTag.value);
         expect(values.length).toBeGreaterThan(0);
@@ -204,9 +205,44 @@ describe('QRDataDisplay Component', () => {
     expect(screen.getByText(emptyData.rawData)).toBeInTheDocument();
   });
 
-  test('displays field info message', () => {
+  test('labels summary values after the sub-tag they came from', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
 
-    expect(screen.getByText(/Fields with sub-tags are expanded by default/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy PromptPay ID' })).toBeInTheDocument();
+    expect(screen.queryByText('Merchant ID')).not.toBeInTheDocument();
+  });
+
+  describe('validity verdict', () => {
+    const signed = (body: string) => {
+      const unsigned = body + '6304';
+      return unsigned + calculateCRC16(unsigned);
+    };
+    const validRaw = signed('00020101021129370016A000000677010111011300668123456785802TH5303764');
+
+    test('shows a valid verdict with the matching CRC', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw)} onClear={onClear} />);
+
+      const verdict = screen.getByRole('status', { name: /payload validity/i });
+      expect(verdict).toHaveTextContent('Valid payload');
+      expect(verdict).toHaveTextContent(`CRC ${validRaw.slice(-4)} matches`);
+      expect(screen.queryByLabelText(/has a validation problem/i)).not.toBeInTheDocument();
+    });
+
+    test('shows the expected CRC and flags the CRC row on mismatch', () => {
+      const tampered = validRaw.slice(0, -4) + 'FFFF';
+      render(<QRDataDisplay data={parseThaiQR(tampered)} onClear={onClear} />);
+
+      const verdict = screen.getByRole('status', { name: /payload validity/i });
+      expect(verdict).toHaveTextContent('Invalid payload: 1 problem');
+      expect(verdict).toHaveTextContent(`does not match, expected ${validRaw.slice(-4)}`);
+      expect(screen.getAllByLabelText(/has a validation problem/i)).toHaveLength(1);
+    });
+
+    test('reports data that could not be parsed', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw + 'zz9')} onClear={onClear} />);
+
+      expect(screen.getByRole('status', { name: /payload validity/i }))
+        .toHaveTextContent(`3 characters at offset ${validRaw.length} could not be read as TLV`);
+    });
   });
 });

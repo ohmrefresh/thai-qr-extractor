@@ -18,6 +18,7 @@ const PaymentTypeSelector: React.FC<PaymentTypeSelectorProps> = ({
       <button
         type="button"
         className={`payment-tab ${selectedType === 'credit-transfer' ? 'active' : ''}`}
+        aria-pressed={selectedType === 'credit-transfer'}
         onClick={() => onTypeChange('credit-transfer')}
       >
         <div className="tab-icon">
@@ -31,6 +32,7 @@ const PaymentTypeSelector: React.FC<PaymentTypeSelectorProps> = ({
       <button
         type="button"
         className={`payment-tab ${selectedType === 'bill-payment' ? 'active' : ''}`}
+        aria-pressed={selectedType === 'bill-payment'}
         onClick={() => onTypeChange('bill-payment')}
       >
         <div className="tab-icon">
@@ -44,6 +46,7 @@ const PaymentTypeSelector: React.FC<PaymentTypeSelectorProps> = ({
       <button
         type="button"
         className={`payment-tab ${selectedType === 'mini-qr' ? 'active' : ''}`}
+        aria-pressed={selectedType === 'mini-qr'}
         onClick={() => onTypeChange('mini-qr')}
       >
         <div className="tab-icon">

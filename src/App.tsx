@@ -3,7 +3,9 @@ import './App.css';
 import { useHistory, useQRData } from './hooks';
 import { toast } from 'sonner';
 import AppHeader from './components/AppHeader';
-import { AlertIcon } from './components/icons';
+import { ScanIcon } from './components/icons';
+import { ErrorMessages } from './components/shared';
+import { validateThaiQR } from './utils/qrValidation';
 
 // Lazy load components to reduce initial bundle size
 const ScanMethodsTabs = lazy(() => import('./components/ScanMethodsTabs'));
@@ -33,6 +35,7 @@ function App() {
     removeFromHistory,
     renameHistoryItem,
     clearHistory,
+    restoreHistory,
     toggleHistory,
     closeHistory
   } = useHistory();
@@ -40,13 +43,28 @@ function App() {
   const handleScan = (data: any, source: 'camera' | 'file' | 'text') => {
     handleScanSuccess(data, source);
     addToHistory(data, source);
-    toast.success('QR code scanned successfully');
+    const { isValid, issues } = validateThaiQR(data);
+    if (isValid) {
+      toast.success('QR code decoded: payload is valid');
+    } else {
+      const count = issues.filter(issue => issue.severity === 'error').length;
+      toast.warning(`QR code decoded with ${count} problem${count === 1 ? '' : 's'}`);
+    }
   };
 
   const handleHistorySelect = (data: any) => {
     handleScanSuccess(data, lastScanSource);
     setCurrentView('scan');
     closeHistory();
+  };
+
+  const handleClearHistory = () => {
+    const snapshot = history;
+    clearHistory();
+    toast('History cleared', {
+      description: `${snapshot.length} item${snapshot.length === 1 ? '' : 's'} removed.`,
+      action: { label: 'Undo', onClick: () => restoreHistory(snapshot) }
+    });
   };
 
   const handleQRGenerated = (qrString: string) => {
@@ -56,7 +74,7 @@ function App() {
       setCurrentView('scan');
     } catch (err) {
       // Error is already handled in parseAndSetQRData
-      toast.error('Failed to parse generated QR code');
+      toast.error('The generated payload couldn\'t be decoded. This is a bug; please report it.');
     }
   };
 
@@ -79,14 +97,10 @@ function App() {
                   <div className="scan-header">
                     <div className="header-title">
                       <div className="card-icon accent-scan">
-                        <svg className="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7"></path>
-                          <path d="M3 7l9-4 9 4"></path>
-                        </svg>
+                        <ScanIcon width={28} height={28} className="icon" />
                       </div>
                       <div>
-                        <h2>QR Code Scanner</h2>
-                        <p>Scan, upload, or paste Thai QR codes</p>
+                        <h2>Decode a QR code</h2>
                       </div>
                     </div>
                   </div>
@@ -100,12 +114,7 @@ function App() {
                   />
 
                   {error && (
-                    <div className="error-messages-modern" style={{ marginTop: '1.5rem' }}>
-                      <div className="error-message-modern">
-                        <AlertIcon width={16} height={16} />
-                        {error}
-                      </div>
-                    </div>
+                    <ErrorMessages errors={[error]} className="scan-error" />
                   )}
                 </div>
               )}
@@ -133,7 +142,7 @@ function App() {
         <History
           historyItems={history}
           onSelectItem={handleHistorySelect}
-          onClearHistory={clearHistory}
+          onClearHistory={handleClearHistory}
           onDeleteItem={removeFromHistory}
           onRenameItem={renameHistoryItem}
           isOpen={isHistoryOpen}

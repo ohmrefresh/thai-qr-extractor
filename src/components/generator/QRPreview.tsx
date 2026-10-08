@@ -74,9 +74,9 @@ const QRPreview: React.FC<QRPreviewProps> = ({
 
   // Get QR type icon/color
   const getQRTypeTheme = () => {
-    if (isMiniQR) return { color: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)' };
-    if (standardQRData?.paymentType === 'credit-transfer') return { color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' };
-    return { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' };
+    if (isMiniQR) return { color: 'var(--color-accent)', bg: 'var(--color-accent-light)' };
+    if (standardQRData?.paymentType === 'credit-transfer') return { color: 'var(--tag-payment)', bg: 'var(--tag-payment-bg)' };
+    return { color: 'var(--tag-metadata)', bg: 'var(--tag-metadata-bg)' };
   };
 
   const theme = getQRTypeTheme();
@@ -93,7 +93,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({
             <QRCodeIcon width={20} height={20} />
           </div>
           <div>
-            <h3 className="qr-preview-title">QR Code Preview</h3>
+            <h2 className="qr-preview-title">QR Code Preview</h2>
             <span className="qr-preview-subtitle">{getQRTypeLabel()}</span>
           </div>
         </div>
@@ -127,7 +127,8 @@ const QRPreview: React.FC<QRPreviewProps> = ({
               </div>
             </div>
 
-            {/* Details Card */}
+            {/* Details: only what the header doesn't already say */}
+            {((isMiniQR && miniQRData) || standardQRData?.amount !== undefined) && (
             <div className="qr-preview-details">
               {isMiniQR && miniQRData ? (
                 <div className="qr-details-grid">
@@ -140,25 +141,19 @@ const QRPreview: React.FC<QRPreviewProps> = ({
                     <span className="qr-detail-value qr-detail-mono">{miniQRData.transactionId}</span>
                   </div>
                 </div>
-              ) : standardQRData ? (
+              ) : standardQRData?.amount !== undefined ? (
+                // Payment type is already the preview subtitle; only show what it doesn't say
                 <div className="qr-details-grid">
                   <div className="qr-detail-item">
-                    <span className="qr-detail-label">Payment Type</span>
-                    <span className="qr-detail-value">
-                      {standardQRData.paymentType === 'credit-transfer' ? 'Credit Transfer' : 'Bill Payment'}
+                    <span className="qr-detail-label">Amount</span>
+                    <span className="qr-detail-value qr-detail-amount">
+                      ฿{standardQRData.amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  {standardQRData.amount !== undefined && (
-                    <div className="qr-detail-item">
-                      <span className="qr-detail-label">Amount</span>
-                      <span className="qr-detail-value qr-detail-amount">
-                        ฿{standardQRData.amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  )}
                 </div>
               ) : null}
             </div>
+            )}
 
             {/* QR String Toggle */}
             <div className="qr-preview-string-section">
