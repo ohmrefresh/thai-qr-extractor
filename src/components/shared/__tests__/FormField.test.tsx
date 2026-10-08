@@ -135,7 +135,8 @@ describe('FormField Component', () => {
     const errorSpan = container.querySelector('.error-message');
     expect(errorSpan).toBeInTheDocument();
     expect(errorSpan).toHaveTextContent('This is an error');
-    expect(errorSpan).toHaveStyle({ marginTop: '0.5rem' });
+    // jsdom resolves rem to px in computed styles, so assert the inline value
+    expect((errorSpan as HTMLElement).style.marginTop).toBe('0.5rem');
   });
 
   test('does not render hint when not provided', () => {

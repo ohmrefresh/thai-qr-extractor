@@ -37,7 +37,7 @@ A React TypeScript application for extracting and parsing Thai QR code payment d
 ## Code Quality
 
 - ✅ **Test Coverage**: 84.77%
-- ✅ **525+ Unit Tests** passing across 23 test files
+- ✅ **560+ Unit Tests** passing across 26 test files
 - ✅ **TypeScript** for type safety
 - ✅ **Custom Hooks** for clean architecture
 - ✅ **Component-based Design** with feature-focused organization
@@ -101,7 +101,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## 📖 Development
 
-1. Clone the repository
+1. Clone the repository and use Node 24 (`nvm use` reads `.nvmrc`)
 2. Install dependencies: `npm install`
 3. Start development server: `npm start`
 4. Run tests: `npm test`

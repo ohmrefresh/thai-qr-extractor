@@ -1,50 +1,29 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import { codecovVitePlugin } from "@codecov/vite-plugin";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
-      bundleName: "thai-qr-extractor",
-      uploadToken: process.env.CODECOV_TOKEN,
-      telemetry: false
-    }),
-  ],
+  plugins: [react()],
   base: '/thai-qr-extractor/',
   build: {
     outDir: 'build',
     sourcemap: false,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: (id) => {
-          // React core - always needed
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
-          }
-          // QR Generation library - heavy, lazy loaded
-          if (id.includes('node_modules/qrcode')) {
-            return 'qr-generator-lib';
-          }
-          // Camera QR scanner - very heavy, only loaded when camera is used
-          if (id.includes('node_modules/html5-qrcode')) {
-            return 'qr-camera-lib';
-          }
-          // File upload QR scanner - lightweight, loaded with FileUpload
-          if (id.includes('node_modules/jsqr')) {
-            return 'qr-file-lib';
-          }
-          // Sonner toast library
-          if (id.includes('node_modules/sonner')) {
-            return 'ui-vendor';
-          }
+        codeSplitting: {
+          groups: [
+            // React core - always needed
+            { name: 'react-vendor', test: /node_modules[\\/]react/ },
+            // QR Generation library - heavy, lazy loaded
+            { name: 'qr-generator-lib', test: /node_modules[\\/]qrcode/ },
+            // Camera QR scanner - very heavy, only loaded when camera is used
+            { name: 'qr-camera-lib', test: /node_modules[\\/]html5-qrcode/ },
+            // File upload QR scanner - lightweight, loaded with FileUpload
+            { name: 'qr-file-lib', test: /node_modules[\\/]jsqr/ },
+            // Sonner toast library
+            { name: 'ui-vendor', test: /node_modules[\\/]sonner/ },
+          ],
         },
       },
-    },
-    // Minification options for smaller bundles
-    esbuild: {
-      drop: ['console', 'debugger'],
     },
   },
   server: {
@@ -74,7 +53,6 @@ export default defineConfig({
       },
       exclude: [
         'src/index.tsx',
-        'src/reportWebVitals.ts',
         'src/**/__tests__/**',
         'src/**/*.d.ts',
         'src/setupTests.ts',
