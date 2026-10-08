@@ -7,29 +7,21 @@ export default defineConfig({
   build: {
     outDir: 'build',
     sourcemap: false,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: (id) => {
-          // React core - always needed
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
-          }
-          // QR Generation library - heavy, lazy loaded
-          if (id.includes('node_modules/qrcode')) {
-            return 'qr-generator-lib';
-          }
-          // Camera QR scanner - very heavy, only loaded when camera is used
-          if (id.includes('node_modules/html5-qrcode')) {
-            return 'qr-camera-lib';
-          }
-          // File upload QR scanner - lightweight, loaded with FileUpload
-          if (id.includes('node_modules/jsqr')) {
-            return 'qr-file-lib';
-          }
-          // Sonner toast library
-          if (id.includes('node_modules/sonner')) {
-            return 'ui-vendor';
-          }
+        codeSplitting: {
+          groups: [
+            // React core - always needed
+            { name: 'react-vendor', test: /node_modules[\\/]react/ },
+            // QR Generation library - heavy, lazy loaded
+            { name: 'qr-generator-lib', test: /node_modules[\\/]qrcode/ },
+            // Camera QR scanner - very heavy, only loaded when camera is used
+            { name: 'qr-camera-lib', test: /node_modules[\\/]html5-qrcode/ },
+            // File upload QR scanner - lightweight, loaded with FileUpload
+            { name: 'qr-file-lib', test: /node_modules[\\/]jsqr/ },
+            // Sonner toast library
+            { name: 'ui-vendor', test: /node_modules[\\/]sonner/ },
+          ],
         },
       },
     },
