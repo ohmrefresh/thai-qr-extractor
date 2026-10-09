@@ -71,24 +71,21 @@ export const SUB_TAG_DESCRIPTIONS: Record<string, Record<string, string>> = {
     '03': 'National ID',
     '04': 'eWallet ID'
   },
+  // PromptPay Credit Transfer
   '29': {
-    '00': 'Globally Unique Identifier',
-    '01': 'Payment Network Specific',
-    '02': 'Mobile Number',
-    '03': 'National ID',
-    '04': 'eWallet ID'
+    '00': 'Application ID (AID)',
+    '01': 'Mobile Number',
+    '02': 'National ID / Tax ID',
+    '03': 'E-Wallet ID',
+    '04': 'Bank Account',
+    '05': 'OTA'
   },
+  // PromptPay Bill Payment
   '30': {
-    '00': 'Globally Unique Identifier',
-    '01': 'Payment Network Specific',
-    '02': 'Merchant Identifier',
-    '03': 'Merchant Category Code',
-    '04': 'Transaction Type',
-    '05': 'Additional Data',
-    '06': 'Terminal ID',
-    '07': 'Store ID',
-    '08': 'Loyalty Program',
-    '09': 'Merchant Category'
+    '00': 'Application ID (AID)',
+    '01': 'Biller ID',
+    '02': 'Reference 1',
+    '03': 'Reference 2'
   },
   '62': {
     '01': 'Bill Number',

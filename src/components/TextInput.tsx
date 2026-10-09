@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { parseThaiQR } from '../utils/thaiQRParser';
-import { toast } from 'sonner';
+import { formatParseError } from '../utils/qrUtils';
 
 interface TextInputProps {
   onScanSuccess: (data: any) => void;
@@ -9,7 +9,6 @@ interface TextInputProps {
 
 const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => {
   const [inputText, setInputText] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(event.target.value);
@@ -17,25 +16,18 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
 
   const handleSubmit = useCallback(() => {
     if (!inputText.trim()) {
-      onScanError('Please enter QR code data');
+      onScanError('Paste a QR payload first. It usually starts with 000201.');
       return;
     }
 
-    setIsProcessing(true);
-    
-    // Small delay to show processing state
-    setTimeout(() => {
-      try {
-        const parsedData = parseThaiQR(inputText.trim());
-        onScanSuccess(parsedData);
-        setInputText('');
-        toast.success('QR data parsed successfully');
-      } catch (error) {
-        onScanError(`Failed to parse QR code: ${error}`);
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 150);
+    // Parsing is synchronous and sub-millisecond; no artificial "processing" delay
+    try {
+      const parsedData = parseThaiQR(inputText.trim());
+      // Keep the text: if the user comes back with "New payload" they can tweak it
+      onScanSuccess(parsedData);
+    } catch (error) {
+      onScanError(formatParseError(error));
+    }
   }, [inputText, onScanSuccess, onScanError]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -64,20 +56,23 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
           </svg>
         </div>
         <div>
-          <h3 className="card-title">Paste QR Payload</h3>
-          <p className="card-subtitle">Paste raw EMVCo string to decode payment data</p>
+          <h3 className="card-title">
+            <label htmlFor="qr-payload-input">Paste QR Payload</label>
+          </h3>
+          <p className="card-subtitle" id="qr-payload-hint">Paste the raw EMVCo string to see every tag, sub-tag and CRC check</p>
         </div>
       </div>
 
       <div className="qr-textarea-wrapper">
         <textarea
+          id="qr-payload-input"
+          aria-describedby="qr-payload-hint"
           value={inputText}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           placeholder="00020101021229370016..."
           className="qr-textarea"
           rows={4}
-          disabled={isProcessing}
           spellCheck={false}
           autoComplete="off"
           autoCorrect="off"
@@ -94,28 +89,18 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
         <button 
           onClick={handleSubmit} 
           className="parse-button"
-          disabled={!inputText.trim() || isProcessing}
+          disabled={!inputText.trim()}
         >
-          {isProcessing ? (
-            <>
-              <div className="spinner" style={{ width: '18px', height: '18px', borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }}></div>
-              Processing...
-            </>
-          ) : (
-            <>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20,6 9,17 4,12"></polyline>
-              </svg>
-              Parse QR Data
-            </>
-          )}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20,6 9,17 4,12"></polyline>
+          </svg>
+          Parse QR Data
         </button>
 
         {inputText && (
           <button 
             onClick={clearInput} 
             className="clear-input-button"
-            disabled={isProcessing}
             title="Clear input"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

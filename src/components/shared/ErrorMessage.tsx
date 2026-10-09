@@ -9,6 +9,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, className = '' }) 
   return (
     <div className={`error-message-modern ${className}`}>
       <svg
+        aria-hidden="true"
         width="16"
         height="16"
         viewBox="0 0 24 24"
@@ -37,7 +38,7 @@ export const ErrorMessages: React.FC<ErrorMessagesProps> = ({
   if (errors.length === 0) return null;
 
   return (
-    <div className={`error-messages-modern ${className}`}>
+    <div className={`error-messages-modern ${className}`} role="alert">
       {errors.map((error, index) => (
         <ErrorMessage key={index} message={error} />
       ))}

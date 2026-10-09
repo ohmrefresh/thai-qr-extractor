@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { parseThaiQR } from '../utils/thaiQRParser';
+import { formatParseError } from '../utils/qrUtils';
 import { useCamera } from '../hooks/useCamera';
 import { CameraIcon, RefreshIcon, ErrorIcon, StopIcon } from './icons';
 
@@ -18,8 +19,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
       onScanSuccess(parsedData);
       setScanStatus('QR code captured successfully.');
     } catch (error) {
-      onScanError(`Failed to parse QR code: ${error}`);
-      setScanStatus('Detected data could not be parsed. Keep the QR code steady and try again.');
+      onScanError(formatParseError(error));
+      setScanStatus('Found a QR code, but it isn\'t an EMV payment payload. Point the camera at a PromptPay or Thai QR payment code.');
     }
   };
 
@@ -63,7 +64,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
         : 'status-pill';
 
   const statusLabel = cameraError
-    ? 'Requires attention'
+    ? 'Camera unavailable'
     : isScanning
       ? 'Live'
       : isStarting
@@ -90,7 +91,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
             onChange={handleCameraChange}
             disabled={isLoadingCameras || availableCameras.length === 0 || isStarting}
           >
-            {availableCameras.length === 0 && <option value="">No cameras detected</option>}
+            {availableCameras.length === 0 && <option value="">Default camera</option>}
             {availableCameras.map((camera) => (
               <option key={camera.id} value={camera.id}>
                 {camera.label || 'Camera'}
@@ -127,7 +128,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
           <button
             onClick={() => startScanning()}
             className="scan-button"
-            disabled={isStarting || availableCameras.length === 0}
+            disabled={isStarting}
           >
             <CameraIcon width={22} height={22} />
             {isStarting ? 'Starting...' : 'Start Scanner'}
@@ -169,7 +170,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError }) => 
                     <path d="M3 7l9-4 9 4"></path>
                   </svg>
                 </div>
-                <p>Start the scanner to stream and decode QR codes in real time.</p>
+                <p>Start the scanner to stream and decode QR codes in real time. Your browser will ask for camera access.</p>
                 <div className="scan-line"></div>
               </>
             )}

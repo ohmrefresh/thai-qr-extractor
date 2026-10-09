@@ -10,7 +10,7 @@ const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     <>
       {children}
       <Toaster
-        position="top-right"
+        position="bottom-right"
         visibleToasts={3}
         toastOptions={{
           style: {

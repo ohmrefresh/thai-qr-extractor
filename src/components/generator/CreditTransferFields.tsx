@@ -1,4 +1,5 @@
 import React from 'react';
+import { FieldError, useFieldA11y, fieldHintId } from '../shared';
 import { RecipientType } from '../../utils/thaiQRGenerator';
 
 interface CreditTransferFieldsProps {
@@ -54,6 +55,10 @@ const CreditTransferFields: React.FC<CreditTransferFieldsProps> = ({
     }
   };
 
+  const recipientTypeA11y = useFieldA11y('recipientType');
+  const recipientIdA11y = useFieldA11y('recipientId', { hasHint: true });
+  const otaA11y = useFieldA11y('ota', { hasHint: true });
+
   return (
     <div className="dynamic-fields">
       <div className="form-field">
@@ -66,12 +71,14 @@ const CreditTransferFields: React.FC<CreditTransferFieldsProps> = ({
           value={recipientType}
           onChange={(e) => onRecipientTypeChange(e.target.value as RecipientType)}
           className="form-select"
+          {...recipientTypeA11y}
         >
           <option value="mobile">Mobile Number</option>
           <option value="national-id">National ID / Tax ID</option>
           <option value="ewallet">E-Wallet ID</option>
           <option value="bank-account">Bank Account</option>
         </select>
+        <FieldError field="recipientType" />
       </div>
 
       <div className="form-field">
@@ -87,8 +94,10 @@ const CreditTransferFields: React.FC<CreditTransferFieldsProps> = ({
           placeholder={getRecipientPlaceholder()}
           maxLength={43}
           className="form-input"
+          {...recipientIdA11y}
         />
-        <span className="field-hint">{getRecipientHint()}</span>
+        <span className="field-hint" id={fieldHintId('recipientId')}>{getRecipientHint()}</span>
+        <FieldError field="recipientId" />
       </div>
 
       {aid === 'A000000677010114' && (
@@ -105,8 +114,10 @@ const CreditTransferFields: React.FC<CreditTransferFieldsProps> = ({
             placeholder="10-digit code"
             maxLength={10}
             className="form-input"
+            {...otaA11y}
           />
-          <span className="field-hint">Required for customer-presented QR</span>
+          <span className="field-hint" id={fieldHintId('ota')}>Required for customer-presented QR</span>
+          <FieldError field="ota" />
         </div>
       )}
     </div>

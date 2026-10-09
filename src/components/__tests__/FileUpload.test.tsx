@@ -98,19 +98,19 @@ describe('FileUpload Component', () => {
   describe('Rendering', () => {
     test('renders upload button', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-      const uploadButton = screen.getByText(/Click or drop image here/i);
+      const uploadButton = screen.getByText(/Drop an image here, or click to choose one/i);
       expect(uploadButton).toBeInTheDocument();
     });
 
     test('renders card title and subtitle', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
       expect(screen.getByText(/Upload Image/i)).toBeInTheDocument();
-      expect(screen.getByText(/Select or drag a QR code image for instant decoding/i)).toBeInTheDocument();
+      expect(screen.getByText(/Drop a screenshot or photo of a QR code to decode it/i)).toBeInTheDocument();
     });
 
     test('renders file type hint', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
-      expect(screen.getByText(/Supports PNG, JPG, WebP up to 10MB/i)).toBeInTheDocument();
+      expect(screen.getByText(/PNG, JPG or WebP/i)).toBeInTheDocument();
     });
 
     test('renders hidden file input', () => {
@@ -128,7 +128,7 @@ describe('FileUpload Component', () => {
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       const clickSpy = vi.spyOn(fileInput, 'click');
 
-      const uploadButton = screen.getByText(/Click or drop image here/i);
+      const uploadButton = screen.getByText(/Drop an image here, or click to choose one/i);
       fireEvent.click(uploadButton);
 
       expect(clickSpy).toHaveBeenCalled();
@@ -215,7 +215,7 @@ describe('FileUpload Component', () => {
       fireEvent.change(fileInput, { target: { files: [file] } });
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('Please select an image file');
+        expect(onScanError).toHaveBeenCalledWith("That file isn't an image. Choose a PNG, JPG or WebP file.");
       });
     });
 
@@ -282,7 +282,8 @@ describe('FileUpload Component', () => {
         expect(onScanSuccess).toHaveBeenCalledWith(mockParsedData);
       });
 
-      expect(toast.success).toHaveBeenCalledWith('QR code decoded successfully');
+      // Success feedback is owned by App, which knows whether the payload is valid
+      expect(toast.success).not.toHaveBeenCalled();
     });
 
     test('shows processing state during image decoding', async () => {
@@ -303,7 +304,7 @@ describe('FileUpload Component', () => {
       simulateImageLoad();
 
       await waitFor(() => {
-        expect(screen.getByText(/Click or drop image here/i)).toBeInTheDocument();
+        expect(screen.getByText(/Drop an image here, or click to choose one/i)).toBeInTheDocument();
       });
     });
 
@@ -344,10 +345,11 @@ describe('FileUpload Component', () => {
       simulateImageLoad();
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('No QR code found in the image');
+        expect(onScanError).toHaveBeenCalledWith('No QR code found in this image. Use a sharp image with the whole code visible, including its quiet border.');
       });
 
-      expect(toast.error).toHaveBeenCalledWith('No QR code found in image');
+      // The error banner reports it; no duplicate toast
+      expect(toast.error).not.toHaveBeenCalled();
     });
 
     test('handles canvas context creation failure', async () => {
@@ -362,7 +364,7 @@ describe('FileUpload Component', () => {
       simulateImageLoad();
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('Failed to create canvas context');
+        expect(onScanError).toHaveBeenCalledWith("Your browser couldn't process this image. Try another browser, or paste the QR string instead.");
       });
     });
 
@@ -381,7 +383,7 @@ describe('FileUpload Component', () => {
       mockImage.onerror?.();
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('Failed to load image');
+        expect(onScanError).toHaveBeenCalledWith("This file couldn't be opened as an image. Choose a PNG, JPG or WebP file.");
       });
     });
 
@@ -397,7 +399,7 @@ describe('FileUpload Component', () => {
       mockFileReader.onerror?.();
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('Failed to read file');
+        expect(onScanError).toHaveBeenCalledWith("The file couldn't be read. Try selecting it again.");
       });
     });
 
@@ -418,7 +420,7 @@ describe('FileUpload Component', () => {
       simulateImageLoad();
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('Failed to parse QR code: Error: Invalid QR format');
+        expect(onScanError).toHaveBeenCalledWith("Couldn't decode this QR code. Invalid QR format");
       });
     });
   });
@@ -427,7 +429,7 @@ describe('FileUpload Component', () => {
     test('applies drag-active class on drag enter', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
-      const dropzone = screen.getByText(/Click or drop image here/i).closest('button');
+      const dropzone = screen.getByText(/Drop an image here, or click to choose one/i).closest('button');
 
       fireEvent.dragEnter(dropzone!);
 
@@ -437,7 +439,7 @@ describe('FileUpload Component', () => {
     test('removes drag-active class on drag leave', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
-      const dropzone = screen.getByText(/Click or drop image here/i).closest('button');
+      const dropzone = screen.getByText(/Drop an image here, or click to choose one/i).closest('button');
 
       fireEvent.dragEnter(dropzone!);
       expect(dropzone).toHaveClass('drag-active');
@@ -449,7 +451,7 @@ describe('FileUpload Component', () => {
     test('prevents default behavior on drag over', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
-      const dropzone = screen.getByText(/Click or drop image here/i).closest('button');
+      const dropzone = screen.getByText(/Drop an image here, or click to choose one/i).closest('button');
 
       const dragOverEvent = new Event('dragover', { bubbles: true, cancelable: true });
       const preventDefaultSpy = vi.spyOn(dragOverEvent, 'preventDefault');
@@ -472,7 +474,7 @@ describe('FileUpload Component', () => {
 
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
-      const dropzone = screen.getByText(/Click or drop image here/i).closest('button');
+      const dropzone = screen.getByText(/Drop an image here, or click to choose one/i).closest('button');
       const file = new File(['fake-image'], 'qr.png', { type: 'image/png' });
 
       // Use fireEvent.drop with dataTransfer
@@ -492,7 +494,7 @@ describe('FileUpload Component', () => {
     test('handles drop without files gracefully', () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
-      const dropzone = screen.getByText(/Click or drop image here/i).closest('button');
+      const dropzone = screen.getByText(/Drop an image here, or click to choose one/i).closest('button');
 
       fireEvent.drop(dropzone!, {
         dataTransfer: {
@@ -507,7 +509,7 @@ describe('FileUpload Component', () => {
     test('rejects non-image files on drop', async () => {
       render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
 
-      const dropzone = screen.getByText(/Click or drop image here/i).closest('button');
+      const dropzone = screen.getByText(/Drop an image here, or click to choose one/i).closest('button');
       const file = new File(['content'], 'test.txt', { type: 'text/plain' });
 
       fireEvent.drop(dropzone!, {
@@ -517,10 +519,45 @@ describe('FileUpload Component', () => {
       });
 
       await waitFor(() => {
-        expect(onScanError).toHaveBeenCalledWith('Please select an image file');
+        expect(onScanError).toHaveBeenCalledWith("That file isn't an image. Choose a PNG, JPG or WebP file.");
       });
     });
   });
-});
 
+  describe('large images', () => {
+    test('decodes a capped copy first and skips full size when it succeeds', async () => {
+      mockImage.width = 4032;
+      mockImage.height = 3024;
+      vi.mocked(jsQR).mockReturnValue({ data: 'qr' } as any);
+      vi.mocked(parseThaiQR).mockReturnValue({ rawData: 'qr', parsedFields: [] } as any);
+
+      render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      fireEvent.change(fileInput, { target: { files: [new File(['x'], 'photo.jpg', { type: 'image/jpeg' })] } });
+      simulateImageLoad();
+
+      await waitFor(() => expect(onScanSuccess).toHaveBeenCalled());
+      expect(jsQR).toHaveBeenCalledTimes(1);
+      const ctx = mockGetContext.mock.results[0].value;
+      expect(ctx.getImageData).toHaveBeenCalledWith(0, 0, 1600, 1200);
+    });
+
+    test('falls back to full resolution when the capped copy finds nothing', async () => {
+      mockImage.width = 4032;
+      mockImage.height = 3024;
+      vi.mocked(jsQR).mockReturnValueOnce(null).mockReturnValueOnce({ data: 'qr' } as any);
+      vi.mocked(parseThaiQR).mockReturnValue({ rawData: 'qr', parsedFields: [] } as any);
+
+      render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      fireEvent.change(fileInput, { target: { files: [new File(['x'], 'photo.jpg', { type: 'image/jpeg' })] } });
+      simulateImageLoad();
+
+      await waitFor(() => expect(onScanSuccess).toHaveBeenCalled());
+      expect(jsQR).toHaveBeenCalledTimes(2);
+      const ctx = mockGetContext.mock.results[0].value;
+      expect(ctx.getImageData).toHaveBeenLastCalledWith(0, 0, 4032, 3024);
+    });
+  });
+});
 

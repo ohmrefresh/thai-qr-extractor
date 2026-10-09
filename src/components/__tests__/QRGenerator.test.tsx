@@ -8,6 +8,7 @@ import * as thaiQRGenerator from '../../utils/thaiQRGenerator';
 vi.mock('../../utils/thaiQRGenerator', () => ({
   generateThaiQR: vi.fn(),
   validateQRInput: vi.fn(),
+  validateQRFields: vi.fn(() => []),
   generateSampleQR: vi.fn(),
   generateSampleCreditTransferQR: vi.fn()
 }));
@@ -18,6 +19,8 @@ describe('QRGenerator Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // QRGenerator remembers the last payment type; start each test from the default
+    window.localStorage.removeItem('generatorMode');
     vi.mocked(thaiQRGenerator.validateQRInput).mockReturnValue([]);
     vi.mocked(thaiQRGenerator.generateSampleQR).mockReturnValue({
       paymentType: 'bill-payment',
@@ -466,4 +469,14 @@ describe('QRGenerator Component', () => {
       expect(screen.queryByText('Optional Information')).not.toBeInTheDocument();
     });
   });
+
+  test('remembers the last payment type', () => {
+    const { unmount } = render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
+    fireEvent.click(screen.getByRole('button', { name: /Credit Transfer/i }));
+    unmount();
+
+    render(<QRGenerator onQRGenerated={mockOnQRGenerated} onClose={mockOnClose} />);
+    expect(screen.getByRole('button', { name: /Credit Transfer/i })).toHaveAttribute('aria-pressed', 'true');
+  });
 });
+

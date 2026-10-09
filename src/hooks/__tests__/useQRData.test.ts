@@ -143,7 +143,7 @@ describe('useQRData Hook', () => {
     }
     
     expect(thrownError).not.toBeNull();
-    expect(thrownError?.message).toBe('Failed to parse QR code: Error: Invalid QR format');
+    expect(thrownError?.message).toBe("Couldn't decode this QR code. Invalid QR format");
     expect(parseThaiQR).toHaveBeenCalledWith('invalid');
   });
 

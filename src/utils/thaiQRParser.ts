@@ -75,40 +75,35 @@ export const parseThaiQR = (qrData: string): ThaiQRData => {
     parsedFields: []
   };
 
-  try {
-    let index = 0;
-    
-    while (index < qrData.length) {
-      const tlv = parseTLV(qrData, index);
-      if (!tlv) break;
-      
-      const { tag, length, value } = tlv;
-      
-      const field: QRField = {
-        tag,
-        length,
-        value,
-        description: getFieldDescription(tag),
-        subTags: parseSubTags(tag, value)
-      };
-      
-      result.parsedFields.push(field);
-      
-      // Extract relevant field values
-      extractFieldValue(result, field);
-      
-      index += 4 + length;
-    }
-    
-    if (!result.parsedFields.length) {
-      throw new Error('No valid QR code fields found');
-    }
-    
-    return result;
-    
-  } catch (error) {
-    throw new Error(`Failed to parse Thai QR code: ${error}`);
+  let index = 0;
+
+  while (index < qrData.length) {
+    const tlv = parseTLV(qrData, index);
+    if (!tlv) break;
+
+    const { tag, length, value } = tlv;
+
+    const field: QRField = {
+      tag,
+      length,
+      value,
+      description: getFieldDescription(tag),
+      subTags: parseSubTags(tag, value)
+    };
+
+    result.parsedFields.push(field);
+
+    // Extract relevant field values
+    extractFieldValue(result, field);
+
+    index += 4 + length;
   }
+
+  if (!result.parsedFields.length) {
+    throw new Error('This text isn\'t an EMV QR payload. Payloads are tag-length-value pairs and usually start with 000201.');
+  }
+
+  return result;
 };
 
 /**
@@ -125,14 +120,18 @@ const extractFieldValue = (result: ThaiQRData, field: QRField): void => {
       result.type = value;
       break;
     case '15':
-    case '29':
       if (value.toLowerCase().includes('promptpay')) {
         result.merchantId = extractPromptPayId(value);
         result.merchantName = 'PromptPay';
       }
       break;
+    case '29':
+      // Recipient is whichever of sub-tags 01-04 is present
+      result.merchantId = findSubTagValue(field.subTags, ['01', '02', '03', '04']) ?? result.merchantId;
+      break;
     case '30':
-      result.merchantId = extractMerchantId(field.subTags);
+      result.merchantId = findSubTagValue(field.subTags, ['01']) ?? result.merchantId;
+      result.reference = findSubTagValue(field.subTags, ['02']) ?? result.reference;
       break;
     case '54':
       result.amount = parseFloat(value);
@@ -162,14 +161,10 @@ const extractPromptPayId = (value: string): string => {
 };
 
 /**
- * Extract merchant ID from sub-tags
+ * Value of the first sub-tag present from the given candidates
  */
-const extractMerchantId = (subTags?: QRSubTag[]): string => {
-  if (!subTags) return '';
-  
-  // Look for merchant identifier in sub-tag 02 or 03
-  const merchantSubTag = subTags.find(tag => tag.tag === '02' || tag.tag === '03');
-  return merchantSubTag?.value || '';
+const findSubTagValue = (subTags: QRSubTag[] | undefined, candidates: string[]): string | undefined => {
+  return subTags?.find(subTag => candidates.includes(subTag.tag))?.value;
 };
 
 /**

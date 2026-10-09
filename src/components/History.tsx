@@ -33,6 +33,9 @@ const History: React.FC<HistoryProps> = ({
   const [editingName, setEditingName] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
 
+  const drawerRef = React.useRef<HTMLDivElement>(null);
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+
   React.useEffect(() => {
     if (!isOpen) {
       setSearchTerm('');
@@ -40,6 +43,47 @@ const History: React.FC<HistoryProps> = ({
       setEditingName('');
     }
   }, [isOpen]);
+
+  // Modal behaviour: move focus in, keep Tab inside, close on Escape, and
+  // hand focus back to whatever opened the drawer.
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const opener = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        // The rename input handles its own Escape (cancel edit)
+        const target = event.target;
+        if (target instanceof HTMLElement && target.classList.contains('history-item-rename-input')) return;
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !drawerRef.current) return;
+      const focusable = Array.from(
+        drawerRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])')
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      opener?.focus?.();
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -65,13 +109,16 @@ const History: React.FC<HistoryProps> = ({
       return item.customName;
     }
 
+    const amount = item.data.amount ? ` · ฿${item.data.amount}` : '';
     if (item.data.merchantName) {
-      return `${item.data.merchantName}${item.data.amount ? ` - ฿${item.data.amount}` : ''}`;
+      return `${item.data.merchantName}${amount}`;
     }
     if (item.data.merchantId) {
-      return `ID: ${item.data.merchantId}${item.data.amount ? ` - ฿${item.data.amount}` : ''}`;
+      return `${item.data.merchantId}${amount}`;
     }
-    return `QR Code (${item.data.version})`;
+    // No name or ID to show: fall back to the start of the payload itself
+    const raw = item.data.rawData ?? '';
+    return raw.length > 24 ? `${raw.slice(0, 24)}…` : raw || 'Untitled QR code';
   };
 
   const handleStartRename = (item: HistoryItem) => {
@@ -110,19 +157,26 @@ const History: React.FC<HistoryProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className={`drawer-backdrop ${isOpen ? 'is-open' : ''}`}
         onClick={onClose}
+        aria-hidden="true"
       />
-      
+
       {/* Drawer */}
-      <div className={`history-drawer ${isOpen ? 'is-open' : ''}`}>
+      <div
+        ref={drawerRef}
+        className={`history-drawer ${isOpen ? 'is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-drawer-title"
+      >
         <div className="history-drawer-header">
           <div className="history-drawer-title">
-            <h2>History</h2>
+            <h2 id="history-drawer-title">History</h2>
             <span className="history-count-badge-drawer">{historyItems.length}</span>
           </div>
-          <button className="drawer-close-btn" onClick={onClose} aria-label="Close history">
+          <button ref={closeButtonRef} className="drawer-close-btn" onClick={onClose} aria-label="Close history">
             <CloseIcon width={20} height={20} />
           </button>
         </div>
@@ -131,15 +185,16 @@ const History: React.FC<HistoryProps> = ({
           {historyItems.length === 0 ? (
             <div className="empty-history">
               <SmileyIcon width={48} height={48} className="icon" style={{ opacity: 0.4 }} />
-              <p>No scan history yet</p>
-              <span>Your scanned QR codes will appear here</span>
+              <p>No history yet</p>
+              <span>QR codes you decode or generate are saved here. The last 50 are kept in this browser only.</span>
             </div>
           ) : (
             <>
               <div className="history-search">
                 <input
                   className="history-search-input"
-                  type="text"
+                  type="search"
+                  aria-label="Search history"
                   placeholder="Search history"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -162,7 +217,7 @@ const History: React.FC<HistoryProps> = ({
 
               <div className="history-list">
                 {filteredHistoryItems.length === 0 && (
-                  <div className="empty-history-search">No matching history items</div>
+                  <div className="empty-history-search">No history matches “{searchTerm.trim()}”</div>
                 )}
 
                 {filteredHistoryItems.map((item) => (
@@ -207,7 +262,10 @@ const History: React.FC<HistoryProps> = ({
                               </button>
                             </div>
                           ) : (
-                            getDisplayTitle(item)
+                            // Keyboard entry point; the click bubbles to the item's handler
+                            <button type="button" className="history-item-open">
+                              {getDisplayTitle(item)}
+                            </button>
                           )}
                         </div>
                         {editingItemId !== item.id && (
@@ -222,8 +280,9 @@ const History: React.FC<HistoryProps> = ({
                             Edit
                           </button>
                         )}
-                        <button 
+                        <button
                           className="delete-item-button"
+                          aria-label={`Delete ${getDisplayTitle(item)}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDeleteItem(item.id);

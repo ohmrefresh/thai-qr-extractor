@@ -6,7 +6,8 @@ import {
   addToHistory as addToHistoryStorage,
   removeFromHistory as removeFromHistoryStorage,
   updateHistoryItemName as updateHistoryItemNameStorage,
-  clearHistory as clearHistoryStorage
+  clearHistory as clearHistoryStorage,
+  saveHistoryToStorage
 } from '../utils/historyStorage';
 
 export type ScanSource = 'camera' | 'file' | 'text';
@@ -40,6 +41,12 @@ export const useHistory = () => {
     setHistory(emptyHistory);
   }, []);
 
+  // Puts back a snapshot, e.g. to undo Clear all
+  const restoreHistory = useCallback((items: HistoryItem[]) => {
+    saveHistoryToStorage(items);
+    setHistory(items);
+  }, []);
+
   const toggleHistory = useCallback(() => {
     setIsHistoryOpen(prev => !prev);
   }, []);
@@ -55,6 +62,7 @@ export const useHistory = () => {
     removeFromHistory,
     renameHistoryItem,
     clearHistory,
+    restoreHistory,
     toggleHistory,
     closeHistory
   };

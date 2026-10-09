@@ -197,7 +197,7 @@ Uses **Vitest** with React Testing Library (migrated from Jest).
 - Component tests use `fireEvent` and `waitFor` from RTL
 - Lazy-loaded components mocked in setupTests.ts for synchronous resolution
 
-**Current test count:** 568 tests across 26 test files
+**Current test count:** 605 tests across 29 test files
 
 ## Build System
 

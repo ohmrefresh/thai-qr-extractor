@@ -37,7 +37,7 @@ A React TypeScript application for extracting and parsing Thai QR code payment d
 ## Code Quality
 
 - ✅ **Test Coverage**: 84.77%
-- ✅ **560+ Unit Tests** passing across 26 test files
+- ✅ **600+ Unit Tests** passing across 29 test files
 - ✅ **TypeScript** for type safety
 - ✅ **Custom Hooks** for clean architecture
 - ✅ **Component-based Design** with feature-focused organization

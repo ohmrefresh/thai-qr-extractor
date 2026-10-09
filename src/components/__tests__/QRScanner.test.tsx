@@ -61,83 +61,104 @@ describe('QRScanner Component', () => {
     });
   });
 
-  test('loads available cameras on mount', async () => {
+  const clickStart = () => fireEvent.click(screen.getByText(/Start Scanner/i));
+
+  test('does not request camera access until Start is clicked', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
+    // Listing cameras triggers the browser permission prompt, so mounting must not do it
     await waitFor(() => {
-      expect(Html5Qrcode.getCameras).toHaveBeenCalled();
+      expect(screen.getByText(/Start Scanner/i)).toBeEnabled();
+    });
+    expect(Html5Qrcode.getCameras).not.toHaveBeenCalled();
+
+    clickStart();
+
+    await waitFor(() => {
+      expect(Html5Qrcode.getCameras).toHaveBeenCalledTimes(1);
     });
   });
 
-  test('displays camera options when cameras are available', async () => {
+  test('displays camera options after starting', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
+    clickStart();
 
     await waitFor(() => {
       expect(screen.getByText('Front Camera')).toBeInTheDocument();
     });
   });
 
-  test('shows error when no cameras are found', async () => {
+  test('shows error and does not start when no cameras are found', async () => {
     mockGetCameras.mockResolvedValue([]);
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
+    clickStart();
 
     await waitFor(() => {
       expect(screen.getByText(/No camera devices found/i)).toBeInTheDocument();
     });
+    expect(mockHtml5QrcodeInstance.start).not.toHaveBeenCalled();
   });
 
   test('handles camera access error gracefully', async () => {
     mockGetCameras.mockRejectedValue(new Error('Permission denied'));
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
+    clickStart();
 
     await waitFor(() => {
       expect(screen.getByText(/Unable to access camera devices/i)).toBeInTheDocument();
     });
   });
 
-  test('starts camera scanning when start button is clicked', async () => {
+  test('starts the first camera when start button is clicked', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Front Camera')).toBeInTheDocument();
-    });
-
-    const startButton = screen.getByText(/Start Scanner/i);
-    fireEvent.click(startButton);
+    clickStart();
 
     await waitFor(() => {
       expect(mockHtml5QrcodeInstance.start).toHaveBeenCalled();
     });
+    expect(mockHtml5QrcodeInstance.start.mock.calls[0][0]).toBe('camera1');
   });
 
   test('stops scanning when stop button is clicked', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Front Camera')).toBeInTheDocument();
-    });
-
-    // Start scanning
-    const startButton = screen.getByText(/Start Scanner/i);
-    fireEvent.click(startButton);
+    clickStart();
 
     await waitFor(() => {
       expect(screen.getByText(/Stop scanner/i)).toBeInTheDocument();
     });
 
-    // Stop scanning
-    const stopButton = screen.getByText(/Stop scanner/i);
-    fireEvent.click(stopButton);
+    fireEvent.click(screen.getByText(/Stop scanner/i));
 
     await waitFor(() => {
       expect(mockHtml5QrcodeInstance.stop).toHaveBeenCalled();
     });
   });
 
+  test('releases the camera if unmounted while it is starting', async () => {
+    let resolveStart: () => void = () => {};
+    mockHtml5QrcodeInstance.start = vi.fn(() => new Promise<void>(resolve => { resolveStart = resolve; }));
+
+    const { unmount } = render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
+    clickStart();
+
+    await waitFor(() => {
+      expect(mockHtml5QrcodeInstance.start).toHaveBeenCalled();
+    });
+
+    unmount();
+    resolveStart();
+
+    await waitFor(() => {
+      expect(mockHtml5QrcodeInstance.stop).toHaveBeenCalled();
+      expect(mockHtml5QrcodeInstance.clear).toHaveBeenCalled();
+    });
+  });
+
   test('changes camera when dropdown value changes', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
+    fireEvent.click(screen.getByTitle(/Refresh camera devices/i));
 
     await waitFor(() => {
       expect(screen.getByText('Front Camera')).toBeInTheDocument();
@@ -151,20 +172,14 @@ describe('QRScanner Component', () => {
     });
   });
 
-  test('refreshes camera list when refresh button is clicked', async () => {
+  test('refresh button lists cameras on demand', async () => {
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
 
-    // Wait for initial load
+    fireEvent.click(screen.getByTitle(/Refresh camera devices/i));
+
     await waitFor(() => {
+      expect(Html5Qrcode.getCameras).toHaveBeenCalled();
       expect(screen.getByText('Front Camera')).toBeInTheDocument();
-    });
-
-    const refreshButton = screen.getByTitle(/Refresh camera devices/i);
-    fireEvent.click(refreshButton);
-
-    // Verify the refresh was triggered (button functionality)
-    await waitFor(() => {
-      expect(refreshButton).toBeInTheDocument();
     });
   });
 
@@ -181,27 +196,10 @@ describe('QRScanner Component', () => {
     mockHtml5QrcodeInstance.start = vi.fn().mockRejectedValue(new Error('Camera error'));
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Front Camera')).toBeInTheDocument();
-    });
-
-    const startButton = screen.getByText(/Start Scanner/i);
-    fireEvent.click(startButton);
+    clickStart();
 
     await waitFor(() => {
       expect(screen.getByText(/Unable to start the camera/i)).toBeInTheDocument();
-    });
-  });
-
-  test('disables controls when no cameras available', async () => {
-    mockGetCameras.mockResolvedValue([]);
-
-    render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
-
-    await waitFor(() => {
-      const startButton = screen.getByText(/Start Scanner/i);
-      expect(startButton).toBeDisabled();
     });
   });
 
@@ -213,6 +211,7 @@ describe('QRScanner Component', () => {
     });
 
     render(<QRScanner onScanSuccess={mockOnScanSuccess} onScanError={mockOnScanError} />);
+    clickStart();
 
     await waitFor(() => {
       expect(screen.getByText(/Camera access is not supported/i)).toBeInTheDocument();

@@ -1,12 +1,15 @@
 import React, { useRef, useState, useCallback } from 'react';
 import jsQR from 'jsqr';
 import { parseThaiQR } from '../utils/thaiQRParser';
-import { toast } from 'sonner';
+import { formatParseError } from '../utils/qrUtils';
 
 interface FileUploadProps {
   onScanSuccess: (data: any) => void;
   onScanError: (error: string) => void;
 }
+
+// Longest edge used for the first decode attempt
+const MAX_DECODE_EDGE = 1600;
 
 const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -15,7 +18,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
 
   const processImage = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      onScanError('Please select an image file');
+      onScanError('That file isn\'t an image. Choose a PNG, JPG or WebP file.');
       return;
     }
 
@@ -29,35 +32,40 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
         const ctx = canvas.getContext('2d');
         
         if (!ctx) {
-          onScanError('Failed to create canvas context');
+          onScanError('Your browser couldn\'t process this image. Try another browser, or paste the QR string instead.');
           setIsProcessing(false);
           return;
         }
 
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        const decodeAt = (scale: number) => {
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          return jsQR(imageData.data, imageData.width, imageData.height);
+        };
 
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        // Phone photos are 12 MP+ (~50 MB of pixels); decoding that blocks the main
+        // thread for close to a second on mid-range phones. A capped copy decodes in
+        // tens of ms; fall back to full size only for codes too small to survive it.
+        const scale = Math.min(1, MAX_DECODE_EDGE / Math.max(img.width, img.height));
+        const code = decodeAt(scale) ?? (scale < 1 ? decodeAt(1) : null);
 
         if (code) {
           try {
             const parsedData = parseThaiQR(code.data);
             onScanSuccess(parsedData);
-            toast.success('QR code decoded successfully');
           } catch (error) {
-            onScanError(`Failed to parse QR code: ${error}`);
+            onScanError(formatParseError(error));
           }
         } else {
-          toast.error('No QR code found in image');
-          onScanError('No QR code found in the image');
+          onScanError('No QR code found in this image. Use a sharp image with the whole code visible, including its quiet border.');
         }
         setIsProcessing(false);
       };
       
       img.onerror = () => {
-        onScanError('Failed to load image');
+        onScanError('This file couldn\'t be opened as an image. Choose a PNG, JPG or WebP file.');
         setIsProcessing(false);
       };
       
@@ -65,7 +73,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
     };
 
     reader.onerror = () => {
-      onScanError('Failed to read file');
+      onScanError('The file couldn\'t be read. Try selecting it again.');
       setIsProcessing(false);
     };
 
@@ -135,7 +143,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
         </div>
         <div>
           <h3 className="card-title">Upload Image</h3>
-          <p className="card-subtitle">Select or drag a QR code image for instant decoding</p>
+          <p className="card-subtitle">Drop a screenshot or photo of a QR code to decode it</p>
         </div>
       </div>
 
@@ -152,7 +160,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
         {isProcessing ? (
           <>
             <div className="upload-dropzone-icon">
-              <div className="spinner" style={{ width: '32px', height: '32px', borderColor: 'rgba(14, 165, 233, 0.2)', borderTopColor: '#0ea5e9' }}></div>
+              <div className="spinner spinner--lg" aria-hidden="true"></div>
             </div>
             <div className="dropzone-content">
               <span className="dropzone-title">Processing...</span>
@@ -169,17 +177,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
               </svg>
             </div>
             <div className="dropzone-content">
-              <span className="dropzone-title">Click or drop image here</span>
-              <span className="dropzone-subtitle">Supports PNG, JPG, WebP up to 10MB</span>
+              <span className="dropzone-title">Drop an image here, or click to choose one</span>
+              <span className="dropzone-subtitle">PNG, JPG or WebP</span>
             </div>
-            <span className="dropzone-hint">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7,10 12,15 17,10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Click to browse
-            </span>
           </>
         )}
       </button>

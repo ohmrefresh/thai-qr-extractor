@@ -1,17 +1,23 @@
 :root {
-  --font-sans: 'Inter', 'SF Pro Text', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  /* System stacks: native, instant, and the mono face keeps hex/IDs unambiguous on every OS */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   
   /* ========================================
-     CLEAN FINTECH BLUE COLOR PALETTE
+     NEUTRAL INSTRUMENT PALETTE
+     Slate neutrals, one blue accent reserved for state and action.
      ======================================== */
   
   /* Primary Blues */
-  --color-primary: #0ea5e9;
-  --color-primary-strong: #0284c7;
-  --color-primary-soft: #38bdf8;
+  --color-primary: #0369a1;
+  --color-primary-strong: #075985;
+  --color-primary-soft: #7dd3fc;
   --color-primary-light: #e0f2fe;
   --color-primary-muted: #f0f9ff;
+  /* Primary as text, icon or focus ring on light surfaces (5.9:1 on white) */
+  --color-primary-ink: #0369a1;
+  /* Accent as text on its own light tint (≥7:1) */
+  --color-accent-ink: #075985;
   
   /* Background - Soft Blue Tint */
   --color-background: #f8fafc;
@@ -24,9 +30,9 @@
   --color-surface-elevated: #ffffff;
   
   /* Accent - Blue-Violet Range */
-  --color-accent: #6366f1;
-  --color-accent-soft: #818cf8;
-  --color-accent-light: #e0e7ff;
+  --color-accent: #0369a1;  /* one accent: same hue as primary */
+  --color-accent-soft: #7dd3fc;
+  --color-accent-light: #e0f2fe;
   
   /* Semantic Colors */
   --color-success: #10b981;
@@ -38,6 +44,14 @@
   --color-warning: #f59e0b;
   --color-warning-soft: #fbbf24;
   --color-warning-light: #fef3c7;
+
+  /* State text on tinted backgrounds (≥4.5:1 on their tint) */
+  --color-success-ink: #047857;
+  --color-success-tint: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-danger-ink: #b91c1c;
+  --color-danger-tint: #fef2f2;
+  --color-danger-border: #fecaca;
   
   /* Border Colors - Blue Tinted */
   --color-border: #e2e8f0;
@@ -47,32 +61,40 @@
   /* Text Colors - Blue-Gray Tones */
   --text-strong: #0f172a;
   --text-default: #1e293b;
-  --text-muted: #64748b;
-  --text-placeholder: #94a3b8;
+  --text-muted: #475569;  /* 7.6:1 on white, 6.9:1 on --color-surface-muted */
+  --text-placeholder: #64748b; /* 4.8:1 on white */
   
   /* Shadows - Blue Tinted */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 20px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.12);
-  --shadow-xl: 0 24px 60px rgba(15, 23, 42, 0.16);
-  --shadow-glow: 0 0 40px rgba(14, 165, 233, 0.15);
-  --shadow-glow-strong: 0 0 60px rgba(14, 165, 233, 0.25);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 4px 16px rgba(15, 23, 42, 0.1);
+  --shadow-xl: 0 8px 32px rgba(15, 23, 42, 0.14);
+  --shadow-glow: none;
+  --shadow-glow-strong: none;
   
-  /* Typography Scale */
-  --fs-xs: 0.75rem;
-  --fs-sm: 0.8125rem;
-  --fs-md: 0.875rem;
-  --fs-base: 0.9375rem;
-  --fs-lg: 1rem;
-  --fs-xl: 1.125rem;
-  --fs-2xl: 1.25rem;
-  
+  /* Type scale (fixed rem, ~1.125–1.25 steps) */
+  --text-caption: 0.75rem;     /* 12px  column headers, badges, meta */
+  --text-secondary: 0.875rem;  /* 14px  labels, hints, secondary UI */
+  --text-body: 1rem;           /* 16px  body, inputs, data values */
+  --text-subheading: 1.125rem; /* 18px  card and section titles */
+  --text-heading: 1.375rem;    /* 22px  view headings */
+  --text-title: 1.75rem;       /* 28px  page title (rare) */
+
+  --leading-tight: 1.25;
+  --leading-body: 1.55;
+
+  /* UI state changes: paint/compositor properties only, never layout */
+  --transition-ui: background-color 150ms ease-out, border-color 150ms ease-out,
+    color 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out,
+    transform 150ms ease-out;
+
+
   /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
   
   /* Tag Colors - Fintech Blue Theme */
   --tag-payment: #10b981;
@@ -94,33 +116,61 @@
 }
 
 html {
-  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: var(--fs-base);
-  background: linear-gradient(180deg, var(--color-background) 0%, var(--color-background-alt) 100%);
-  background-attachment: fixed;
+  font-size: var(--text-body);
+  font-kerning: normal;
+  background: var(--color-background);
   color: var(--text-default);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
+  line-height: var(--leading-body);
+}
+
+/* Form controls don't inherit type by default (they fell back to Arial) */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+h1, h2, h3, h4 {
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 #root {
   min-height: 100vh;
 }
 
-code {
+code,
+kbd,
+samp,
+pre {
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+kbd {
+  white-space: nowrap;
 }
 
 /* Selection Styling */
 ::selection {
-  background: rgba(14, 165, 233, 0.2);
-  color: var(--color-primary-strong);
+  background: var(--color-primary-light);
+  color: var(--text-strong);
 }
 
 /* Scrollbar Styling */
@@ -145,6 +195,27 @@ code {
 
 /* Focus Styling */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-primary-ink);
   outline-offset: 2px;
 }
+
+/* Reduced motion: no looping or sliding decoration. Spinners keep turning (slowly)
+   because they are the only cue that work is in progress. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spinner,
+  .spinner-small,
+  .qr-btn-spinner {
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
