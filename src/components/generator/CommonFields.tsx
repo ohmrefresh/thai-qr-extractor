@@ -1,4 +1,5 @@
 import React from 'react';
+import { FieldError, useFieldA11y, fieldHintId } from '../shared';
 
 interface CommonFieldsProps {
   amount?: number;
@@ -19,6 +20,10 @@ const CommonFields: React.FC<CommonFieldsProps> = ({
   onMerchantCityChange,
   showOptionalHeading = false
 }) => {
+  const amountA11y = useFieldA11y('amount', { hasHint: true });
+  const merchantNameA11y = useFieldA11y('merchantName');
+  const merchantCityA11y = useFieldA11y('merchantCity');
+
   return (
     <div className="optional-section">
       {showOptionalHeading && (
@@ -42,9 +47,11 @@ const CommonFields: React.FC<CommonFieldsProps> = ({
             max="999999.99"
             step="0.01"
             className="form-input"
+            {...amountA11y}
           />
         </div>
-        <span className="field-hint">Amount in Thai Baht (THB)</span>
+        <span className="field-hint" id={fieldHintId('amount')}>Amount in Thai Baht (THB)</span>
+        <FieldError field="amount" />
       </div>
 
       <div className="form-row">
@@ -61,7 +68,9 @@ const CommonFields: React.FC<CommonFieldsProps> = ({
             placeholder="Your Business Name"
             maxLength={25}
             className="form-input"
+            {...merchantNameA11y}
           />
+          <FieldError field="merchantName" />
         </div>
 
         <div className="form-field">
@@ -74,7 +83,9 @@ const CommonFields: React.FC<CommonFieldsProps> = ({
             placeholder="Bangkok"
             maxLength={15}
             className="form-input"
+            {...merchantCityA11y}
           />
+          <FieldError field="merchantCity" />
         </div>
       </div>
     </div>

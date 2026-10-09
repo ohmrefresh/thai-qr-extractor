@@ -370,6 +370,16 @@ describe('App Component', () => {
   });
 
   describe('History Management', () => {
+    test('history button names its count and reports whether the drawer is open', async () => {
+      render(<App />);
+
+      const button = screen.getByRole('button', { name: 'History, 0 items' });
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(button);
+      await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'true'));
+    });
+
     test('loads history from storage on mount', async () => {
       const mockHistory = [
         {

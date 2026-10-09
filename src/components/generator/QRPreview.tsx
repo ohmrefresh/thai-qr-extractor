@@ -18,6 +18,8 @@ interface QRPreviewProps {
     paymentType: 'credit-transfer' | 'bill-payment';
     amount?: number;
   };
+  /** Open this payload in the decoder (tag table and validity check) */
+  onInspect?: (qrData: string) => void;
 }
 
 const QRPreview: React.FC<QRPreviewProps> = ({
@@ -26,11 +28,13 @@ const QRPreview: React.FC<QRPreviewProps> = ({
   isGenerating = false,
   isMiniQR = false,
   miniQRData,
-  standardQRData
+  standardQRData,
+  onInspect
 }) => {
   const { copy } = useClipboard();
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showQRString, setShowQRString] = useState(false);
+  // The payload string is the main output for engineers; show it by default
+  const [showQRString, setShowQRString] = useState(true);
 
   // Handle download QR code image
   const handleDownload = useCallback(async () => {
@@ -158,8 +162,11 @@ const QRPreview: React.FC<QRPreviewProps> = ({
             {/* QR String Toggle */}
             <div className="qr-preview-string-section">
               <button 
+                type="button"
                 className="qr-string-toggle"
                 onClick={() => setShowQRString(!showQRString)}
+                aria-expanded={showQRString}
+                aria-controls="qr-preview-string"
               >
                 <span>QR String Data</span>
                 <ChevronIcon
@@ -170,7 +177,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({
               </button>
               
               {showQRString && (
-                <div className="qr-preview-string">
+                <div className="qr-preview-string" id="qr-preview-string">
                   <code>{result.qrString}</code>
                 </div>
               )}
@@ -203,6 +210,16 @@ const QRPreview: React.FC<QRPreviewProps> = ({
                 <CopyIcon width={18} height={18} />
                 <span>Copy String</span>
               </button>
+
+              {onInspect && result?.qrString && (
+                <button
+                  type="button"
+                  onClick={() => onInspect(result.qrString)}
+                  className="qr-action-btn qr-action-btn-secondary qr-action-btn--wide"
+                >
+                  <span>Inspect in decoder</span>
+                </button>
+              )}
             </div>
           </>
         ) : (

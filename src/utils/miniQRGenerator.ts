@@ -80,20 +80,25 @@ export const generateMiniQR = async (input: MiniQRInput): Promise<MiniQRResult> 
   };
 };
 
-export const validateMiniQRInput = (input: Partial<MiniQRInput>): string[] => {
-  const errors: string[] = [];
+export const validateMiniQRFields = (
+  input: Partial<MiniQRInput>
+): { field: keyof MiniQRInput; message: string }[] => {
+  const errors: { field: keyof MiniQRInput; message: string }[] = [];
 
   if (!input.bankCode) {
-    errors.push('Bank code is required');
+    errors.push({ field: 'bankCode', message: 'Bank code is required' });
   } else if (input.bankCode.length !== 3 || !/^\d{3}$/.test(input.bankCode)) {
-    errors.push('Bank code must be exactly 3 digits');
+    errors.push({ field: 'bankCode', message: 'Bank code must be exactly 3 digits' });
   }
 
   if (!input.transactionId) {
-    errors.push('Transaction ID is required');
+    errors.push({ field: 'transactionId', message: 'Transaction ID is required' });
   } else if (input.transactionId.length > 50) {
-    errors.push('Transaction ID must be 50 characters or less');
+    errors.push({ field: 'transactionId', message: 'Transaction ID must be 50 characters or less' });
   }
 
   return errors;
 };
+
+export const validateMiniQRInput = (input: Partial<MiniQRInput>): string[] =>
+  validateMiniQRFields(input).map(error => error.message);

@@ -23,8 +23,8 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
     // Parsing is synchronous and sub-millisecond; no artificial "processing" delay
     try {
       const parsedData = parseThaiQR(inputText.trim());
+      // Keep the text: if the user comes back with "New payload" they can tweak it
       onScanSuccess(parsedData);
-      setInputText('');
     } catch (error) {
       onScanError(formatParseError(error));
     }
@@ -56,13 +56,17 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
           </svg>
         </div>
         <div>
-          <h3 className="card-title">Paste QR Payload</h3>
-          <p className="card-subtitle">Paste the raw EMVCo string to see every tag, sub-tag and CRC check</p>
+          <h3 className="card-title">
+            <label htmlFor="qr-payload-input">Paste QR Payload</label>
+          </h3>
+          <p className="card-subtitle" id="qr-payload-hint">Paste the raw EMVCo string to see every tag, sub-tag and CRC check</p>
         </div>
       </div>
 
       <div className="qr-textarea-wrapper">
         <textarea
+          id="qr-payload-input"
+          aria-describedby="qr-payload-hint"
           value={inputText}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}

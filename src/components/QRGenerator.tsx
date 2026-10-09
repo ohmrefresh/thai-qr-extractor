@@ -6,16 +6,36 @@ import MiniQRGenerator from './MiniQRGenerator';
 
 interface QRGeneratorProps {
   onQRGenerated?: (qrData: string) => void;
+  /** Open a generated payload in the decoder */
+  onInspect?: (qrData: string) => void;
   onClose?: () => void;
 }
 
 type PaymentMode = PaymentType | 'mini-qr';
 
-const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => {
-  const [selectedMode, setSelectedMode] = useState<PaymentMode>('bill-payment');
+const MODE_STORAGE_KEY = 'generatorMode';
+const isPaymentMode = (value: string | null): value is PaymentMode =>
+  value === 'credit-transfer' || value === 'bill-payment' || value === 'mini-qr';
+
+const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onInspect, onClose }) => {
+  // Reopen on the payment type the user last worked with
+  const [selectedMode, setSelectedMode] = useState<PaymentMode>(() => {
+    try {
+      const stored = window.localStorage.getItem(MODE_STORAGE_KEY);
+      if (isPaymentMode(stored)) return stored;
+    } catch {
+      // Storage unavailable; use the default
+    }
+    return 'bill-payment';
+  });
 
   const handleModeChange = (mode: PaymentMode) => {
     setSelectedMode(mode);
+    try {
+      window.localStorage.setItem(MODE_STORAGE_KEY, mode);
+    } catch {
+      // Not persisting is fine
+    }
   };
 
   return (
@@ -55,11 +75,12 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({ onQRGenerated, onClose }) => 
 
       {/* Render appropriate generator based on selected mode */}
       {selectedMode === 'mini-qr' ? (
-        <MiniQRGenerator onQRGenerated={onQRGenerated} />
+        <MiniQRGenerator onQRGenerated={onQRGenerated} onInspect={onInspect} />
       ) : (
         <StandardQRGenerator
           paymentType={selectedMode}
           onQRGenerated={onQRGenerated}
+          onInspect={onInspect}
         />
       )}
     </div>

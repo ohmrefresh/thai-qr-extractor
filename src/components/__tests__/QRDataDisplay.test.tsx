@@ -71,13 +71,13 @@ describe('QRDataDisplay Component', () => {
 
   test('renders clear button', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
-    const clearButton = screen.getByText(/Clear/i);
+    const clearButton = screen.getByRole('button', { name: 'New payload' });
     expect(clearButton).toBeInTheDocument();
   });
 
   test('calls onClear when clear button is clicked', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
-    const clearButton = screen.getByText(/Clear/i);
+    const clearButton = screen.getByRole('button', { name: 'New payload' });
     fireEvent.click(clearButton);
     expect(onClear).toHaveBeenCalled();
   });
@@ -87,7 +87,8 @@ describe('QRDataDisplay Component', () => {
     render(<QRDataDisplay data={mockData} onClear={onClear} />);
 
     expect(screen.getByText(/Raw QR Data/i)).toBeInTheDocument();
-    expect(screen.getByText(mockData.rawData)).toBeInTheDocument();
+    // Shown as tag | length | value segments; the text content is still the exact payload
+    expect(document.querySelector('.raw-payload__string')?.textContent).toBe(mockData.rawData);
   });
 
   test('renders parsed fields section', () => {
@@ -245,4 +246,67 @@ describe('QRDataDisplay Component', () => {
         .toHaveTextContent(`3 characters at offset ${validRaw.length} could not be read as TLV`);
     });
   });
+
+  describe('raw payload inspector', () => {
+    const signed = (body: string) => {
+      const unsigned = body + '6304';
+      return unsigned + calculateCRC16(unsigned);
+    };
+    const validRaw = signed('00020101021229370016A000000677010111011300668123456785802TH5303764');
+
+    test('lays out the table with table semantics', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw)} onClear={onClear} />);
+
+      const table = screen.getByRole('table', { name: 'Parsed fields' });
+      expect(within(table).getAllByRole('columnheader').length).toBeGreaterThanOrEqual(4);
+      expect(screen.getByRole('table', { name: 'Sub-tags of tag 29' })).toBeInTheDocument();
+    });
+
+    test('moves focus to the verdict when a result appears', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw)} onClear={onClear} />);
+
+      expect(screen.getByRole('status', { name: /payload validity/i })).toHaveFocus();
+    });
+
+    test('shows the raw currency code and names it in the description', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw)} onClear={onClear} />);
+
+      const row = document.getElementById('field-row-4')!;
+      expect(within(row).getByText('764')).toBeInTheDocument();
+      expect(within(row).getByText(/Transaction Currency · THB/)).toBeInTheDocument();
+    });
+
+    test('splits the payload into linked tag | length | value segments', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw)} onClear={onClear} />);
+
+      const segment = screen.getByRole('link', { name: '5802TH: tag 58, length 02, value TH' });
+      expect(segment).toHaveAttribute('href', '#field-row-3');
+    });
+
+    test('marks bytes that could not be parsed', () => {
+      render(<QRDataDisplay data={parseThaiQR(validRaw + 'zz9')} onClear={onClear} />);
+
+      expect(document.querySelector('.raw-seg--unparsed')?.textContent).toBe('zz9');
+    });
+
+    test('edits and decodes the payload again with Cmd/Ctrl+Enter', () => {
+      const onReparse = vi.fn().mockReturnValueOnce("Couldn't decode this QR code. Bad").mockReturnValueOnce(undefined);
+      render(<QRDataDisplay data={parseThaiQR(validRaw)} onClear={onClear} onReparse={onReparse} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+      const editor = screen.getByLabelText('Edit payload');
+      fireEvent.change(editor, { target: { value: 'garbage' } });
+      fireEvent.keyDown(editor, { key: 'Enter', metaKey: true });
+
+      expect(onReparse).toHaveBeenLastCalledWith('garbage');
+      expect(screen.getByRole('alert')).toHaveTextContent("Couldn't decode this QR code. Bad");
+      expect(editor).toHaveAttribute('aria-invalid', 'true');
+
+      fireEvent.change(editor, { target: { value: validRaw } });
+      fireEvent.click(screen.getByRole('button', { name: 'Decode again' }));
+      expect(onReparse).toHaveBeenLastCalledWith(validRaw);
+      expect(screen.queryByLabelText('Edit payload')).not.toBeInTheDocument();
+    });
+  });
 });
+

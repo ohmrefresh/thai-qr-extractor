@@ -15,6 +15,7 @@ const flushPromises = async () => {
 vi.mock('../../utils/miniQRGenerator', () => ({
   generateMiniQR: vi.fn(),
   validateMiniQRInput: vi.fn(),
+  validateMiniQRFields: vi.fn(() => []),
   MiniQRInput: {},
   MiniQRResult: {}
 }));

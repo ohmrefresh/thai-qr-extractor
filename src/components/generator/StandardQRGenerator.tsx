@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   generateThaiQR,
   validateQRInput,
+  validateQRFields,
   generateSampleQR,
   generateSampleCreditTransferQR,
   ThaiQRGeneratorInput,
@@ -14,17 +15,19 @@ import CreditTransferFields from './CreditTransferFields';
 import BillPaymentFields from './BillPaymentFields';
 import CommonFields from './CommonFields';
 import QRPreview from './QRPreview';
-import { ErrorMessages } from '../shared';
-import { DocumentIcon, QRCodeIcon, TrashIcon } from '../icons';
+import { ErrorMessages, FieldErrorsProvider, FieldError, fieldA11yProps, fieldHintId } from '../shared';
+import { DocumentIcon, QRCodeIcon } from '../icons';
 
 interface StandardQRGeneratorProps {
   paymentType: PaymentType;
   onQRGenerated?: (qrData: string) => void;
+  onInspect?: (qrData: string) => void;
 }
 
 const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
   paymentType,
-  onQRGenerated
+  onQRGenerated,
+  onInspect
 }) => {
   const [formData, setFormData] = useState<ThaiQRGeneratorInput>({
     paymentType,
@@ -74,6 +77,9 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
     }));
     state.clearResult();
   }, [paymentType]);
+
+  // Errors only show after Generate; recompute which inputs they belong to
+  const fieldErrors = state.errors.length > 0 ? validateQRFields(formData) : [];
 
   const handleInputChange = (field: keyof ThaiQRGeneratorInput, value: string | number | undefined) => {
     setFormData(prev => ({
@@ -142,6 +148,7 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
       {/* Left Side - Form */}
       <div className="generator-form-modern">
         {/* Form Content */}
+        <FieldErrorsProvider errors={fieldErrors}>
         <div className="form-content">
           <h2 className="form-heading">Required information</h2>
           <div className="form-sections">
@@ -156,6 +163,7 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
                 value={formData.aid}
                 onChange={(e) => handleInputChange('aid', e.target.value)}
                 className="form-select"
+                {...fieldA11yProps(fieldErrors, 'aid', { hasHint: true })}
               >
                 <option value="">Select AID Type</option>
                 {formData.paymentType === 'credit-transfer' ? (
@@ -170,11 +178,12 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
                   </>
                 )}
               </select>
-              <span className="field-hint">
+              <span className="field-hint" id={fieldHintId('aid')}>
                 {formData.paymentType === 'credit-transfer'
                   ? 'Merchant-presented or customer-presented QR type'
                   : 'Domestic or cross-border merchant type'}
               </span>
+              <FieldError field="aid" />
             </div>
 
             {/* Dynamic Fields based on Payment Type */}
@@ -242,16 +251,17 @@ const StandardQRGenerator: React.FC<StandardQRGeneratorProps> = ({
                 Load Sample
               </button>
               <button onClick={handleClear} className="btn-secondary">
-                <TrashIcon width={16} height={16} />
                 Clear Form
               </button>
             </div>
           </div>
         </div>
+        </FieldErrorsProvider>
       </div>
 
       {/* Right Side - Preview */}
       <QRPreview
+        onInspect={onInspect}
         result={state.qrResult}
         isPreview={state.isPreview}
         isGenerating={isGeneratingPreview}

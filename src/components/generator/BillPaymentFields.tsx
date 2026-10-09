@@ -1,4 +1,5 @@
 import React from 'react';
+import { FieldError, useFieldA11y, fieldHintId } from '../shared';
 
 interface BillPaymentFieldsProps {
   billerId: string;
@@ -17,6 +18,10 @@ const BillPaymentFields: React.FC<BillPaymentFieldsProps> = ({
   onReference1Change,
   onReference2Change
 }) => {
+  const billerIdA11y = useFieldA11y('billerId', { hasHint: true });
+  const reference1A11y = useFieldA11y('reference1', { hasHint: true });
+  const reference2A11y = useFieldA11y('reference2', { hasHint: true });
+
   return (
     <div className="dynamic-fields">
       <div className="form-field">
@@ -32,8 +37,10 @@ const BillPaymentFields: React.FC<BillPaymentFieldsProps> = ({
           placeholder="010555500012345"
           maxLength={32}
           className="form-input"
+          {...billerIdA11y}
         />
-        <span className="field-hint">National ID/Tax ID with suffix (15 digits)</span>
+        <span className="field-hint" id={fieldHintId('billerId')}>National ID/Tax ID with suffix (15 digits)</span>
+        <FieldError field="billerId" />
       </div>
 
       <div className="form-row">
@@ -50,8 +57,10 @@ const BillPaymentFields: React.FC<BillPaymentFieldsProps> = ({
             placeholder="INV2024001"
             maxLength={20}
             className="form-input"
+            {...reference1A11y}
           />
-          <span className="field-hint">Primary reference number</span>
+          <span className="field-hint" id={fieldHintId('reference1')}>Primary reference number</span>
+          <FieldError field="reference1" />
         </div>
 
         <div className="form-field">
@@ -67,8 +76,10 @@ const BillPaymentFields: React.FC<BillPaymentFieldsProps> = ({
             placeholder="Customer ID"
             maxLength={20}
             className="form-input"
+            {...reference2A11y}
           />
-          <span className="field-hint">Secondary reference</span>
+          <span className="field-hint" id={fieldHintId('reference2')}>Secondary reference</span>
+          <FieldError field="reference2" />
         </div>
       </div>
     </div>

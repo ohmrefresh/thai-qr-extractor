@@ -5,6 +5,7 @@ interface AppHeaderProps {
   currentView: 'scan' | 'generate';
   onViewChange: (view: 'scan' | 'generate') => void;
   historyCount: number;
+  isHistoryOpen?: boolean;
   onHistoryToggle: () => void;
 }
 
@@ -12,6 +13,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   currentView,
   onViewChange,
   historyCount,
+  isHistoryOpen = false,
   onHistoryToggle,
 }) => {
   return (
@@ -47,10 +49,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           className="history-toggle-button"
           onClick={onHistoryToggle}
           title="View scan history"
+          aria-label={`History, ${historyCount} item${historyCount === 1 ? '' : 's'}`}
+          aria-expanded={isHistoryOpen}
+          aria-haspopup="dialog"
         >
           <HistoryIcon width={22} height={22} />
           {historyCount > 0 && (
-            <span className="history-count-badge">{historyCount}</span>
+            <span className="history-count-badge" aria-hidden="true">{historyCount}</span>
           )}
         </button>
       </div>

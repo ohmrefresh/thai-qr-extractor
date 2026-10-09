@@ -2,20 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   generateMiniQR,
   validateMiniQRInput,
+  validateMiniQRFields,
   MiniQRInput,
   MiniQRResult
 } from '../utils/miniQRGenerator';
 import { useDebouncedPreview } from '../hooks/useDebouncedPreview';
 import { useQRGeneratorState } from '../hooks/useQRGeneratorState';
 import QRPreview from './generator/QRPreview';
-import { ErrorMessages } from './shared';
-import { DocumentIcon, QRCodeIcon, TrashIcon } from './icons';
+import { ErrorMessages, FieldErrorsProvider, FieldError, fieldA11yProps, fieldHintId } from './shared';
+import { DocumentIcon, QRCodeIcon } from './icons';
 
 interface MiniQRGeneratorProps {
   onQRGenerated?: (qrData: string) => void;
+  onInspect?: (qrData: string) => void;
 }
 
-const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
+const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated, onInspect }) => {
   const [miniQRData, setMiniQRData] = useState<MiniQRInput>({
     bankCode: '',
     transactionId: '',
@@ -36,6 +38,8 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
   useEffect(() => {
     state.setPreviewResult(previewResult);
   }, [previewResult]);
+
+  const fieldErrors = state.errors.length > 0 ? validateMiniQRFields(miniQRData) : [];
 
   const handleInputChange = (field: keyof MiniQRInput, value: string) => {
     setMiniQRData(prev => ({ ...prev, [field]: value }));
@@ -74,6 +78,7 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
     <div className="generator-main">
       {/* Left Side - Form */}
       <div className="generator-form-modern">
+        <FieldErrorsProvider errors={fieldErrors}>
         <div className="form-content">
           <h2 className="form-heading">Required information</h2>
 
@@ -89,10 +94,12 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
                 className="form-input"
                 value={miniQRData.bankCode}
                 onChange={(e) => handleInputChange('bankCode', e.target.value)}
+                {...fieldA11yProps(fieldErrors, 'bankCode', { hasHint: true })}
                 placeholder="e.g., 014"
                 maxLength={3}
               />
-              <span className="field-hint">3-digit bank code (e.g., 014 for SCB)</span>
+              <span className="field-hint" id={fieldHintId('bankCode')}>3-digit bank code (e.g., 014 for SCB)</span>
+              <FieldError field="bankCode" />
             </div>
 
             <div className="form-field">
@@ -106,10 +113,12 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
                 className="form-input"
                 value={miniQRData.transactionId}
                 onChange={(e) => handleInputChange('transactionId', e.target.value)}
+                {...fieldA11yProps(fieldErrors, 'transactionId', { hasHint: true })}
                 placeholder="e.g., 202602078Buvov9xGKBPqxhso"
                 maxLength={50}
               />
-              <span className="field-hint">Unique transaction identifier (max 50 characters)</span>
+              <span className="field-hint" id={fieldHintId('transactionId')}>Unique transaction identifier (max 50 characters)</span>
+              <FieldError field="transactionId" />
             </div>
 
             <div className="form-field">
@@ -123,10 +132,12 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
                 className="form-input"
                 value={miniQRData.countryCode}
                 onChange={(e) => handleInputChange('countryCode', e.target.value)}
+                {...fieldA11yProps(fieldErrors, 'countryCode', { hasHint: true })}
                 placeholder="TH"
                 maxLength={2}
               />
-              <span className="field-hint">Country code (default: TH)</span>
+              <span className="field-hint" id={fieldHintId('countryCode')}>Country code (default: TH)</span>
+              <FieldError field="countryCode" />
             </div>
           </div>
 
@@ -159,16 +170,17 @@ const MiniQRGenerator: React.FC<MiniQRGeneratorProps> = ({ onQRGenerated }) => {
                 Load Sample
               </button>
               <button onClick={handleClear} className="btn-secondary">
-                <TrashIcon width={16} height={16} />
                 Clear Form
               </button>
             </div>
           </div>
         </div>
+        </FieldErrorsProvider>
       </div>
 
       {/* Right Side - Preview */}
       <QRPreview
+        onInspect={onInspect}
         result={state.qrResult}
         isPreview={state.isPreview}
         isGenerating={isGeneratingPreview}

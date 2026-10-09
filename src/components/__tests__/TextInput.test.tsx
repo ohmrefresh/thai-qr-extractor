@@ -73,7 +73,7 @@ describe('TextInput Component', () => {
     });
   });
 
-  test('clears input after successful parsing', async () => {
+  test('keeps the input after successful parsing so it can be tweaked', async () => {
     const mockParsedData = {
       rawData: '00020101',
       parsedFields: [],
@@ -89,8 +89,9 @@ describe('TextInput Component', () => {
     fireEvent.click(parseButton);
 
     await waitFor(() => {
-      expect(textarea.value).toBe('');
+      expect(onScanSuccess).toHaveBeenCalledWith(mockParsedData);
     });
+    expect(textarea.value).toBe('00020101');
   });
 
   test('parse button is disabled when input is empty or whitespace', () => {

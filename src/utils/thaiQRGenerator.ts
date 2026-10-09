@@ -318,15 +318,21 @@ export const generateThaiQR = async (input: ThaiQRGeneratorInput): Promise<QRGen
   }
 };
 
+export interface FieldError {
+  /** Input the message is about (matches the form control id), when there is one */
+  field?: keyof ThaiQRGeneratorInput;
+  message: string;
+}
+
 /**
- * Validate Thai QR input fields
+ * Validate Thai QR input fields, keeping track of which input each error belongs to
  */
-export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] => {
-  const errors: string[] = [];
+export const validateQRFields = (input: Partial<ThaiQRGeneratorInput>): FieldError[] => {
+  const errors: FieldError[] = [];
 
   // Validate payment type
   if (!input.paymentType) {
-    errors.push('Payment type is required');
+    errors.push({ field: 'paymentType', message: 'Payment type is required' });
     return errors;
   }
 
@@ -334,33 +340,33 @@ export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] 
   if (input.paymentType === 'credit-transfer') {
     // Tag 29 validations
     if (!input.aid || !input.aid.trim()) {
-      errors.push('AID (Application Identifier) is required');
+      errors.push({ field: 'aid', message: 'AID (Application Identifier) is required' });
     }
 
     if (!input.recipientId || !input.recipientId.trim()) {
-      errors.push('Recipient ID is required for credit transfer');
+      errors.push({ field: 'recipientId', message: 'Recipient ID is required for credit transfer' });
     }
 
     if (!input.recipientType) {
-      errors.push('Recipient type is required for credit transfer');
+      errors.push({ field: 'recipientType', message: 'Recipient type is required for credit transfer' });
     }
 
     // Check if OTA is required (when AID = A000000677010114)
     if (input.aid === 'A000000677010114' && (!input.ota || !input.ota.trim())) {
-      errors.push('OTA is mandatory when AID is A000000677010114 (customer-presented QR)');
+      errors.push({ field: 'ota', message: 'OTA is mandatory when AID is A000000677010114 (customer-presented QR)' });
     }
   } else if (input.paymentType === 'bill-payment') {
     // Tag 30 validations
     if (!input.aid || !input.aid.trim()) {
-      errors.push('AID (Application Identifier) is required');
+      errors.push({ field: 'aid', message: 'AID (Application Identifier) is required' });
     }
 
     if (!input.billerId || !input.billerId.trim()) {
-      errors.push('Biller ID is required for bill payment');
+      errors.push({ field: 'billerId', message: 'Biller ID is required for bill payment' });
     }
 
     if (!input.reference1 || !input.reference1.trim()) {
-      errors.push('Reference 1 is required for bill payment');
+      errors.push({ field: 'reference1', message: 'Reference 1 is required for bill payment' });
     }
   }
 
@@ -374,7 +380,7 @@ export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] 
     // Check max length for string fields
     if (rule.maxLength && typeof value === 'string' && value.length > rule.maxLength) {
       if (rule.errorMessages.maxLength) {
-        errors.push(rule.errorMessages.maxLength);
+        errors.push({ field: rule.field, message: rule.errorMessages.maxLength });
       }
     }
 
@@ -382,12 +388,12 @@ export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] 
     if (typeof value === 'number') {
       if (rule.minValue !== undefined && value < rule.minValue) {
         if (rule.errorMessages.range) {
-          errors.push(rule.errorMessages.range);
+          errors.push({ field: rule.field, message: rule.errorMessages.range });
         }
       }
       if (rule.maxValue !== undefined && value > rule.maxValue) {
         if (rule.errorMessages.range) {
-          errors.push(rule.errorMessages.range);
+          errors.push({ field: rule.field, message: rule.errorMessages.range });
         }
       }
     }
@@ -395,6 +401,12 @@ export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] 
 
   return errors;
 };
+
+/**
+ * Validate Thai QR input fields
+ */
+export const validateQRInput = (input: Partial<ThaiQRGeneratorInput>): string[] =>
+  validateQRFields(input).map(error => error.message);
 
 /**
  * Generate sample QR code for testing
