@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-10-09
+
+CI and deployment workflows updated to the latest GitHub Actions releases. No app changes.
+
+### Changed
+- `actions/checkout`, `actions/setup-node` and `actions/upload-artifact` to v7; `actions/configure-pages` to v6; `actions/upload-pages-artifact` and `actions/deploy-pages` to v5; `marocchino/sticky-pull-request-comment` to v3; `codecov/codecov-action` to v7.
+- Test results upload to Codecov through `codecov/codecov-action` (`report_type: test_results`) instead of the deprecated `codecov/test-results-action`.
+- Dependabot now checks GitHub Actions weekly.
+
+### Removed
+- `irongut/CodeCoverageSummary` step from CI; its output was unused. The coverage PR comment and job summary are unchanged.
+
 ## [0.3.0] - 2026-10-09
 
 Decoded payloads are now checked for validity, the raw payload can be inspected and edited in place, and the interface was redesigned as a quiet, accessible instrument.
@@ -119,6 +131,7 @@ Toolchain upgrade to the latest major versions. No user-facing behavior change.
 - Scan history stored in localStorage.
 - GitHub Pages deployment.
 
+[0.3.1]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.1.5...0.2.0
 [0.1.5]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.1.4...0.1.5
