@@ -523,6 +523,41 @@ describe('FileUpload Component', () => {
       });
     });
   });
-});
 
+  describe('large images', () => {
+    test('decodes a capped copy first and skips full size when it succeeds', async () => {
+      mockImage.width = 4032;
+      mockImage.height = 3024;
+      vi.mocked(jsQR).mockReturnValue({ data: 'qr' } as any);
+      vi.mocked(parseThaiQR).mockReturnValue({ rawData: 'qr', parsedFields: [] } as any);
+
+      render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      fireEvent.change(fileInput, { target: { files: [new File(['x'], 'photo.jpg', { type: 'image/jpeg' })] } });
+      simulateImageLoad();
+
+      await waitFor(() => expect(onScanSuccess).toHaveBeenCalled());
+      expect(jsQR).toHaveBeenCalledTimes(1);
+      const ctx = mockGetContext.mock.results[0].value;
+      expect(ctx.getImageData).toHaveBeenCalledWith(0, 0, 1600, 1200);
+    });
+
+    test('falls back to full resolution when the capped copy finds nothing', async () => {
+      mockImage.width = 4032;
+      mockImage.height = 3024;
+      vi.mocked(jsQR).mockReturnValueOnce(null).mockReturnValueOnce({ data: 'qr' } as any);
+      vi.mocked(parseThaiQR).mockReturnValue({ rawData: 'qr', parsedFields: [] } as any);
+
+      render(<FileUpload onScanSuccess={onScanSuccess} onScanError={onScanError} />);
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      fireEvent.change(fileInput, { target: { files: [new File(['x'], 'photo.jpg', { type: 'image/jpeg' })] } });
+      simulateImageLoad();
+
+      await waitFor(() => expect(onScanSuccess).toHaveBeenCalled());
+      expect(jsQR).toHaveBeenCalledTimes(2);
+      const ctx = mockGetContext.mock.results[0].value;
+      expect(ctx.getImageData).toHaveBeenLastCalledWith(0, 0, 4032, 3024);
+    });
+  });
+});
 

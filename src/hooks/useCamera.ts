@@ -1,10 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  Html5Qrcode,
-  Html5QrcodeSupportedFormats,
-  type CameraDevice,
-  type Html5QrcodeResult,
-} from 'html5-qrcode';
+import type { Html5Qrcode, CameraDevice, Html5QrcodeResult } from 'html5-qrcode';
+
+// html5-qrcode is ~108 kB gzipped, more than the rest of the app. Load it when the
+// user asks for the camera rather than whenever the Camera tab is shown.
+const loadScannerLibrary = () => import('html5-qrcode');
 
 interface UseCameraOptions {
   containerId: string;
@@ -100,6 +99,7 @@ export const useCamera = ({
     setCameraError(null);
 
     try {
+      const { Html5Qrcode } = await loadScannerLibrary();
       const devices = await Html5Qrcode.getCameras();
 
       if (!isMountedRef.current) {
@@ -162,6 +162,21 @@ export const useCamera = ({
 
       updateSelectedCamera(cameraId);
 
+      let scannerLibrary: Awaited<ReturnType<typeof loadScannerLibrary>>;
+      try {
+        scannerLibrary = await loadScannerLibrary();
+      } catch (error) {
+        console.error('Failed to load the QR scanner', error);
+        if (isMountedRef.current) {
+          setCameraError("Couldn't load the camera scanner. Check your connection and try again.");
+          setIsStarting(false);
+        }
+        return;
+      }
+      if (!isMountedRef.current) {
+        return;
+      }
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = scannerLibrary;
       const html5QrCode = new Html5Qrcode(containerId);
       scannerRef.current = html5QrCode;
 

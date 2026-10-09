@@ -9,7 +9,6 @@ interface TextInputProps {
 
 const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => {
   const [inputText, setInputText] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(event.target.value);
@@ -21,20 +20,14 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
       return;
     }
 
-    setIsProcessing(true);
-    
-    // Small delay to show processing state
-    setTimeout(() => {
-      try {
-        const parsedData = parseThaiQR(inputText.trim());
-        onScanSuccess(parsedData);
-        setInputText('');
-      } catch (error) {
-        onScanError(formatParseError(error));
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 150);
+    // Parsing is synchronous and sub-millisecond; no artificial "processing" delay
+    try {
+      const parsedData = parseThaiQR(inputText.trim());
+      onScanSuccess(parsedData);
+      setInputText('');
+    } catch (error) {
+      onScanError(formatParseError(error));
+    }
   }, [inputText, onScanSuccess, onScanError]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -76,7 +69,6 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
           placeholder="00020101021229370016..."
           className="qr-textarea"
           rows={4}
-          disabled={isProcessing}
           spellCheck={false}
           autoComplete="off"
           autoCorrect="off"
@@ -93,28 +85,18 @@ const TextInput: React.FC<TextInputProps> = ({ onScanSuccess, onScanError }) => 
         <button 
           onClick={handleSubmit} 
           className="parse-button"
-          disabled={!inputText.trim() || isProcessing}
+          disabled={!inputText.trim()}
         >
-          {isProcessing ? (
-            <>
-              <div className="spinner spinner--on-accent" aria-hidden="true"></div>
-              Processing...
-            </>
-          ) : (
-            <>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20,6 9,17 4,12"></polyline>
-              </svg>
-              Parse QR Data
-            </>
-          )}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20,6 9,17 4,12"></polyline>
+          </svg>
+          Parse QR Data
         </button>
 
         {inputText && (
           <button 
             onClick={clearInput} 
             className="clear-input-button"
-            disabled={isProcessing}
             title="Clear input"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

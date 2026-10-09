@@ -338,7 +338,7 @@ button:disabled:hover {
   display: grid;
   place-items: center;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .summary-item:hover .copy-btn {
@@ -635,7 +635,7 @@ button:disabled:hover {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   flex: 1;
   text-align: left;
 }
@@ -709,7 +709,7 @@ button:disabled:hover {
   background: var(--color-surface-alt);
   color: var(--text-strong);
   font-size: var(--text-body);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .form-select:focus,
@@ -1199,7 +1199,7 @@ button:disabled:hover {
   font-weight: 600;
   font-size: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .nav-tab:hover {
@@ -1231,7 +1231,7 @@ button:disabled:hover {
   background: var(--color-surface);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   position: relative;
   flex-shrink: 0;
 }
@@ -1310,7 +1310,7 @@ button:disabled:hover {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .card-icon.accent-scan {
@@ -1436,7 +1436,7 @@ button:disabled:hover {
   background: var(--color-surface);
   color: var(--text-default);
   font-size: var(--text-body);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .form-input:hover,
@@ -1507,31 +1507,18 @@ button:disabled:hover {
   font-weight: 600;
   font-size: var(--text-body);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
   box-shadow: none;
   position: relative;
   overflow: hidden;
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  transition: left 0.5s ease;
-}
 
 .btn-primary:hover:not(:disabled) {
   transform: none;
   box-shadow: none;
 }
 
-.btn-primary:hover:not(:disabled)::before {
-  left: 100%;
-}
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
@@ -1556,7 +1543,7 @@ button:disabled:hover {
   font-weight: 500;
   font-size: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .btn-secondary:hover {
@@ -1575,7 +1562,7 @@ button:disabled:hover {
   backdrop-filter: none;
   z-index: 1000;
   pointer-events: none;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .drawer-backdrop.is-open {
@@ -1646,7 +1633,7 @@ button:disabled:hover {
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .drawer-close-btn:hover {
@@ -1676,7 +1663,7 @@ button:disabled:hover {
   color: var(--text-default);
   padding: 0.625rem 0.875rem;
   font-size: var(--text-body);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .history-search-input:focus {
@@ -1706,7 +1693,7 @@ button:disabled:hover {
   font-weight: 500;
   font-size: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .clear-history-button:hover {
@@ -1750,7 +1737,7 @@ button:disabled:hover {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface-alt);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .history-item:hover {
@@ -1825,7 +1812,7 @@ button:disabled:hover {
   font-size: var(--text-caption);
   line-height: 1.2;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .history-item-action-button:hover {
@@ -1843,7 +1830,7 @@ button:disabled:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   flex-shrink: 0;
 }
 
@@ -2007,7 +1994,7 @@ button:disabled:hover {
   background: rgba(14, 165, 233, 0.15);
   border: 1px solid rgba(14, 165, 233, 0.25);
   box-shadow: none;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .file-upload:hover .card-icon.accent-upload {
@@ -2048,7 +2035,7 @@ button:disabled:hover {
   background: rgba(14, 165, 233, 0.06);
   color: var(--text-default);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
   position: relative;
   z-index: 1;
   flex: 1;
@@ -2075,7 +2062,7 @@ button:disabled:hover {
   border: 1px solid rgba(14, 165, 233, 0.2);
   display: grid;
   place-items: center;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .upload-dropzone:hover:not(:disabled) .upload-dropzone-icon {
@@ -2167,7 +2154,7 @@ button:disabled:hover {
   background: rgba(99, 102, 241, 0.15);
   border: 1px solid rgba(99, 102, 241, 0.25);
   box-shadow: none;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .text-input:hover .card-icon.accent-text {
@@ -2212,7 +2199,7 @@ button:disabled:hover {
   font-size: var(--text-secondary);
   line-height: 1.6;
   resize: vertical;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   color: var(--text-default);
 }
 
@@ -2273,31 +2260,18 @@ button:disabled:hover {
   font-weight: 600;
   font-size: var(--text-body);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
   box-shadow: none;
   position: relative;
   overflow: hidden;
 }
 
-.parse-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  transition: left 0.5s ease;
-}
 
 .parse-button:hover:not(:disabled) {
   transform: none;
   box-shadow: none;
 }
 
-.parse-button:hover:not(:disabled)::before {
-  left: 100%;
-}
 
 .parse-button:disabled {
   opacity: 0.6;
@@ -2320,7 +2294,7 @@ button:disabled:hover {
   font-weight: 600;
   font-size: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .clear-input-button:hover:not(:disabled) {
@@ -2446,7 +2420,7 @@ button:disabled:hover {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   text-align: left;
 }
 
@@ -2470,7 +2444,7 @@ button:disabled:hover {
   background: var(--color-surface-alt);
   border-radius: var(--radius-md);
   color: var(--text-muted);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   flex-shrink: 0;
 }
 
@@ -2620,7 +2594,7 @@ button:disabled:hover {
   background: rgba(14, 165, 233, 0.15);
   border: 1px solid rgba(14, 165, 233, 0.25);
   box-shadow: none;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
   flex-shrink: 0;
 }
 
@@ -2686,7 +2660,7 @@ button:disabled:hover {
   font-size: var(--text-secondary);
   padding: 0.5rem 0.75rem;
   color: var(--text-default);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   cursor: pointer;
 }
 
@@ -2725,7 +2699,7 @@ button:disabled:hover {
   background: var(--color-surface-alt);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .camera-refresh-button:hover:not(:disabled) {
@@ -2753,7 +2727,7 @@ button:disabled:hover {
   color: var(--text-muted);
   font-weight: 600;
   font-size: var(--text-secondary);
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .status-pill::before {
@@ -2762,7 +2736,7 @@ button:disabled:hover {
   height: 8px;
   border-radius: 50%;
   background: currentColor;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .status-pill--live {
@@ -2837,31 +2811,18 @@ button:disabled:hover {
   font-weight: 600;
   font-size: var(--text-body);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
   box-shadow: none;
   position: relative;
   overflow: hidden;
 }
 
-.scan-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  transition: left 0.5s ease;
-}
 
 .scan-button:hover:not(:disabled) {
   transform: none;
   box-shadow: none;
 }
 
-.scan-button:hover:not(:disabled)::before {
-  left: 100%;
-}
 
 .scan-button:disabled {
   opacity: 0.6;
@@ -2884,7 +2845,7 @@ button:disabled:hover {
   font-weight: 600;
   font-size: var(--text-body);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-ui);
 }
 
 .stop-button:hover:not(:disabled) {
@@ -2909,7 +2870,7 @@ button:disabled:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.4s ease;
+  transition: var(--transition-ui);
   position: relative;
   z-index: 1;
   flex-shrink: 0;
@@ -3027,31 +2988,26 @@ button:disabled:hover {
   border-radius: var(--radius-xl);
 }
 
+/* Full-height layer whose top edge is the scan line, so it can move with transform */
 .scanner-scanning-overlay::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: transparent;
+  inset: 0;
+  border-top: 2px solid var(--color-primary);
   animation: scanningLine 2s linear infinite;
-  box-shadow: 0 0 10px var(--color-primary);
 }
 
 @keyframes scanningLine {
   0% {
-    top: 0;
+    transform: translateY(0);
     opacity: 0;
   }
-  10% {
-    opacity: 1;
-  }
+  10%,
   90% {
     opacity: 1;
   }
   100% {
-    top: 100%;
+    transform: translateY(100%);
     opacity: 0;
   }
 }
@@ -3164,7 +3120,7 @@ button:disabled:hover {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .field-group:hover {
@@ -3239,7 +3195,7 @@ button:disabled:hover {
   color: var(--text-muted);
   font-size: var(--text-caption);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   flex-shrink: 0;
 }
 
@@ -3290,7 +3246,7 @@ button:disabled:hover {
   display: grid;
   place-items: center;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .table-row:hover .field-copy-btn {
@@ -3788,7 +3744,7 @@ button:disabled:hover {
   font-size: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   border: 1px solid transparent;
   white-space: nowrap;
 }

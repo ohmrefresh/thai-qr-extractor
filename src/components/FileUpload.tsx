@@ -8,6 +8,9 @@ interface FileUploadProps {
   onScanError: (error: string) => void;
 }
 
+// Longest edge used for the first decode attempt
+const MAX_DECODE_EDGE = 1600;
+
 const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -34,12 +37,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onScanSuccess, onScanError }) =
           return;
         }
 
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        const decodeAt = (scale: number) => {
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          return jsQR(imageData.data, imageData.width, imageData.height);
+        };
 
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        // Phone photos are 12 MP+ (~50 MB of pixels); decoding that blocks the main
+        // thread for close to a second on mid-range phones. A capped copy decodes in
+        // tens of ms; fall back to full size only for codes too small to survive it.
+        const scale = Math.min(1, MAX_DECODE_EDGE / Math.max(img.width, img.height));
+        const code = decodeAt(scale) ?? (scale < 1 ? decodeAt(1) : null);
 
         if (code) {
           try {

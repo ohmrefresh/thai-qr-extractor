@@ -83,6 +83,11 @@
   --leading-tight: 1.25;
   --leading-body: 1.55;
 
+  /* UI state changes: paint/compositor properties only, never layout */
+  --transition-ui: background-color 150ms ease-out, border-color 150ms ease-out,
+    color 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out,
+    transform 150ms ease-out;
+
 
   /* Border Radius */
   --radius-sm: 4px;
