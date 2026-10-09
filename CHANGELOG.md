@@ -5,6 +5,41 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-09
+
+Decoded payloads are now checked for validity, the raw payload can be inspected and edited in place, and the interface was redesigned as a quiet, accessible instrument.
+
+### Added
+- **Validity verdict for decoded payloads.** The CRC (Tag 63, or Tag 91 for Mini QR) is recomputed and the decoded view reports CRC mismatches, a missing or misplaced CRC, unparsed bytes (with their offset), a wrong Payload Format Indicator, malformed Tag 29/30/62 templates and missing mandatory sub-tags (including OTA for AID `A000000677010114`). Problem rows are flagged in the table.
+- **Raw payload inspector.** The raw string is split into tag, length and value segments that link to their table rows, with unreadable bytes marked. Copy and Edit actions; Edit re-decodes in place with ⌘/Ctrl+Enter.
+- "Inspect in decoder" action in the generator preview.
+- Undo for History "Clear all".
+- Generator remembers the last payment type; the scan view remembers the last method and defaults to Paste with a mouse or Camera on touch devices.
+- `PRODUCT.md` describing users, purpose and design principles.
+
+### Changed
+- Redesigned UI: slate neutrals with one blue accent reserved for state and action; gradients, glow shadows, glassmorphism, decorative motion and icon tiles removed; one surface per view; parsed fields shown as a real table.
+- System font stacks and a fixed six-step type scale; sentence-case labels.
+- Generating a QR stays on the form and saves it to History instead of jumping to the decoder. The generator keeps its state when switching views, and the QR string is shown expanded.
+- The Value column shows raw values (Tag 53 `764`); friendly names move to the Description column. The amount shows `฿` only for THB.
+- Pasted text is kept after decoding. "Clear" is now "New payload".
+- Rewritten error, empty-state and help copy, including precise parse errors.
+- Responsive layout: compact field rows on phones, 44px touch targets, no horizontal scroll at 320px or 200% text, safe-area insets.
+- Decode verdict toasts replace each other instead of stacking; toasts moved to the bottom right.
+
+### Fixed
+- Tag 29 and Tag 30 sub-tag labels now follow the PromptPay spec (for example Tag 29/01 is "Mobile Number", Tag 30/01–03 are Biller ID, Reference 1 and Reference 2). Recipient, biller ID and reference are extracted correctly, so History titles are no longer "QR Code (01)".
+- Malformed, truncated or tampered payloads no longer report success.
+- Error messages no longer repeat "Error: Error:".
+- The camera stream is released if the scanner unmounts while the camera is starting.
+- Accessibility: WCAG AA contrast tokens and visible focus rings; the History drawer is a modal dialog with focus management and Escape to close; labelled paste textarea, History button and icon buttons; table semantics for parsed fields; announced errors; field-level generator errors with `aria-invalid`; correct heading order; `prefers-reduced-motion` support.
+
+### Performance
+- The camera library (~108 kB gzipped) loads only when the camera is started; first-load JavaScript on phones drops from 195.6 kB to 91.3 kB.
+- Uploaded images are decoded at a 1600 px long edge first, falling back to full resolution only when no QR is found.
+- `App.css` deduplicated from about 8,600 to 4,700 lines with no change to computed styles; shipped CSS drops from 13.8 kB to 10.2 kB gzipped.
+- Removed the artificial 150 ms delay before parsing pasted text; transitions limited to paint and compositor properties.
+
 ## [0.2.0] - 2026-10-08
 
 Toolchain upgrade to the latest major versions. No user-facing behavior change.
@@ -84,6 +119,7 @@ Toolchain upgrade to the latest major versions. No user-facing behavior change.
 - Scan history stored in localStorage.
 - GitHub Pages deployment.
 
+[0.3.0]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.1.5...0.2.0
 [0.1.5]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/ohmrefresh/thai-qr-extractor/compare/0.1.3...0.1.4
